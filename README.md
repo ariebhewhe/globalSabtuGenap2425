@@ -31,4 +31,8 @@ Isi nick = nama
 - ririks = Riri Komalasari
   > > > > > > > 9056f0cff579f238b166b3e54fd51d2ad71fcad0
 >>>>>>> 2bc13f453308de0bd568871217e8261b7b0e7919
+<<<<<<< HEAD
 >>>>>>> a3a4ee701c4f866a29f67731c0abcca4534b7082
+=======
+- davinalfy = Davina Alifyani
+>>>>>>> c315d77797c6097896835e1f611b3e6e67495b6c
