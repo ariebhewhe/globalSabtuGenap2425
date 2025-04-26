@@ -10,3 +10,4 @@ Isi nick = nama
 =======
 - bintangkharisma22 = Bintang Kharisma
 >>>>>>> 67e82882fe27ae2c70047753f144f02e72b0f610
+- rodiyansah = Muhamad Rodiyansah
