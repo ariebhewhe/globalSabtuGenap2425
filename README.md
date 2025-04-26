@@ -10,4 +10,5 @@ Isi nick = nama
 - YudiMeiza = Yudi Meiza
 - dikayo05 = Dika yonanda putra
 - dwibayunugraha = Dwi Bayu Nugraha
+- Annisafitrianirizky = Annisa Fitriani Rizky
 
