@@ -12,3 +12,4 @@ Isi nick = nama
 >>>>>>> 67e82882fe27ae2c70047753f144f02e72b0f610
 - YudiMeiza = Yudi Meiza
 - dikayo05 = Dika yonanda putra
+- MJuanAdiPratama = M Juan Adi Pratama
