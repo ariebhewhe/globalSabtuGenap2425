@@ -6,6 +6,8 @@ Isi nick = nama
 - WahyuArliansyah = Wahyu Arliansyah ganteng
 - gusnaldi99 = Gusnaldi Luthfi
 - bintangkharisma22 = Bintang Kharisma
+- rodiyansah = Muhamad Rodiyansah
 - YudiMeiza = Yudi Meiza
 - dikayo05 = Dika yonanda putra
 - dwibayunugraha = Dwi Bayu Nugraha
+
