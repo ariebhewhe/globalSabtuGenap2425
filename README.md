@@ -1,14 +1,1 @@
-Isi nick = nama
-
-- ariebhewhe = Ary Budi Warsito
-- Rizz404 = Rizqiansyah Ramadhan
-- riofach = Fachrio Raditya
-- WahyuArliansyah = Wahyu Arliansyah ganteng
-- gusnaldi99 = Gusnaldi Luthfi
-- bintangkharisma22 = Bintang Kharisma
-- rodiyansah = Muhamad Rodiyansah
-- YudiMeiza = Yudi Meiza
-- dikayo05 = Dika yonanda putra
-- dwibayunugraha = Dwi Bayu Nugraha
-- Annisafitrianirizky = Annisa Fitriani Rizky
-
+Ini branch baru saya Wahyu Arliansyah
