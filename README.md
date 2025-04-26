@@ -18,3 +18,4 @@ Isi nick = nama
 - Annisafitrianirizky = Annisa Fitriani Rizky
 - ririks = Riri Komalasari
 >>>>>>> 9056f0cff579f238b166b3e54fd51d2ad71fcad0
+- almaids = Almaidah Isnaeni
