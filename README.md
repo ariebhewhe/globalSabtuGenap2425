@@ -14,4 +14,8 @@ Isi nick = nama
 - rodiyansah = Muhamad Rodiyansah
 =======
 - YudiMeiza = Yudi Meiza
+<<<<<<< HEAD
 >>>>>>> eb379da4c8a10fd8a6cadea04dfe0be72be05e1e
+=======
+- dikayo05 = Dika yonanda putra
+>>>>>>> 4d5176765d931726b4c87066c36cbabca21a7022
