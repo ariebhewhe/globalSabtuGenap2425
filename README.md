@@ -19,3 +19,5 @@ Isi nick = nama
 =======
 - dikayo05 = Dika yonanda putra
 >>>>>>> 4d5176765d931726b4c87066c36cbabca21a7022
+
+- VanZainur = irvandy zainur
