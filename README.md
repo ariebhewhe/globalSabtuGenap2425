@@ -5,11 +5,14 @@ Isi nick = nama
 - riofach = Fachrio Raditya
 - WahyuArliansyah = Wahyu Arliansyah ganteng
 - gusnaldi99 = Gusnaldi Luthfi
-<<<<<<< HEAD
-- fandifdlh = fandi fadillah
-=======
 - bintangkharisma22 = Bintang Kharisma
->>>>>>> 67e82882fe27ae2c70047753f144f02e72b0f610
+- rodiyansah = Muhamad Rodiyansah
 - YudiMeiza = Yudi Meiza
 - dikayo05 = Dika yonanda putra
+<<<<<<< HEAD
 - MJuanAdiPratama = M Juan Adi Pratama
+=======
+- dwibayunugraha = Dwi Bayu Nugraha
+- Annisafitrianirizky = Annisa Fitriani Rizky
+
+>>>>>>> 9056f0cff579f238b166b3e54fd51d2ad71fcad0
