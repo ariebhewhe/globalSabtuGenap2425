@@ -35,3 +35,4 @@ Isi nick = nama
 - agunggrzksptra = Agung Rizki Saputra
 - Mifta24 = Miftahudin Aldi Saputra>>>>>>> 94b4a425b8a5c1e0489844d2aeb00ef230572deb
 - GStarrrr = Bintang Poetra
+- tirtwhyu = Wahyu Nayoga
