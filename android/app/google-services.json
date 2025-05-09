@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "712554617132",
+    "project_id": "jamal-69420",
+    "storage_bucket": "jamal-69420.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:712554617132:android:b9e2fda58ebb83141f3489",
+        "android_client_info": {
+          "package_name": "rizz.learn.jamal"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDYPP7WpjV5M3ue89Di6H_wISWnbGcWH64"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
