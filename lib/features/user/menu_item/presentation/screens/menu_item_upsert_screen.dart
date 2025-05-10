@@ -1,49 +1,66 @@
 import 'package:auto_route/annotations.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_form_builder/flutter_form_builder.dart';
+import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:jamal/data/models/menu_item_model.dart';
 import 'package:jamal/features/user/menu_item/providers/menu_item_mutation_provider.dart';
 
 @RoutePage()
-class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+class MenuItemUpsertScreen extends ConsumerStatefulWidget {
+  final MenuItemModel? menuItemModel;
+
+  const MenuItemUpsertScreen({super.key, this.menuItemModel});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  ConsumerState<MenuItemUpsertScreen> createState() =>
+      _MenuItemUpsertScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
-  final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _descriptionController = TextEditingController();
-  final TextEditingController _priceController = TextEditingController();
-  final TextEditingController _categoryController = TextEditingController();
-  final TextEditingController _imageUrlController = TextEditingController();
+class _MenuItemUpsertScreenState extends ConsumerState<MenuItemUpsertScreen> {
+  final _formKey = GlobalKey<FormBuilderState>();
 
-  bool _isAvailable = true;
-  bool _isVegetarian = false;
-  double _spiceLevel = 0;
-
-  @override
-  void dispose() {
-    _nameController.dispose();
-    _descriptionController.dispose();
-    _priceController.dispose();
-    _categoryController.dispose();
-    _imageUrlController.dispose();
-    super.dispose();
+  void _resetForm() {
+    _formKey.currentState?.reset();
+    // Reset nilai spesifik yang tidak otomatis di-reset
+    _formKey.currentState?.fields['isAvailable']?.didChange(true);
+    _formKey.currentState?.fields['isVegetarian']?.didChange(false);
+    _formKey.currentState?.fields['spiceLevel']?.didChange(0.0);
   }
 
-  void _reset() {
-    _nameController.clear();
-    _descriptionController.clear();
-    _priceController.clear();
-    _categoryController.clear();
-    _imageUrlController.clear();
-    setState(() {
-      _isAvailable = true;
-      _isVegetarian = false;
-      _spiceLevel = 0;
-    });
+  void _submitForm() async {
+    final isValid = _formKey.currentState?.saveAndValidate() ?? false;
+
+    if (isValid) {
+      final formValues = _formKey.currentState!.value;
+
+      final menuItem = MenuItemModel(
+        id: '',
+        name: formValues['name'] as String,
+        description: formValues['description'] as String,
+        price: double.tryParse(formValues['price'].toString()) ?? 0.0,
+        category: formValues['category'] as String,
+        imageUrl: formValues['imageUrl'] as String,
+        isAvailable: formValues['isAvailable'] as bool,
+        isVegetarian: formValues['isVegetarian'] as bool,
+        spiceLevel: (formValues['spiceLevel'] as double).round(),
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
+
+      if (widget.menuItemModel != null) {
+        await ref
+            .read(menuItemMutationProvider.notifier)
+            .updateMenuItem(widget.menuItemModel!.id, menuItem);
+      } else {
+        await ref.read(menuItemMutationProvider.notifier).addMenuItem(menuItem);
+      }
+
+      // Reset form fields setelah berhasil
+      if (ref.read(menuItemMutationProvider).successMessage != null) {
+        _resetForm();
+      }
+    }
   }
 
   @override
@@ -83,154 +100,159 @@ class _HomeScreenState extends State<HomeScreen> {
                 }
               });
 
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  TextField(
-                    controller: _nameController,
-                    decoration: const InputDecoration(
-                      border: OutlineInputBorder(),
-                      hintText: 'Name',
-                      label: Text('Name'),
+              return FormBuilder(
+                key: _formKey,
+                initialValue: {
+                  'name': widget.menuItemModel?.name ?? '',
+                  'description': widget.menuItemModel?.description ?? '',
+                  'price': widget.menuItemModel?.price.toString() ?? '',
+                  'category': widget.menuItemModel?.category ?? '',
+                  'imageUrl': widget.menuItemModel?.imageUrl ?? '',
+                  'isAvailable': widget.menuItemModel?.isAvailable ?? true,
+                  'isVegetarian': widget.menuItemModel?.isVegetarian ?? false,
+                  'spiceLevel':
+                      widget.menuItemModel?.spiceLevel.toDouble() ?? 0.0,
+                },
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    FormBuilderTextField(
+                      name: 'name',
+                      decoration: const InputDecoration(
+                        border: OutlineInputBorder(),
+                        hintText: 'Name',
+                        labelText: 'Name',
+                      ),
+                      validator: FormBuilderValidators.compose([
+                        FormBuilderValidators.required(),
+                        FormBuilderValidators.minLength(3),
+                        FormBuilderValidators.maxLength(50),
+                      ]),
                     ),
-                  ),
-                  const SizedBox(height: 16),
+                    const SizedBox(height: 16),
 
-                  TextField(
-                    controller: _descriptionController,
-                    keyboardType: TextInputType.multiline,
-                    maxLines: 3,
-                    decoration: const InputDecoration(
-                      border: OutlineInputBorder(),
-                      hintText: 'Description',
-                      label: Text('Description'),
+                    FormBuilderTextField(
+                      name: 'description',
+                      keyboardType: TextInputType.multiline,
+                      maxLines: 3,
+                      decoration: const InputDecoration(
+                        border: OutlineInputBorder(),
+                        hintText: 'Description',
+                        labelText: 'Description',
+                      ),
+                      validator: FormBuilderValidators.compose([
+                        FormBuilderValidators.required(),
+                        FormBuilderValidators.minLength(10),
+                        FormBuilderValidators.maxLength(500),
+                      ]),
                     ),
-                  ),
-                  const SizedBox(height: 16),
+                    const SizedBox(height: 16),
 
-                  TextField(
-                    keyboardType: TextInputType.number,
-                    controller: _priceController,
-                    decoration: const InputDecoration(
-                      border: OutlineInputBorder(),
-                      hintText: 'Price',
-                      label: Text('Price'),
+                    FormBuilderTextField(
+                      name: 'price',
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(
+                        border: OutlineInputBorder(),
+                        hintText: 'Price',
+                        labelText: 'Price',
+                        prefixText: '\$ ',
+                      ),
+                      validator: FormBuilderValidators.compose([
+                        FormBuilderValidators.required(),
+                        FormBuilderValidators.numeric(),
+                        FormBuilderValidators.min(0.1),
+                      ]),
                     ),
-                  ),
-                  const SizedBox(height: 16),
+                    const SizedBox(height: 16),
 
-                  TextField(
-                    controller: _categoryController,
-                    decoration: const InputDecoration(
-                      border: OutlineInputBorder(),
-                      hintText: 'Category',
-                      label: Text('Category'),
+                    FormBuilderTextField(
+                      name: 'category',
+                      decoration: const InputDecoration(
+                        border: OutlineInputBorder(),
+                        hintText: 'Category',
+                        labelText: 'Category',
+                      ),
+                      validator: FormBuilderValidators.compose([
+                        FormBuilderValidators.required(),
+                      ]),
                     ),
-                  ),
-                  const SizedBox(height: 16),
+                    const SizedBox(height: 16),
 
-                  TextField(
-                    controller: _imageUrlController,
-                    decoration: const InputDecoration(
-                      border: OutlineInputBorder(),
-                      hintText: 'Image URL',
-                      label: Text('Image URL'),
+                    FormBuilderTextField(
+                      name: 'imageUrl',
+                      decoration: const InputDecoration(
+                        border: OutlineInputBorder(),
+                        hintText: 'Image URL',
+                        labelText: 'Image URL',
+                      ),
+                      validator: FormBuilderValidators.compose([
+                        FormBuilderValidators.required(),
+                        FormBuilderValidators.url(),
+                      ]),
                     ),
-                  ),
-                  const SizedBox(height: 16),
+                    const SizedBox(height: 16),
 
-                  // Boolean for isAvailable
-                  SwitchListTile(
-                    title: const Text('Available'),
-                    value: _isAvailable,
-                    onChanged: (value) {
-                      setState(() {
-                        _isAvailable = value;
-                      });
-                    },
-                  ),
+                    // Boolean untuk isAvailable
+                    FormBuilderSwitch(
+                      name: 'isAvailable',
+                      title: const Text('Available'),
+                      decoration: const InputDecoration(
+                        border: InputBorder.none,
+                      ),
+                    ),
 
-                  // Boolean for isVegetarian
-                  SwitchListTile(
-                    title: const Text('Vegetarian'),
-                    value: _isVegetarian,
-                    onChanged: (value) {
-                      setState(() {
-                        _isVegetarian = value;
-                      });
-                    },
-                  ),
-                  const SizedBox(height: 16),
+                    // Boolean untuk isVegetarian
+                    FormBuilderSwitch(
+                      name: 'isVegetarian',
+                      title: const Text('Vegetarian'),
+                      decoration: const InputDecoration(
+                        border: InputBorder.none,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
 
-                  // Slider for spice level
-                  const Padding(
-                    padding: EdgeInsets.only(left: 16, top: 8),
-                    child: Text('Spice Level'),
-                  ),
+                    // Slider untuk spice level
+                    const Padding(
+                      padding: EdgeInsets.only(left: 16, top: 8),
+                      child: Text('Spice Level'),
+                    ),
 
-                  Slider(
-                    value: _spiceLevel,
-                    min: 0,
-                    max: 5,
-                    divisions: 5,
-                    label: _spiceLevel.round().toString(),
-                    onChanged: (value) {
-                      setState(() {
-                        _spiceLevel = value;
-                      });
-                    },
-                  ),
+                    FormBuilderSlider(
+                      name: 'spiceLevel',
+                      min: 0,
+                      max: 5,
+                      divisions: 5,
+                      decoration: const InputDecoration(
+                        border: InputBorder.none,
+                      ),
+                      valueTransformer: (value) => value?.round(),
+                      displayValues: DisplayValues.current,
+                      initialValue: 0,
+                    ),
 
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    child: SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed:
-                            mutationState.isLoading
-                                ? null
-                                : () async {
-                                  final newMenuItem = MenuItemModel(
-                                    id: '',
-                                    name: _nameController.text,
-                                    description: _descriptionController.text,
-                                    price:
-                                        double.tryParse(
-                                          _priceController.text,
-                                        ) ??
-                                        0.0,
-                                    category: _categoryController.text,
-                                    imageUrl: _imageUrlController.text,
-                                    isAvailable: _isAvailable,
-                                    isVegetarian: _isVegetarian,
-                                    spiceLevel: _spiceLevel.round(),
-                                    createdAt: DateTime.now(),
-                                    updatedAt: DateTime.now(),
-                                  );
-
-                                  await ref
-                                      .read(menuItemMutationProvider.notifier)
-                                      .addMenuItem(newMenuItem);
-
-                                  // Reset form fields setelah berhasil
-                                  if (ref
-                                          .read(menuItemMutationProvider)
-                                          .successMessage !=
-                                      null) {
-                                    _reset();
-                                  }
-                                },
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          child:
-                              mutationState.isLoading
-                                  ? const CircularProgressIndicator()
-                                  : const Text('Submit'),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      child: SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed:
+                              mutationState.isLoading ? null : _submitForm,
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            child:
+                                mutationState.isLoading
+                                    ? const CircularProgressIndicator()
+                                    : Text(
+                                      widget.menuItemModel != null
+                                          ? 'Update'
+                                          : 'Submit',
+                                    ),
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               );
             },
           ),

@@ -10,7 +10,7 @@ class MyEndDrawer extends StatelessWidget {
   Widget build(BuildContext context) {
     final List<Map<String, dynamic>> drawerItems = [
       {'icon': Icons.person, 'title': 'Profile', 'route': '/profile'},
-      {'icon': Icons.food_bank, 'title': 'food', 'route': '/menu'},
+      {'icon': Icons.food_bank, 'title': 'Foods', 'route': '/menu-items'},
     ];
 
     return Drawer(

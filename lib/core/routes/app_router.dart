@@ -9,6 +9,8 @@ class AppRouter extends RootStackRouter {
   @override
   List<AutoRoute> get routes => [
     AutoRoute(page: HomeRoute.page, initial: true),
+    AutoRoute(page: MenuItemsRoute.page, path: '/menu-items'),
+    AutoRoute(page: MenuItemDetailRoute.page, path: '/menu-items/detail'),
   ];
 
   @override
