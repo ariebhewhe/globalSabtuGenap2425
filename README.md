@@ -1,1 +1,0 @@
-Haloo Saya Bintang Kharisma
