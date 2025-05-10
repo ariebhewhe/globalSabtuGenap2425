@@ -1,6 +1,6 @@
 ## Aplikasi Pos Order Makanan
 **kelompok**
-- Rizqiansyah Ramadhan
-- Fendi Andriyanto
-- Andreas Ronaldo
-- Lukman Hakim (tanya dulu ke pak ary boleh 4 orang ga)
+- Rizqiansyah Ramadhan (1122140051)
+- Fendi Andriyanto (1122140055)
+- Andreas Ronaldo (1122140098)
+- Lukman Hakim (1122140088)
