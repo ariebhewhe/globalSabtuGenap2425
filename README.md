@@ -1,29 +1,5 @@
-Isi nick = nama
+Nama Kelompok =
 
-- ariebhewhe = Ary Budi Warsito
-- Rizz404 = Rizqiansyah Ramadhan
-- riofach = Fachrio Raditya
-- WahyuArliansyah = Wahyu Arliansyah ganteng
-- gusnaldi99 = Gusnaldi Luthfi
-- fandifdlh = fandi fadillah
-- rodiyansah = Muhamad Rodiyansah
-- YudiMeiza = Yudi Meiza
-- dikayo05 = Dika yonanda putra
-- Annisafitrianirizky = Annisa Fitriani Rizky
-- bintangkharisma22 = Bintang Kharisma
-- rodiyansah = Muhamad Rodiyansah
-- YudiMeiza = Yudi Meiza
-- dikayo05 = Dika yonanda putra
-- MJuanAdiPratama = M Juan Adi Pratama
-- dwibayunugraha = Dwi Bayu Nugraha
-- Annisafitrianirizky = Annisa Fitriani Rizky
-- almaids = Almaidah Isnaeni
-- VanZainur = irvandy zainur
-- dwibayunugraha = Dwi Bayu Nugraha
-- Annisafitrianirizky = Annisa Fitriani Rizky
-- ririks = Riri Komalasari
-- davinalfy = Davina Alifyani
-- agunggrzksptra = Agung Rizki Saputra
-- Mifta24 = Miftahudin Aldi Saputra
-- GStarrrr = Bintang Poetra
-- tirtwhyu = Wahyu Nayoga
+- Agung Rizki Saputra (1122140056/AgungRizkiSaputra)
+- Gusnaldi Luthfi
+- Wahyu Arliansyah (1122140037/WahyuArliansyah)
