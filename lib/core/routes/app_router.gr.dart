@@ -8,42 +8,63 @@
 // ignore_for_file: type=lint
 // coverage:ignore-file
 
-// ignore_for_file: no_leading_underscores_for_library_prefixes
-import 'package:auto_route/auto_route.dart' as _i5;
-import 'package:flutter/material.dart' as _i6;
-import 'package:jamal/data/models/menu_item_model.dart' as _i7;
-import 'package:jamal/features/user/home/presentation/screens/home_screen.dart'
-    as _i1;
-import 'package:jamal/features/user/menu_item/presentation/screens/menu_item_detail_screen.dart'
-    as _i2;
-import 'package:jamal/features/user/menu_item/presentation/screens/menu_item_upsert_screen.dart'
-    as _i3;
-import 'package:jamal/features/user/menu_item/presentation/screens/menu_items_screen.dart'
-    as _i4;
+part of 'app_router.dart';
 
 /// generated route for
-/// [_i1.HomeScreen]
-class HomeRoute extends _i5.PageRouteInfo<void> {
-  const HomeRoute({List<_i5.PageRouteInfo>? children})
+/// [HomeScreen]
+class HomeRoute extends PageRouteInfo<void> {
+  const HomeRoute({List<PageRouteInfo>? children})
     : super(HomeRoute.name, initialChildren: children);
 
   static const String name = 'HomeRoute';
 
-  static _i5.PageInfo page = _i5.PageInfo(
+  static PageInfo page = PageInfo(
     name,
     builder: (data) {
-      return const _i1.HomeScreen();
+      return const HomeScreen();
     },
   );
 }
 
 /// generated route for
-/// [_i2.MenuItemDetailScreen]
-class MenuItemDetailRoute extends _i5.PageRouteInfo<MenuItemDetailRouteArgs> {
+/// [LoginScreen]
+class LoginRoute extends PageRouteInfo<void> {
+  const LoginRoute({List<PageRouteInfo>? children})
+    : super(LoginRoute.name, initialChildren: children);
+
+  static const String name = 'LoginRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      return const LoginScreen();
+    },
+  );
+}
+
+/// generated route for
+/// [MainTabScreen]
+class MainTabRoute extends PageRouteInfo<void> {
+  const MainTabRoute({List<PageRouteInfo>? children})
+    : super(MainTabRoute.name, initialChildren: children);
+
+  static const String name = 'MainTabRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      return const MainTabScreen();
+    },
+  );
+}
+
+/// generated route for
+/// [MenuItemDetailScreen]
+class MenuItemDetailRoute extends PageRouteInfo<MenuItemDetailRouteArgs> {
   MenuItemDetailRoute({
-    _i6.Key? key,
-    required _i7.MenuItemModel menuItem,
-    List<_i5.PageRouteInfo>? children,
+    Key? key,
+    required MenuItemModel menuItem,
+    List<PageRouteInfo>? children,
   }) : super(
          MenuItemDetailRoute.name,
          args: MenuItemDetailRouteArgs(key: key, menuItem: menuItem),
@@ -52,11 +73,11 @@ class MenuItemDetailRoute extends _i5.PageRouteInfo<MenuItemDetailRouteArgs> {
 
   static const String name = 'MenuItemDetailRoute';
 
-  static _i5.PageInfo page = _i5.PageInfo(
+  static PageInfo page = PageInfo(
     name,
     builder: (data) {
       final args = data.argsAs<MenuItemDetailRouteArgs>();
-      return _i2.MenuItemDetailScreen(key: args.key, menuItem: args.menuItem);
+      return MenuItemDetailScreen(key: args.key, menuItem: args.menuItem);
     },
   );
 }
@@ -64,9 +85,9 @@ class MenuItemDetailRoute extends _i5.PageRouteInfo<MenuItemDetailRouteArgs> {
 class MenuItemDetailRouteArgs {
   const MenuItemDetailRouteArgs({this.key, required this.menuItem});
 
-  final _i6.Key? key;
+  final Key? key;
 
-  final _i7.MenuItemModel menuItem;
+  final MenuItemModel menuItem;
 
   @override
   String toString() {
@@ -75,12 +96,12 @@ class MenuItemDetailRouteArgs {
 }
 
 /// generated route for
-/// [_i3.MenuItemUpsertScreen]
-class MenuItemUpsertRoute extends _i5.PageRouteInfo<MenuItemUpsertRouteArgs> {
+/// [MenuItemUpsertScreen]
+class MenuItemUpsertRoute extends PageRouteInfo<MenuItemUpsertRouteArgs> {
   MenuItemUpsertRoute({
-    _i6.Key? key,
-    _i7.MenuItemModel? menuItemModel,
-    List<_i5.PageRouteInfo>? children,
+    Key? key,
+    MenuItemModel? menuItemModel,
+    List<PageRouteInfo>? children,
   }) : super(
          MenuItemUpsertRoute.name,
          args: MenuItemUpsertRouteArgs(key: key, menuItemModel: menuItemModel),
@@ -89,13 +110,13 @@ class MenuItemUpsertRoute extends _i5.PageRouteInfo<MenuItemUpsertRouteArgs> {
 
   static const String name = 'MenuItemUpsertRoute';
 
-  static _i5.PageInfo page = _i5.PageInfo(
+  static PageInfo page = PageInfo(
     name,
     builder: (data) {
       final args = data.argsAs<MenuItemUpsertRouteArgs>(
         orElse: () => const MenuItemUpsertRouteArgs(),
       );
-      return _i3.MenuItemUpsertScreen(
+      return MenuItemUpsertScreen(
         key: args.key,
         menuItemModel: args.menuItemModel,
       );
@@ -106,9 +127,9 @@ class MenuItemUpsertRoute extends _i5.PageRouteInfo<MenuItemUpsertRouteArgs> {
 class MenuItemUpsertRouteArgs {
   const MenuItemUpsertRouteArgs({this.key, this.menuItemModel});
 
-  final _i6.Key? key;
+  final Key? key;
 
-  final _i7.MenuItemModel? menuItemModel;
+  final MenuItemModel? menuItemModel;
 
   @override
   String toString() {
@@ -117,17 +138,33 @@ class MenuItemUpsertRouteArgs {
 }
 
 /// generated route for
-/// [_i4.MenuItemsScreen]
-class MenuItemsRoute extends _i5.PageRouteInfo<void> {
-  const MenuItemsRoute({List<_i5.PageRouteInfo>? children})
+/// [MenuItemsScreen]
+class MenuItemsRoute extends PageRouteInfo<void> {
+  const MenuItemsRoute({List<PageRouteInfo>? children})
     : super(MenuItemsRoute.name, initialChildren: children);
 
   static const String name = 'MenuItemsRoute';
 
-  static _i5.PageInfo page = _i5.PageInfo(
+  static PageInfo page = PageInfo(
     name,
     builder: (data) {
-      return const _i4.MenuItemsScreen();
+      return const MenuItemsScreen();
+    },
+  );
+}
+
+/// generated route for
+/// [ProfileScreen]
+class ProfileRoute extends PageRouteInfo<void> {
+  const ProfileRoute({List<PageRouteInfo>? children})
+    : super(ProfileRoute.name, initialChildren: children);
+
+  static const String name = 'ProfileRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      return const ProfileScreen();
     },
   );
 }

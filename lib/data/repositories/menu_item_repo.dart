@@ -1,9 +1,16 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:jamal/core/helpers/error_response.dart';
 import 'package:jamal/core/helpers/success_response.dart';
 import 'package:jamal/core/utils/logger.dart';
 import 'package:jamal/data/models/menu_item_model.dart';
+import 'package:jamal/providers.dart';
+
+final menuItemRepoProvider = Provider.autoDispose<MenuItemRepo>((ref) {
+  final firestore = ref.watch(firebaseFirestoreProvider);
+  return MenuItemRepo(firestore);
+});
 
 class MenuItemRepo {
   final FirebaseFirestore _firebaseFirestore;

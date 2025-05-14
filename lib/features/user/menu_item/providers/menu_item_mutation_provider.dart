@@ -4,7 +4,7 @@ import 'package:jamal/data/repositories/menu_item_repo.dart';
 import 'package:jamal/features/user/menu_item/providers/menu_item_mutation_state.dart';
 import 'package:jamal/features/user/menu_item/providers/menu_item_provider.dart';
 import 'package:jamal/features/user/menu_item/providers/menu_items_provider.dart';
-import 'package:jamal/service_locator.dart';
+import 'package:jamal/providers.dart';
 
 class MenuItemMutationNotifier extends StateNotifier<MenuItemMutationState> {
   final MenuItemRepo _menuItemRepo;
@@ -99,6 +99,6 @@ final menuItemMutationProvider =
     StateNotifierProvider<MenuItemMutationNotifier, MenuItemMutationState>((
       ref,
     ) {
-      final MenuItemRepo menuItemRepo = serviceLocator<MenuItemRepo>();
+      final MenuItemRepo menuItemRepo = ref.watch(menuItemRepoProvider);
       return MenuItemMutationNotifier(menuItemRepo, ref);
     });

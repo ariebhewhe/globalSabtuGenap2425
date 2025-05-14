@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:jamal/data/repositories/menu_item_repo.dart';
 import 'package:jamal/features/user/menu_item/providers/menu_items_state.dart';
-import 'package:jamal/service_locator.dart';
+import 'package:jamal/providers.dart';
 
 class MenuItemsNotifier extends StateNotifier<MenuItemsState> {
   final MenuItemRepo _menuItemRepo;
@@ -30,6 +30,6 @@ class MenuItemsNotifier extends StateNotifier<MenuItemsState> {
 
 final menuItemsProvider =
     StateNotifierProvider<MenuItemsNotifier, MenuItemsState>((ref) {
-      final MenuItemRepo menuItemRepo = serviceLocator<MenuItemRepo>();
+      final MenuItemRepo menuItemRepo = ref.watch(menuItemRepoProvider);
       return MenuItemsNotifier(menuItemRepo);
     });

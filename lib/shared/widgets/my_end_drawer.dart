@@ -2,6 +2,7 @@ import 'package:auto_route/auto_route.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:jamal/core/routes/app_router.dart';
 
 class MyEndDrawer extends StatelessWidget {
   const MyEndDrawer({Key? key}) : super(key: key);
@@ -9,8 +10,12 @@ class MyEndDrawer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final List<Map<String, dynamic>> drawerItems = [
-      {'icon': Icons.person, 'title': 'Profile', 'route': '/profile'},
-      {'icon': Icons.food_bank, 'title': 'Foods', 'route': '/menu-items'},
+      {'icon': Icons.person, 'title': 'Profile', 'route': const ProfileRoute()},
+      {
+        'icon': Icons.food_bank,
+        'title': 'Foods',
+        'route': const MenuItemsRoute(),
+      },
     ];
 
     return Drawer(
@@ -34,14 +39,17 @@ class MyEndDrawer extends StatelessWidget {
                             route: item['route'],
                             onTap: () {
                               Navigator.of(context).pop();
-                              context.router.pushPath(item['route']);
+                              context.router.push(item['route']);
                             },
                           );
                         }).toList(),
                   ),
                 ),
 
-                ElevatedButton(onPressed: () {}, child: const Text('Logout')),
+                ElevatedButton(
+                  onPressed: () => context.router.push(const LoginRoute()),
+                  child: const Text('Login'),
+                ),
               ],
             );
           },
@@ -174,11 +182,16 @@ class MyEndDrawer extends StatelessWidget {
     BuildContext context, {
     required IconData icon,
     required String title,
-    required String route,
+    required dynamic route,
     required VoidCallback onTap,
   }) {
-    // Use AutoRoute's methods to check the current route
-    final isActive = context.router.currentPath.startsWith(route);
+    bool isActive = false;
+
+    if (route is PageRouteInfo) {
+      final currentRouteName = context.router.current.name;
+
+      isActive = currentRouteName == route.routeName;
+    }
 
     return Card(
       color:

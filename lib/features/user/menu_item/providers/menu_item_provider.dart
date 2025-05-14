@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:jamal/data/repositories/menu_item_repo.dart';
 import 'package:jamal/features/user/menu_item/providers/menu_item_state.dart';
-import 'package:jamal/service_locator.dart';
+import 'package:jamal/providers.dart';
 
 class MenuItemNotifier extends StateNotifier<MenuItemState> {
   final MenuItemRepo _menuItemRepo;
@@ -38,7 +38,7 @@ final menuItemProvider =
       ref,
       id,
     ) {
-      final MenuItemRepo menuItemRepo = serviceLocator<MenuItemRepo>();
+      final MenuItemRepo menuItemRepo = ref.watch(menuItemRepoProvider);
       return MenuItemNotifier(menuItemRepo, id);
     });
 
@@ -48,7 +48,7 @@ final activeMenuItemIdProvider = StateProvider<String?>((ref) => null);
 // * Auto-refresh provider ketika ID berubah
 final activeMenuItemProvider =
     StateNotifierProvider<MenuItemNotifier, MenuItemState>((ref) {
-      final MenuItemRepo menuItemRepo = serviceLocator<MenuItemRepo>();
+      final MenuItemRepo menuItemRepo = ref.watch(menuItemRepoProvider);
       final id = ref.watch(activeMenuItemIdProvider);
 
       return MenuItemNotifier(menuItemRepo, id ?? '');
