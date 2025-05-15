@@ -1,15 +1,12 @@
-import 'package:firebase_auth/firebase_auth.dart';
-
 import 'package:jamal/data/models/user_model.dart';
 
-class AuthState {
+class AuthMutationState {
   final bool isLoading;
   final String? errorMessage;
   final String? successMessage;
-
-  // * Jangan lupa parse User ke user model
   final UserModel? userModel;
-  AuthState({
+
+  AuthMutationState({
     this.isLoading = false,
     this.errorMessage,
     this.successMessage,
@@ -17,13 +14,13 @@ class AuthState {
   });
 
   // * Gak perlu method lainnya setelah ini soalnya cuma auth state
-  AuthState copyWith({
+  AuthMutationState copyWith({
     bool? isLoading,
     String? errorMessage,
     String? successMessage,
     UserModel? userModel,
   }) {
-    return AuthState(
+    return AuthMutationState(
       isLoading: isLoading ?? this.isLoading,
       errorMessage: errorMessage ?? this.errorMessage,
       successMessage: successMessage ?? this.successMessage,

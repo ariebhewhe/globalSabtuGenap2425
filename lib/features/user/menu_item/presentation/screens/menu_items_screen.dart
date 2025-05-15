@@ -135,7 +135,7 @@ class MenuItemsScreen extends StatelessWidget {
                       menuItemsState.isLoading
                           ? null
                           : () {
-                            context.router.push(
+                            context.router.replace(
                               MenuItemDetailRoute(menuItem: menuItem),
                             );
                           },

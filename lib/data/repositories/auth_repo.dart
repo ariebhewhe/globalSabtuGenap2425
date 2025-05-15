@@ -161,9 +161,29 @@ class AuthRepo {
             .collection(_collectionPath)
             .doc(user.uid)
             .set(userModel.toMap());
+      } else {
+        final userData = docSnapshot.data();
+        if (userData == null) {
+          return Left(ErrorResponse(message: 'Existing user data is null'));
+        }
+        userModel = UserModel.fromMap(userData);
 
-        await _currentUserStorageService.saveCurrentUser(userModel);
+        if (userModel.profilePicture != user.photoURL ||
+            userModel.username !=
+                (user.displayName ?? user.email!.split('@')[0])) {
+          userModel = userModel.copyWith(
+            profilePicture: user.photoURL,
+            username: user.displayName ?? user.email!.split('@')[0],
+            updatedAt: DateTime.now(),
+          );
+          await _firebaseFirestore
+              .collection(_collectionPath)
+              .doc(user.uid)
+              .update(userModel.toMap());
+        }
       }
+
+      await _currentUserStorageService.saveCurrentUser(userModel);
 
       return Right(
         SuccessResponse(data: userModel, message: 'Google login successful'),
@@ -180,14 +200,11 @@ class AuthRepo {
     return currentUser;
   }
 
-  bool isLoggedIn() {
-    return _firebaseAuth.currentUser != null;
-  }
-
   Future<Either<ErrorResponse, SuccessResponse<String>>> logout() async {
     try {
       await _googleSignIn.signOut();
       await _firebaseAuth.signOut();
+      await _currentUserStorageService.deleteCurrentUser();
 
       return Right(
         SuccessResponse(data: 'No data nyan~', message: 'Logout successful'),

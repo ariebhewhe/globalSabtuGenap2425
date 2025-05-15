@@ -1,13 +1,17 @@
-// main.dart
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:jamal/core/constants/local_storage_keys.dart';
 import 'package:jamal/core/routes/app_router.dart';
+import 'package:jamal/core/utils/enums.dart';
 import 'package:jamal/core/utils/logger.dart';
 import 'package:jamal/firebase_options.dart';
 import 'package:jamal/providers.dart';
+import 'package:jamal/shared/services/current_user_storage.dart';
+
+import 'package:jamal/features/auth/auth_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 final logger = AppLogger();
@@ -16,13 +20,12 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   try {
-    // * Inisialisasi service yang diperlukan sebelum menjalankan app
     final firebaseApp = await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
 
     const secureStorage = FlutterSecureStorage();
-    final preferences = await SharedPreferences.getInstance();
+
     final preferencesWithCache = await SharedPreferencesWithCache.create(
       cacheOptions: const SharedPreferencesWithCacheOptions(
         allowList: {
@@ -35,10 +38,8 @@ void main() async {
     runApp(
       ProviderScope(
         overrides: [
-          // Override providers dengan instance yang sudah diinisialisasi
           firebaseAppProvider.overrideWithValue(firebaseApp),
           secureStorageProvider.overrideWithValue(secureStorage),
-          sharedPreferencesProvider.overrideWithValue(preferences),
           sharedPreferencesWithCacheProvider.overrideWithValue(
             preferencesWithCache,
           ),
@@ -48,25 +49,91 @@ void main() async {
     );
   } catch (e) {
     logger.e("Error during initialization: $e");
-    // Masih jalankan app, tapi dengan state error
+
     runApp(
-      ProviderScope(
+      const ProviderScope(
         child: MaterialApp(
-          home: Scaffold(
-            body: Center(child: Text('Error initializing app: $e')),
-          ),
+          home: Scaffold(body: Center(child: Text('Error initializing app'))),
         ),
       ),
     );
   }
 }
 
-class MyApp extends ConsumerWidget {
+class MyApp extends ConsumerStatefulWidget {
   const MyApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends ConsumerState<MyApp> {
+  @override
+  Widget build(BuildContext context) {
     final appRouter = ref.watch(appRouterProvider);
+
+    ref.listen<AsyncValue<User?>>(authStateProvider, (
+      previousAsyncState,
+      currentAsyncState,
+    ) async {
+      logger.i(
+        "MyApp Listener: Auth AsyncValue changed. Current: ${currentAsyncState.toString()}. Previous: ${previousAsyncState?.toString()}",
+      );
+
+      final currentRouteName = appRouter.current.name;
+
+      if (currentAsyncState.isLoading) {
+        logger.i("MyApp Listener: Auth state is loading. No action.");
+        return;
+      }
+
+      if (currentAsyncState.hasError) {
+        logger.e(
+          "MyApp Listener: Error in authStateProvider: ${currentAsyncState.error}, Stack: ${currentAsyncState.stackTrace}",
+        );
+
+        if (currentRouteName != LoginRoute.name) {
+          appRouter.replaceAll([const LoginRoute()]);
+          logger.w(
+            "MyApp Listener: Redirecting to LoginRoute due to auth stream error.",
+          );
+        }
+        return;
+      }
+
+      final firebaseUser = currentAsyncState.value;
+
+      if (firebaseUser != null) {
+        logger.i(
+          "MyApp Listener: Firebase User is not null (UID: ${firebaseUser.uid}). Current route: $currentRouteName",
+        );
+
+        final currentUserStorage = ref.read(currentUserStorageServiceProvider);
+        final userModel = await currentUserStorage.getCurrentUser();
+
+        if (userModel != null && userModel.role == Role.admin) {
+          if (currentRouteName != MenuItemUpsertRoute.name) {
+            appRouter.replaceAll([const ProfileRoute()]);
+            logger.i(
+              "MyApp Listener: Redirecting admin to MenuItemUpsertRoute.",
+            );
+          }
+        } else {
+          if (currentRouteName != MainTabRoute.name) {
+            appRouter.replaceAll([const MainTabRoute()]);
+            logger.i("MyApp Listener: Redirecting user to MainTabRoute.");
+          }
+        }
+      } else {
+        logger.i(
+          "MyApp Listener: Firebase user is null (logged out or no session). Current route: $currentRouteName",
+        );
+        if (currentRouteName != LoginRoute.name) {
+          appRouter.replaceAll([const LoginRoute()]);
+          logger.i("MyApp Listener: Redirecting to LoginRoute.");
+        }
+      }
+    });
 
     return MaterialApp.router(
       debugShowCheckedModeBanner: false,

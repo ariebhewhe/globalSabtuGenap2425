@@ -2,14 +2,15 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:jamal/data/models/user_model.dart';
 import 'package:jamal/data/repositories/auth_repo.dart';
-import 'package:jamal/features/auth/providers/auth_state.dart';
+import 'package:jamal/features/auth/providers/auth_mutation_state.dart';
 import 'package:jamal/providers.dart';
 
-class AuthNotifier extends StateNotifier<AuthState> {
+class AuthMutationNotifier extends StateNotifier<AuthMutationState> {
   final AuthRepo _authRepo;
   final Ref _ref;
 
-  AuthNotifier(this._authRepo, this._ref) : super(AuthState());
+  AuthMutationNotifier(this._authRepo, this._ref)
+    : super(AuthMutationState()) {}
 
   Future<void> register({
     required String username,
@@ -77,16 +78,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
     result.match(
       (error) =>
           state = state.copyWith(isLoading: false, errorMessage: error.message),
-      (success) => state = AuthState(),
+      (success) => state = AuthMutationState(),
     );
-  }
-
-  Future<void> checkAuthStatus() async {
-    state = state.copyWith(isLoading: true);
-
-    final result = await _authRepo.getCurrentUser();
-
-    state = state.copyWith(userModel: result);
   }
 
   void resetSuccessMessage() {
@@ -98,14 +91,22 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }
 }
 
-final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
-  final AuthRepo authRepo = ref.watch(authRepoProvider);
+final authMutationProvider =
+    StateNotifierProvider<AuthMutationNotifier, AuthMutationState>((ref) {
+      final AuthRepo authRepo = ref.watch(authRepoProvider);
 
-  return AuthNotifier(authRepo, ref);
-});
+      return AuthMutationNotifier(authRepo, ref);
+    });
 
 final authStateProvider = StreamProvider<User?>((ref) {
   final FirebaseAuth authState = ref.watch(firebaseAuthProvider);
 
   return authState.authStateChanges();
+});
+
+final currentUserProvider = FutureProvider<UserModel?>((ref) async {
+  final AuthRepo authRepo = ref.watch(authRepoProvider);
+  final UserModel? userModel = await authRepo.getCurrentUser();
+
+  return userModel;
 });

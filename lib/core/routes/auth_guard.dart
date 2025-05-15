@@ -1,38 +1,57 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:jamal/core/routes/app_router.dart';
-import 'package:jamal/features/auth/auth_provider.dart';
+import 'package:jamal/core/utils/enums.dart';
+import 'package:jamal/core/utils/logger.dart';
+import 'package:jamal/shared/services/current_user_storage.dart';
+
+final authGuardProvider = Provider<AuthGuard>((ref) {
+  return AuthGuard(ref.watch(currentUserStorageServiceProvider));
+});
 
 class AuthGuard extends AutoRouteGuard {
-  final WidgetRef ref;
+  final CurrentUserStorageService _currentUserStorageService;
+  final AppLogger logger = AppLogger();
 
-  AuthGuard(this.ref);
+  AuthGuard(this._currentUserStorageService);
 
   @override
-  void onNavigation(NavigationResolver resolver, StackRouter router) {
-    final authState = ref.read(authStateProvider);
+  Future<void> onNavigation(
+    NavigationResolver resolver,
+    StackRouter router,
+  ) async {
+    final userModel = await _currentUserStorageService.getCurrentUser();
+    final isAuthenticated = userModel != null;
+    final targetRouteName = resolver.route.name;
 
-    authState.when(
-      data: (user) {
-        if (user != null) {
-          // * Pengguna sudah login, lanjutkan navigasi
-          resolver.next();
-        } else {
-          // * Pengguna belum login, redirect ke halaman login
-          router.push(const LoginRoute());
-        }
-      },
-      loading: () {
-        // * Ketika masih memuat status auth, tunda navigasi
-        // * Opsional: bisa menampilkan loading screen sementara
-        Future.delayed(const Duration(milliseconds: 500), () {
-          onNavigation(resolver, router);
-        });
-      },
-      error: (_, __) {
-        // * Ada kesalahan saat memeriksa status auth, redirect ke login
-        router.push(const LoginRoute());
-      },
+    logger.i(
+      "AuthGuard: Checking navigation. Target: '$targetRouteName'. Authenticated: $isAuthenticated. User role: ${userModel?.role}",
     );
+
+    if (isAuthenticated) {
+      if (targetRouteName == LoginRoute.name) {
+        logger.w(
+          "AuthGuard: Authenticated user attempting to navigate to LoginRoute. Listener should have handled this. Redirecting defensively.",
+        );
+        if (userModel.role == Role.admin) {
+          router.replaceAll([const ProfileRoute()]);
+        } else {
+          router.replaceAll([const MainTabRoute()]);
+        }
+        resolver.next(false); // Hentikan navigasi ke LoginRoute
+        return;
+      }
+      resolver.next();
+    } else {
+      if (targetRouteName != LoginRoute.name) {
+        logger.i(
+          "AuthGuard: Unauthenticated user trying to access '$targetRouteName'. Redirecting to LoginRoute.",
+        );
+        router.replaceAll([const LoginRoute()]);
+        resolver.next(false);
+        return;
+      }
+      resolver.next(true);
+    }
   }
 }

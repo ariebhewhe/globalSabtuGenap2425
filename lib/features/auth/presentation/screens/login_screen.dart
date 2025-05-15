@@ -1,8 +1,10 @@
-import 'package:auto_route/annotations.dart';
+import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:jamal/core/routes/app_router.dart';
+import 'package:jamal/core/utils/enums.dart';
 import 'package:jamal/features/auth/auth_provider.dart';
 import 'package:jamal/shared/widgets/my_screen_container.dart';
 
@@ -21,6 +23,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     _formKey.currentState?.reset();
   }
 
+  // Di file login_screen.dart, tambahkan kode navigasi setelah login berhasil
   void _submitForm() async {
     final isValid = _formKey.currentState?.saveAndValidate() ?? false;
 
@@ -28,15 +31,52 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       final formValues = _formKey.currentState!.value;
 
       await ref
-          .read(authProvider.notifier)
+          .read(authMutationProvider.notifier)
           .loginWithEmail(
-            email: formValues['mail'] as String,
+            email: formValues['email'] as String,
             password: formValues['password'] as String,
           );
 
-      if (ref.read(authProvider).successMessage != null) {
+      final authState = ref.read(authMutationProvider);
+
+      if (mounted && authState.userModel != null) {
         _resetForm();
+
+        // if (authState.userModel!.role == Role.admin) {
+        //   AutoRouter.of(context).replaceAll([MenuItemUpsertRoute()]);
+        // } else {
+        //   AutoRouter.of(context).replaceAll([const MainTabRoute()]);
+        // }
+      } else if (mounted && authState.errorMessage != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(authState.errorMessage!),
+            backgroundColor: Colors.red,
+          ),
+        );
+        ref.read(authMutationProvider.notifier).resetErrorMessage();
       }
+    }
+  }
+
+  void _loginWithGoogle() async {
+    await ref.read(authMutationProvider.notifier).loginWithGoogle();
+    final authState = ref.read(authMutationProvider);
+
+    if (mounted && authState.userModel != null) {
+      // if (authState.userModel!.role == Role.admin) {
+      //   AutoRouter.of(context).replaceAll([const ProfileRoute()]);
+      // } else {
+      //   AutoRouter.of(context).replaceAll([const MainTabRoute()]);
+      // }
+    } else if (mounted && authState.errorMessage != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(authState.errorMessage!),
+          backgroundColor: Colors.red,
+        ),
+      );
+      ref.read(authMutationProvider.notifier).resetErrorMessage();
     }
   }
 
@@ -48,29 +88,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         child: SingleChildScrollView(
           child: Consumer(
             builder: (context, ref, child) {
-              final authState = ref.watch(authProvider);
-
-              // * Menampilkan SnackBar ketika successMessage tidak null
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (authState.successMessage != null) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(authState.successMessage!)),
-                  );
-                  // * Reset successMessage setelah menampilkan SnackBar
-                  ref.read(authProvider.notifier).resetSuccessMessage();
-                }
-
-                if (authState.errorMessage != null) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(authState.errorMessage!),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                  // * Reset errorMessage setelah menampilkan SnackBar
-                  ref.read(authProvider.notifier).resetErrorMessage();
-                }
-              });
+              final authState = ref.watch(authMutationProvider);
 
               return FormBuilder(
                 key: _formKey,
@@ -126,12 +144,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
-                        onPressed: () {
-                          if (authState.isLoading) {
-                            return null;
-                          }
-                          ref.read(authProvider.notifier).loginWithGoogle();
-                        },
+                        onPressed:
+                            authState.isLoading ? null : _loginWithGoogle,
                         child: Padding(
                           padding: const EdgeInsets.symmetric(vertical: 12),
                           child:

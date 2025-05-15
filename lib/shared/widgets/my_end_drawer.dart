@@ -3,6 +3,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:jamal/core/routes/app_router.dart';
+import 'package:jamal/features/auth/auth_provider.dart';
 
 class MyEndDrawer extends StatelessWidget {
   const MyEndDrawer({Key? key}) : super(key: key);
@@ -46,9 +47,29 @@ class MyEndDrawer extends StatelessWidget {
                   ),
                 ),
 
-                ElevatedButton(
-                  onPressed: () => context.router.push(const LoginRoute()),
-                  child: const Text('Login'),
+                Consumer(
+                  builder: (context, ref, child) {
+                    final authState = ref.watch(authStateProvider);
+
+                    return authState.when(
+                      loading: () => const CircularProgressIndicator(),
+                      error: (err, stack) => Text('Error: $err'),
+                      data: (user) {
+                        final bool isAuth = user != null;
+
+                        return ElevatedButton(
+                          onPressed: () {
+                            if (isAuth) {
+                              ref.read(authMutationProvider.notifier).logout();
+                            } else {
+                              context.router.pushAll([const LoginRoute()]);
+                            }
+                          },
+                          child: Text(isAuth ? "Logout" : "Login"),
+                        );
+                      },
+                    );
+                  },
                 ),
               ],
             );
