@@ -8,6 +8,7 @@ import 'package:jamal/core/helpers/success_response.dart';
 import 'package:jamal/core/utils/logger.dart';
 import 'package:jamal/data/models/menu_item_model.dart';
 import 'package:jamal/providers.dart';
+import 'package:jamal/shared/models/paginated_result.dart';
 import 'package:jamal/shared/services/cloudinary_service.dart';
 
 final menuItemRepoProvider = Provider.autoDispose<MenuItemRepo>((ref) {
@@ -91,6 +92,63 @@ class MenuItemRepo {
       logger.e(e.toString());
       return Left(
         ErrorResponse(message: 'Failed to get all menu items ${e.toString()}'),
+      );
+    }
+  }
+
+  Future<Either<ErrorResponse, SuccessResponse<PaginatedResult<MenuItemModel>>>>
+  getPaginatedMenuItems({
+    int limit = 10,
+    DocumentSnapshot? startAfter,
+    String orderBy = 'createdAt',
+    bool descending = true,
+  }) async {
+    try {
+      Query query = _firebaseFirestore
+          .collection(_collectionPath)
+          .orderBy(orderBy, descending: descending)
+          .limit(limit);
+
+      // * Tambahkan startAfter jika disediakan (untuk load more)
+      if (startAfter != null) {
+        query = query.startAfterDocument(startAfter);
+      }
+
+      final querySnapshot = await query.get();
+
+      // * Konversi hasil query menjadi model
+      final menuItems =
+          querySnapshot.docs
+              .map(
+                (doc) =>
+                    MenuItemModel.fromMap(doc.data() as Map<String, dynamic>),
+              )
+              .toList();
+
+      // * Cek apakah masih ada data lagi yang bisa dimuat
+      final hasMore = querySnapshot.docs.length >= limit;
+
+      // * Simpan dokumen terakhir untuk digunakan sebagai startAfter pada request berikutnya
+      final lastDocument =
+          querySnapshot.docs.isNotEmpty ? querySnapshot.docs.last : null;
+
+      // * Kembalikan hasil dengan metadata pagination
+      return Right(
+        SuccessResponse(
+          data: PaginatedResult(
+            items: menuItems,
+            hasMore: hasMore,
+            lastDocument: lastDocument,
+          ),
+          message: 'Menu items retrieved successfully',
+        ),
+      );
+    } catch (e) {
+      logger.e(e.toString());
+      return Left(
+        ErrorResponse(
+          message: 'Failed to get paginated menu items: ${e.toString()}',
+        ),
       );
     }
   }

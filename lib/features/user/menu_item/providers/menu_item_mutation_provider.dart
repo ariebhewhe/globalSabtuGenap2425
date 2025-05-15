@@ -4,7 +4,6 @@ import 'package:jamal/data/repositories/menu_item_repo.dart';
 import 'package:jamal/features/user/menu_item/providers/menu_item_mutation_state.dart';
 import 'package:jamal/features/user/menu_item/providers/menu_item_provider.dart';
 import 'package:jamal/features/user/menu_item/providers/menu_items_provider.dart';
-import 'package:jamal/providers.dart';
 
 class MenuItemMutationNotifier extends StateNotifier<MenuItemMutationState> {
   final MenuItemRepo _menuItemRepo;
@@ -28,7 +27,7 @@ class MenuItemMutationNotifier extends StateNotifier<MenuItemMutationState> {
         );
 
         // * Refresh menu items list
-        _ref.read(menuItemsProvider.notifier).getAllMenuItems();
+        _ref.read(menuItemsProvider.notifier).refreshMenuItems();
       },
     );
   }
@@ -48,7 +47,7 @@ class MenuItemMutationNotifier extends StateNotifier<MenuItemMutationState> {
         );
 
         // * Refresh menu items dan menu items
-        _ref.read(menuItemsProvider.notifier).getAllMenuItems();
+        _ref.read(menuItemsProvider.notifier).refreshMenuItems();
 
         final activeId = _ref.read(activeMenuItemIdProvider);
         if (activeId == id) {
@@ -73,7 +72,7 @@ class MenuItemMutationNotifier extends StateNotifier<MenuItemMutationState> {
         );
 
         // * Refresh menu items
-        _ref.read(menuItemsProvider.notifier).getAllMenuItems();
+        _ref.read(menuItemsProvider.notifier).refreshMenuItems();
 
         // * Kalo delete clear active item id
         final activeId = _ref.read(activeMenuItemIdProvider);

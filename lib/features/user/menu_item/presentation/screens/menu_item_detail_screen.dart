@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:jamal/data/models/menu_item_model.dart';
 import 'package:jamal/shared/widgets/my_app_bar.dart';
+import 'package:jamal/shared/widgets/my_screen_container.dart';
 
 @RoutePage()
 class MenuItemDetailScreen extends StatelessWidget {
@@ -15,14 +16,13 @@ class MenuItemDetailScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: const MyAppBar(),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (menuItem.imageUrl != null)
-              Center(
-                child: ClipRRect(
+      body: MyScreenContainer(
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (menuItem.imageUrl != null)
+                ClipRRect(
                   borderRadius: BorderRadius.circular(8.0),
                   child: CachedNetworkImage(
                     imageUrl: menuItem.imageUrl!,
@@ -36,131 +36,167 @@ class MenuItemDetailScreen extends StatelessWidget {
                         (context, url, error) =>
                             const Icon(Icons.error, size: 50),
                   ),
+                )
+              else
+                Container(
+                  width: double.infinity,
+                  height: 250,
+                  color: Colors.grey[300],
+                  child: const Center(child: Text('No Image Available')),
                 ),
-              )
-            else
-              Container(
-                width: double.infinity,
-                height: 250,
-                color: Colors.grey[300],
-                child: const Center(child: Text('No Image Available')),
+              const SizedBox(height: 16.0),
+
+              Text(
+                menuItem.name,
+                style: const TextStyle(
+                  fontSize: 24.0,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
+              const SizedBox(height: 8.0),
 
-            const SizedBox(height: 16.0),
-
-            // --- Name ---
-            Text(
-              menuItem.name,
-              style: const TextStyle(
-                fontSize: 24.0,
-                fontWeight: FontWeight.bold,
+              Text(
+                'Harga: Rp ${menuItem.price.toStringAsFixed(0)}',
+                style: TextStyle(
+                  fontSize: 20.0,
+                  color: Theme.of(context).primaryColor,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
-            ),
-            const SizedBox(height: 8.0),
+              const SizedBox(height: 16.0),
 
-            // --- Price ---
-            Text(
-              'Harga: Rp ${menuItem.price.toStringAsFixed(0)}',
-              style: TextStyle(
-                fontSize: 20.0,
-                color: Theme.of(context).primaryColor,
-                fontWeight: FontWeight.w600,
+              const Text(
+                'Deskripsi:',
+                style: TextStyle(fontSize: 18.0, fontWeight: FontWeight.bold),
               ),
-            ),
-            const SizedBox(height: 16.0),
+              const SizedBox(height: 4.0),
+              Text(
+                menuItem.description,
+                style: const TextStyle(fontSize: 16.0),
+              ),
+              const SizedBox(height: 16.0),
 
-            // --- Description ---
-            const Text(
-              'Deskripsi:',
-              style: TextStyle(fontSize: 18.0, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 4.0),
-            Text(menuItem.description, style: const TextStyle(fontSize: 16.0)),
-            const SizedBox(height: 16.0),
+              Text(
+                'Kategori: ${menuItem.category}',
+                style: const TextStyle(fontSize: 16.0),
+              ),
+              const SizedBox(height: 8.0),
 
-            // --- Category ---
-            Text(
-              'Kategori: ${menuItem.category}',
-              style: const TextStyle(fontSize: 16.0),
-            ),
-            const SizedBox(height: 8.0),
-
-            // --- Availability ---
-            Row(
-              children: [
-                Icon(
-                  menuItem.isAvailable
-                      ? Icons.check_circle_outline
-                      : Icons.cancel_outlined,
-                  color: menuItem.isAvailable ? Colors.green : Colors.red,
-                  size: 20,
-                ),
-                const SizedBox(width: 8.0),
-                Text(
-                  menuItem.isAvailable ? 'Tersedia' : 'Tidak Tersedia',
-                  style: TextStyle(
-                    fontSize: 16.0,
-                    color: menuItem.isAvailable ? Colors.green : Colors.red,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8.0),
-
-            // --- Vegetarian ---
-            Row(
-              children: [
-                Icon(
-                  menuItem.isVegetarian ? Icons.local_florist : Icons.fastfood,
-                  color: menuItem.isVegetarian ? Colors.green : Colors.brown,
-                  size: 20,
-                ),
-                const SizedBox(width: 8.0),
-                Text(
-                  menuItem.isVegetarian ? 'Vegetarian' : 'Mengandung Daging',
-                  style: const TextStyle(fontSize: 16.0),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8.0),
-
-            // --- Spice Level ---
-            if (menuItem.spiceLevel > 0)
               Row(
                 children: [
-                  const Text(
-                    'Tingkat Pedas: ',
-                    style: TextStyle(fontSize: 16.0),
+                  Icon(
+                    menuItem.isAvailable
+                        ? Icons.check_circle_outline
+                        : Icons.cancel_outlined,
+                    color: menuItem.isAvailable ? Colors.green : Colors.red,
+                    size: 20,
                   ),
-                  Row(
-                    children: List.generate(
-                      menuItem.spiceLevel,
-                      (i) => const Icon(
-                        Icons.local_fire_department,
-                        size: 20,
-                        color: Colors.red,
-                      ),
+                  const SizedBox(width: 8.0),
+                  Text(
+                    menuItem.isAvailable ? 'Tersedia' : 'Tidak Tersedia',
+                    style: TextStyle(
+                      fontSize: 16.0,
+                      color: menuItem.isAvailable ? Colors.green : Colors.red,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
+                ],
+              ),
+              const SizedBox(height: 8.0),
+
+              Row(
+                children: [
+                  Icon(
+                    menuItem.isVegetarian
+                        ? Icons.local_florist
+                        : Icons.fastfood,
+                    color: menuItem.isVegetarian ? Colors.green : Colors.brown,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 8.0),
                   Text(
-                    ' (${menuItem.spiceLevel}/5)',
+                    menuItem.isVegetarian ? 'Vegetarian' : 'Mengandung Daging',
                     style: const TextStyle(fontSize: 16.0),
                   ),
                 ],
               ),
+              const SizedBox(height: 8.0),
 
-            // --- Created/Updated Dates (Optional but good for detail) ---
-            const SizedBox(height: 16.0),
-            Text(
-              'Ditambahkan: ${menuItem.createdAt.toLocal().toString().split('.')[0]}', // Format date nicely
-              style: const TextStyle(fontSize: 12.0, color: Colors.grey),
-            ),
-            Text(
-              'Terakhir Diupdate: ${menuItem.updatedAt.toLocal().toString().split('.')[0]}', // Format date nicely
-              style: const TextStyle(fontSize: 12.0, color: Colors.grey),
+              if (menuItem.spiceLevel > 0)
+                Row(
+                  children: [
+                    const Text(
+                      'Tingkat Pedas: ',
+                      style: TextStyle(fontSize: 16.0),
+                    ),
+                    Row(
+                      children: List.generate(
+                        menuItem.spiceLevel,
+                        (i) => const Icon(
+                          Icons.local_fire_department,
+                          size: 20,
+                          color: Colors.red,
+                        ),
+                      ),
+                    ),
+                    Text(
+                      ' (${menuItem.spiceLevel}/5)',
+                      style: const TextStyle(fontSize: 16.0),
+                    ),
+                  ],
+                ),
+
+              const SizedBox(height: 16.0),
+              Text(
+                'Ditambahkan: ${menuItem.createdAt.toLocal().toString().split('.')[0]}',
+                style: const TextStyle(fontSize: 12.0, color: Colors.grey),
+              ),
+              Text(
+                'Diperbarui: ${menuItem.updatedAt.toLocal().toString().split('.')[0]}',
+                style: const TextStyle(fontSize: 12.0, color: Colors.grey),
+              ),
+
+              // Tambahkan padding di bawah untuk memberi ruang saat di-scroll
+              const SizedBox(height: 80),
+            ],
+          ),
+        ),
+      ),
+
+      // Opsi 1: Menggunakan bottomNavigationBar (lebih direkomendasikan)
+      bottomNavigationBar: Container(
+        padding: const EdgeInsets.all(16.0),
+        decoration: BoxDecoration(
+          color: Theme.of(context).scaffoldBackgroundColor,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 4,
+              offset: const Offset(0, -2),
             ),
           ],
+        ),
+        child: SafeArea(
+          child: SizedBox(
+            width: double.infinity,
+            height: 50,
+            child: ElevatedButton(
+              onPressed: () {
+                // Tambahkan logika untuk pemesanan di sini
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Theme.of(context).primaryColor,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8.0),
+                ),
+              ),
+              child: const Text(
+                'Order',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ),
         ),
       ),
     );
