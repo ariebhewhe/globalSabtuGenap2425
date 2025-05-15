@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
@@ -6,30 +8,56 @@ import 'package:jamal/core/helpers/success_response.dart';
 import 'package:jamal/core/utils/logger.dart';
 import 'package:jamal/data/models/menu_item_model.dart';
 import 'package:jamal/providers.dart';
+import 'package:jamal/shared/services/cloudinary_service.dart';
 
 final menuItemRepoProvider = Provider.autoDispose<MenuItemRepo>((ref) {
   final firestore = ref.watch(firebaseFirestoreProvider);
-  return MenuItemRepo(firestore);
+  final cloudinary = ref.watch(cloudinaryProvider);
+
+  return MenuItemRepo(firestore, cloudinary);
 });
 
 class MenuItemRepo {
   final FirebaseFirestore _firebaseFirestore;
+  final CloudinaryService _cloudinaryService;
+
   final String _collectionPath = 'menuItems';
+  final String _cloudinaryFolder = 'menu_items';
   final AppLogger logger = AppLogger();
 
-  MenuItemRepo(this._firebaseFirestore);
+  MenuItemRepo(this._firebaseFirestore, this._cloudinaryService);
 
   Future<Either<ErrorResponse, SuccessResponse<MenuItemModel>>> addMenuItem(
-    MenuItemModel newMenuItem,
-  ) async {
+    MenuItemModel newMenuItem, {
+    File? imageFile,
+  }) async {
     try {
       final menuItemsCollection = _firebaseFirestore.collection(
         _collectionPath,
       );
       final docRef = menuItemsCollection.doc();
 
+      String? imageUrl = newMenuItem.imageUrl;
+
+      if (imageFile != null) {
+        try {
+          final uploadResponse = await _cloudinaryService.uploadImage(
+            imageFile: imageFile,
+            folder: _cloudinaryFolder,
+          );
+
+          imageUrl = uploadResponse.secureUrl;
+        } catch (e) {
+          logger.e('Failed to upload image: ${e.toString()}');
+          return Left(
+            ErrorResponse(message: 'Failed to upload image: ${e.toString()}'),
+          );
+        }
+      }
+
       final menuItemWithId = newMenuItem.copyWith(
         id: docRef.id,
+        imageUrl: imageUrl,
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
       );
@@ -54,12 +82,13 @@ class MenuItemRepo {
           await _firebaseFirestore.collection(_collectionPath).get();
 
       final menuItems =
-          await querySnapshot.docs
+          querySnapshot.docs
               .map((doc) => MenuItemModel.fromMap(doc.data()))
               .toList();
 
       return Right(SuccessResponse(data: menuItems));
     } catch (e) {
+      logger.e(e.toString());
       return Left(
         ErrorResponse(message: 'Failed to get all menu items ${e.toString()}'),
       );
@@ -81,16 +110,76 @@ class MenuItemRepo {
 
       return Right(SuccessResponse(data: menuItem));
     } catch (e) {
+      logger.e(e.toString());
       return Left(ErrorResponse(message: "Failed to get menu item"));
     }
   }
 
   Future<Either<ErrorResponse, SuccessResponse<MenuItemModel>>> updateMenuItem(
     String id,
-    MenuItemModel updatedMenuItem,
-  ) async {
+    MenuItemModel updatedMenuItem, {
+    File? imageFile,
+    bool deleteExistingImage = false,
+  }) async {
     try {
+      final menuItemResult = await getMenuItemById(id);
+      if (menuItemResult.isLeft()) {
+        return Left(ErrorResponse(message: 'Menu item not found'));
+      }
+
+      final existingMenuItem = menuItemResult.getRight().toNullable()!.data;
+      String? imageUrl = updatedMenuItem.imageUrl ?? existingMenuItem.imageUrl;
+
+      // * Hapus gambar yang ada di Cloudinary jika diminta
+      if (deleteExistingImage && existingMenuItem.imageUrl != null) {
+        try {
+          // * Ekstrak public ID dari URL gambar yang ada
+          final existingImageUrl = existingMenuItem.imageUrl!;
+          final uri = Uri.parse(existingImageUrl);
+          final pathSegments = uri.pathSegments;
+
+          // * Format: https:// *res.cloudinary.com/{cloud_name}/image/upload/{transformations}/{public_id}.{format}
+          // * Cari indeks "upload" dalam path
+          final uploadIndex = pathSegments.indexOf('upload');
+          if (uploadIndex != -1 && uploadIndex < pathSegments.length - 1) {
+            // * Ambil semua segment setelah "upload", kecuali ekstensi file terakhir
+            final segments = pathSegments.sublist(uploadIndex + 1);
+
+            // * Gabungkan segments untuk mendapatkan public ID dengan folder
+            String fullPath = segments.join('/');
+
+            // * Hilangkan ekstensi file (misal .jpg, .png)
+            final lastDotIndex = fullPath.lastIndexOf('.');
+            if (lastDotIndex != -1) {
+              fullPath = fullPath.substring(0, lastDotIndex);
+            }
+
+            await _cloudinaryService.deleteImage(fullPath);
+            imageUrl = null;
+          }
+        } catch (e) {
+          logger.e('Failed to delete existing image: ${e.toString()}');
+        }
+      }
+
+      if (imageFile != null) {
+        try {
+          final uploadResponse = await _cloudinaryService.uploadImage(
+            imageFile: imageFile,
+            folder: _cloudinaryFolder,
+          );
+
+          imageUrl = uploadResponse.secureUrl;
+        } catch (e) {
+          logger.e('Failed to upload image: ${e.toString()}');
+          return Left(
+            ErrorResponse(message: 'Failed to upload image: ${e.toString()}'),
+          );
+        }
+      }
+
       final menuItemWithUpdatedTimestamp = updatedMenuItem.copyWith(
+        imageUrl: imageUrl,
         updatedAt: DateTime.now(),
       );
 
@@ -106,6 +195,7 @@ class MenuItemRepo {
         ),
       );
     } catch (e) {
+      logger.e(e.toString());
       return Left(
         ErrorResponse(message: 'Failed to update menu ${e.toString()}'),
       );
@@ -113,13 +203,52 @@ class MenuItemRepo {
   }
 
   Future<Either<ErrorResponse, SuccessResponse<String>>> deleteMenuItem(
-    String id,
-  ) async {
+    String id, {
+    bool deleteImage = true,
+  }) async {
     try {
+      final menuItemResult = await getMenuItemById(id);
+      if (menuItemResult.isLeft()) {
+        return Left(ErrorResponse(message: 'Menu item not found'));
+      }
+
+      final menuItem = menuItemResult.getRight().toNullable()!.data;
+
+      // * Hapus gambar dari Cloudinary jika ada dan diminta
+      if (deleteImage && menuItem.imageUrl != null) {
+        try {
+          // * Ekstrak public ID dari URL gambar
+          final imageUrl = menuItem.imageUrl!;
+          final uri = Uri.parse(imageUrl);
+          final pathSegments = uri.pathSegments;
+
+          // * Cari indeks "upload" dalam path
+          final uploadIndex = pathSegments.indexOf('upload');
+          if (uploadIndex != -1 && uploadIndex < pathSegments.length - 1) {
+            // * Ambil semua segment setelah "upload", kecuali ekstensi file terakhir
+            final segments = pathSegments.sublist(uploadIndex + 1);
+
+            // * Gabungkan segments untuk mendapatkan public ID dengan folder
+            String fullPath = segments.join('/');
+
+            // * Hilangkan ekstensi file (misal .jpg, .png)
+            final lastDotIndex = fullPath.lastIndexOf('.');
+            if (lastDotIndex != -1) {
+              fullPath = fullPath.substring(0, lastDotIndex);
+            }
+
+            await _cloudinaryService.deleteImage(fullPath);
+          }
+        } catch (e) {
+          logger.e('Failed to delete image: ${e.toString()}');
+        }
+      }
+
       await _firebaseFirestore.collection(_collectionPath).doc(id).delete();
 
       return Right(SuccessResponse(data: id, message: "Menu item deleted"));
     } catch (e) {
+      logger.e(e.toString());
       return Left(
         ErrorResponse(message: 'Failed to delete menu ${e.toString()}'),
       );

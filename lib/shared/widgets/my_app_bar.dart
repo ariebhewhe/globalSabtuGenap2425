@@ -14,7 +14,7 @@ class MyAppBar extends StatelessWidget implements PreferredSizeWidget {
     super.key,
     this.customTitle,
     this.actions,
-    this.automaticLeading = true,
+    this.automaticLeading = false,
     this.leading,
     this.backgroundColor,
     this.elevation,
