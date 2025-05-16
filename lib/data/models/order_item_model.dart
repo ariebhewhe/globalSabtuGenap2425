@@ -1,9 +1,9 @@
 import 'dart:convert';
 
+import 'package:jamal/core/abstractions/base_model.dart';
 import 'package:jamal/data/models/menu_item_model.dart';
 
-class OrderItemModel {
-  final String id;
+class OrderItemModel extends BaseModel {
   final int orderId;
   final int itemId;
   final int quantity;
@@ -11,11 +11,9 @@ class OrderItemModel {
   final double subtotal;
   final String? specialRequests;
   final MenuItemModel? menuItem; // * Populated kalo perlu
-  final DateTime createdAt;
-  final DateTime updatedAt;
 
   OrderItemModel({
-    required this.id,
+    required String id,
     required this.orderId,
     required this.itemId,
     required this.quantity,
@@ -23,9 +21,9 @@ class OrderItemModel {
     required this.subtotal,
     this.specialRequests,
     this.menuItem,
-    required this.createdAt,
-    required this.updatedAt,
-  });
+    required DateTime createdAt,
+    required DateTime updatedAt,
+  }) : super(id: id, createdAt: createdAt, updatedAt: updatedAt);
 
   OrderItemModel copyWith({
     String? id,
@@ -53,6 +51,7 @@ class OrderItemModel {
     );
   }
 
+  @override
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
       'id': id,
@@ -68,6 +67,7 @@ class OrderItemModel {
     };
   }
 
+  @override
   factory OrderItemModel.fromMap(Map<String, dynamic> map) {
     return OrderItemModel(
       id: map['id'] as String,
@@ -89,8 +89,10 @@ class OrderItemModel {
     );
   }
 
+  @override
   String toJson() => json.encode(toMap());
 
+  @override
   factory OrderItemModel.fromJson(String source) =>
       OrderItemModel.fromMap(json.decode(source) as Map<String, dynamic>);
 

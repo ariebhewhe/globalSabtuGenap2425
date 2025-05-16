@@ -1,10 +1,10 @@
 import 'dart:convert';
 
+import 'package:jamal/core/abstractions/base_model.dart';
 import 'package:jamal/core/utils/enums.dart';
 import 'package:jamal/data/models/restaurant_table_model.dart';
 
-class TableReservationModel {
-  final String id;
+class TableReservationModel extends BaseModel {
   final int tableId;
   final int orderId;
   final DateTime reservationTime;
@@ -12,20 +12,17 @@ class TableReservationModel {
   final ReservationStatus status;
   final RestaurantTableModel? table; // * Populated kalo perlu
 
-  final DateTime createdAt;
-  final DateTime updatedAt;
-
   TableReservationModel({
-    required this.id,
+    required String id,
     required this.tableId,
     required this.orderId,
     required this.reservationTime,
     required this.duration,
     required this.status,
     this.table,
-    required this.createdAt,
-    required this.updatedAt,
-  });
+    required DateTime createdAt,
+    required DateTime updatedAt,
+  }) : super(id: id, createdAt: createdAt, updatedAt: updatedAt);
 
   TableReservationModel copyWith({
     String? id,
@@ -51,6 +48,7 @@ class TableReservationModel {
     );
   }
 
+  @override
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
       'id': id,
@@ -65,6 +63,7 @@ class TableReservationModel {
     };
   }
 
+  @override
   factory TableReservationModel.fromMap(Map<String, dynamic> map) {
     return TableReservationModel(
       id: map['id'] as String,
@@ -86,8 +85,10 @@ class TableReservationModel {
     );
   }
 
+  @override
   String toJson() => json.encode(toMap());
 
+  @override
   factory TableReservationModel.fromJson(String source) =>
       TableReservationModel.fromMap(
         json.decode(source) as Map<String, dynamic>,

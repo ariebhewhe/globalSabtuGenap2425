@@ -1,6 +1,8 @@
 import 'package:auto_route/annotations.dart';
+import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:jamal/core/routes/app_router.dart';
 import 'package:jamal/data/models/menu_item_model.dart';
 import 'package:jamal/shared/widgets/my_app_bar.dart';
 import 'package:jamal/shared/widgets/my_screen_container.dart';
@@ -166,31 +168,13 @@ class MenuItemDetailScreen extends StatelessWidget {
       // Opsi 1: Menggunakan bottomNavigationBar (lebih direkomendasikan)
       bottomNavigationBar: Container(
         padding: const EdgeInsets.all(16.0),
-        decoration: BoxDecoration(
-          color: Theme.of(context).scaffoldBackgroundColor,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 4,
-              offset: const Offset(0, -2),
-            ),
-          ],
-        ),
+
         child: SafeArea(
           child: SizedBox(
             width: double.infinity,
             height: 50,
             child: ElevatedButton(
-              onPressed: () {
-                // Tambahkan logika untuk pemesanan di sini
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Theme.of(context).primaryColor,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8.0),
-                ),
-              ),
+              onPressed: () => context.pushRoute(const CartRoute()),
               child: const Text(
                 'Order',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),

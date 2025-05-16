@@ -1,11 +1,11 @@
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
+import 'package:jamal/core/abstractions/base_model.dart';
 import 'package:jamal/core/utils/enums.dart';
 import 'package:jamal/data/models/order_item_model.dart';
 
-class OrderModel {
-  final String id;
+class OrderModel extends BaseModel {
   final int userId;
   final int? tableId;
   final OrderType orderType;
@@ -17,11 +17,9 @@ class OrderModel {
   final DateTime? estimatedReadyTime;
   final String? specialInstructions;
   final List<OrderItemModel>? orderItems;
-  final DateTime createdAt;
-  final DateTime updatedAt;
 
   OrderModel({
-    required this.id,
+    required String id,
     required this.userId,
     this.tableId,
     required this.orderType,
@@ -33,9 +31,9 @@ class OrderModel {
     this.estimatedReadyTime,
     this.specialInstructions,
     this.orderItems,
-    required this.createdAt,
-    required this.updatedAt,
-  });
+    required DateTime createdAt,
+    required DateTime updatedAt,
+  }) : super(id: id, createdAt: createdAt, updatedAt: updatedAt);
 
   OrderModel copyWith({
     String? id,
@@ -71,6 +69,7 @@ class OrderModel {
     );
   }
 
+  @override
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
       'id': id,
@@ -90,6 +89,7 @@ class OrderModel {
     };
   }
 
+  @override
   factory OrderModel.fromMap(Map<String, dynamic> map) {
     return OrderModel(
       id: map['id'] as String,
@@ -129,8 +129,10 @@ class OrderModel {
     );
   }
 
+  @override
   String toJson() => json.encode(toMap());
 
+  @override
   factory OrderModel.fromJson(String source) =>
       OrderModel.fromMap(json.decode(source) as Map<String, dynamic>);
 

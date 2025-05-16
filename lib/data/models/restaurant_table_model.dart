@@ -1,25 +1,23 @@
 import 'dart:convert';
 
+import 'package:jamal/core/abstractions/base_model.dart';
 import 'package:jamal/core/utils/enums.dart';
 
-class RestaurantTableModel {
-  final String id;
+class RestaurantTableModel extends BaseModel {
   final String tableNumber;
   final int capacity;
   final bool isAvailable;
   final Location location;
-  final DateTime createdAt;
-  final DateTime updatedAt;
 
   RestaurantTableModel({
-    required this.id,
+    required String id,
     required this.tableNumber,
     required this.capacity,
     required this.isAvailable,
     required this.location,
-    required this.createdAt,
-    required this.updatedAt,
-  });
+    required DateTime createdAt,
+    required DateTime updatedAt,
+  }) : super(id: id, createdAt: createdAt, updatedAt: updatedAt);
 
   RestaurantTableModel copyWith({
     String? id,
@@ -41,6 +39,7 @@ class RestaurantTableModel {
     );
   }
 
+  @override
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
       'id': id,
@@ -53,6 +52,7 @@ class RestaurantTableModel {
     };
   }
 
+  @override
   factory RestaurantTableModel.fromMap(Map<String, dynamic> map) {
     return RestaurantTableModel(
       id: map['id'] as String,
@@ -65,8 +65,10 @@ class RestaurantTableModel {
     );
   }
 
+  @override
   String toJson() => json.encode(toMap());
 
+  @override
   factory RestaurantTableModel.fromJson(String source) =>
       RestaurantTableModel.fromMap(json.decode(source) as Map<String, dynamic>);
 

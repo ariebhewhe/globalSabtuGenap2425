@@ -1,7 +1,8 @@
 import 'dart:convert';
 
-class MenuItemModel {
-  final String id;
+import 'package:jamal/core/abstractions/base_model.dart';
+
+class MenuItemModel extends BaseModel {
   final String name;
   final String description;
   final double price;
@@ -10,11 +11,9 @@ class MenuItemModel {
   final bool isAvailable;
   final bool isVegetarian;
   final int spiceLevel; // 0-5
-  final DateTime createdAt;
-  final DateTime updatedAt;
 
   MenuItemModel({
-    required this.id,
+    required String id,
     required this.name,
     required this.description,
     required this.price,
@@ -23,9 +22,9 @@ class MenuItemModel {
     required this.isAvailable,
     required this.isVegetarian,
     required this.spiceLevel,
-    required this.createdAt,
-    required this.updatedAt,
-  });
+    required DateTime createdAt,
+    required DateTime updatedAt,
+  }) : super(id: id, createdAt: createdAt, updatedAt: updatedAt);
 
   MenuItemModel copyWith({
     String? id,
@@ -55,6 +54,7 @@ class MenuItemModel {
     );
   }
 
+  @override
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
       'id': id,
@@ -71,6 +71,7 @@ class MenuItemModel {
     };
   }
 
+  @override
   factory MenuItemModel.fromMap(Map<String, dynamic> map) {
     return MenuItemModel(
       id: map['id'] as String,
@@ -87,8 +88,10 @@ class MenuItemModel {
     );
   }
 
+  @override
   String toJson() => json.encode(toMap());
 
+  @override
   factory MenuItemModel.fromJson(String source) =>
       MenuItemModel.fromMap(json.decode(source) as Map<String, dynamic>);
 

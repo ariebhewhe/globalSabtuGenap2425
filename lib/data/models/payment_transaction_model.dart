@@ -1,29 +1,27 @@
 import 'dart:convert';
 
+import 'package:jamal/core/abstractions/base_model.dart';
 import 'package:jamal/core/utils/enums.dart';
 
-class PaymentTransactionModel {
-  final String id;
+class PaymentTransactionModel extends BaseModel {
   final int orderId;
   final double amount;
   final PaymentMethod paymentMethod;
   final DateTime transactionDate;
   final TransactionStatus status;
   final String? paymentDetails;
-  final DateTime createdAt;
-  final DateTime updatedAt;
 
   PaymentTransactionModel({
-    required this.id,
+    required String id,
     required this.orderId,
     required this.amount,
     required this.paymentMethod,
     required this.transactionDate,
     required this.status,
     this.paymentDetails,
-    required this.createdAt,
-    required this.updatedAt,
-  });
+    required DateTime createdAt,
+    required DateTime updatedAt,
+  }) : super(id: id, createdAt: createdAt, updatedAt: updatedAt);
 
   PaymentTransactionModel copyWith({
     String? id,
@@ -49,6 +47,7 @@ class PaymentTransactionModel {
     );
   }
 
+  @override
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
       'id': id,
@@ -63,6 +62,7 @@ class PaymentTransactionModel {
     };
   }
 
+  @override
   factory PaymentTransactionModel.fromMap(Map<String, dynamic> map) {
     return PaymentTransactionModel(
       id: map['id'] as String,
@@ -84,8 +84,10 @@ class PaymentTransactionModel {
     );
   }
 
+  @override
   String toJson() => json.encode(toMap());
 
+  @override
   factory PaymentTransactionModel.fromJson(String source) =>
       PaymentTransactionModel.fromMap(
         json.decode(source) as Map<String, dynamic>,

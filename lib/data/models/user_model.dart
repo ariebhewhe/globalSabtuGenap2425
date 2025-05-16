@@ -1,9 +1,9 @@
 import 'dart:convert';
 
+import 'package:jamal/core/abstractions/base_model.dart';
 import 'package:jamal/core/utils/enums.dart';
 
-class UserModel {
-  final String id;
+class UserModel extends BaseModel {
   final String username;
   final String email;
   final String? password;
@@ -11,11 +11,9 @@ class UserModel {
   final String? phoneNumber;
   final String? address;
   final String? profilePicture;
-  final DateTime createdAt;
-  final DateTime updatedAt;
 
   UserModel({
-    required this.id,
+    required String id,
     required this.username,
     required this.email,
     this.password,
@@ -23,10 +21,11 @@ class UserModel {
     this.phoneNumber,
     this.address,
     this.profilePicture,
-    required this.createdAt,
-    required this.updatedAt,
-  });
+    required DateTime createdAt,
+    required DateTime updatedAt,
+  }) : super(id: id, createdAt: createdAt, updatedAt: updatedAt);
 
+  // @override
   UserModel copyWith({
     String? id,
     String? username,
@@ -53,6 +52,7 @@ class UserModel {
     );
   }
 
+  @override
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
       'id': id,
@@ -86,8 +86,6 @@ class UserModel {
       updatedAt: DateTime.fromMillisecondsSinceEpoch(map['updatedAt'] as int),
     );
   }
-
-  String toJson() => json.encode(toMap());
 
   factory UserModel.fromJson(String source) =>
       UserModel.fromMap(json.decode(source) as Map<String, dynamic>);
