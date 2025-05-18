@@ -5,8 +5,8 @@ import 'package:jamal/data/models/cart_item_model.dart';
 import 'package:jamal/features/cart/presentation/widgets/cart_item_tile.dart';
 import 'package:jamal/features/cart/providers/cart_items_provider.dart';
 import 'package:jamal/features/cart/providers/selected_cart_items_provider.dart';
-import 'package:jamal/shared/widgets/my_app_bar.dart';
-import 'package:jamal/shared/widgets/my_end_drawer.dart';
+import 'package:jamal/shared/widgets/user_app_bar.dart';
+import 'package:jamal/shared/widgets/user_end_drawer.dart';
 import 'package:jamal/shared/widgets/my_screen_container.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
@@ -54,8 +54,8 @@ class _CartScreenState extends ConsumerState<CartScreen> {
     final selectedCartItems = ref.watch(selectedCartItemsProvider);
 
     return Scaffold(
-      appBar: const MyAppBar(),
-      endDrawer: const MyEndDrawer(),
+      appBar: const UserAppBar(),
+      endDrawer: const UserEndDrawer(),
       body: MyScreenContainer(
         child: Consumer(
           builder: (context, ref, child) {

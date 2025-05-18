@@ -11,6 +11,54 @@
 part of 'app_router.dart';
 
 /// generated route for
+/// [AdminHomeScreen]
+class AdminHomeRoute extends PageRouteInfo<void> {
+  const AdminHomeRoute({List<PageRouteInfo>? children})
+    : super(AdminHomeRoute.name, initialChildren: children);
+
+  static const String name = 'AdminHomeRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      return const AdminHomeScreen();
+    },
+  );
+}
+
+/// generated route for
+/// [AdminProfileScreen]
+class AdminProfileRoute extends PageRouteInfo<void> {
+  const AdminProfileRoute({List<PageRouteInfo>? children})
+    : super(AdminProfileRoute.name, initialChildren: children);
+
+  static const String name = 'AdminProfileRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      return const AdminProfileScreen();
+    },
+  );
+}
+
+/// generated route for
+/// [AdminTabScreen]
+class AdminTabRoute extends PageRouteInfo<void> {
+  const AdminTabRoute({List<PageRouteInfo>? children})
+    : super(AdminTabRoute.name, initialChildren: children);
+
+  static const String name = 'AdminTabRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      return const AdminTabScreen();
+    },
+  );
+}
+
+/// generated route for
 /// [CartScreen]
 class CartRoute extends PageRouteInfo<void> {
   const CartRoute({List<PageRouteInfo>? children})
@@ -22,6 +70,22 @@ class CartRoute extends PageRouteInfo<void> {
     name,
     builder: (data) {
       return const CartScreen();
+    },
+  );
+}
+
+/// generated route for
+/// [CreateOrderScreen]
+class CreateOrderRoute extends PageRouteInfo<void> {
+  const CreateOrderRoute({List<PageRouteInfo>? children})
+    : super(CreateOrderRoute.name, initialChildren: children);
+
+  static const String name = 'CreateOrderRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      return const CreateOrderScreen();
     },
   );
 }
@@ -54,22 +118,6 @@ class LoginRoute extends PageRouteInfo<void> {
     name,
     builder: (data) {
       return const LoginScreen();
-    },
-  );
-}
-
-/// generated route for
-/// [MainTabScreen]
-class MainTabRoute extends PageRouteInfo<void> {
-  const MainTabRoute({List<PageRouteInfo>? children})
-    : super(MainTabRoute.name, initialChildren: children);
-
-  static const String name = 'MainTabRoute';
-
-  static PageInfo page = PageInfo(
-    name,
-    builder: (data) {
-      return const MainTabScreen();
     },
   );
 }
@@ -213,6 +261,22 @@ class SplashRoute extends PageRouteInfo<void> {
     name,
     builder: (data) {
       return const SplashScreen();
+    },
+  );
+}
+
+/// generated route for
+/// [UserTabScreen]
+class UserTabRoute extends PageRouteInfo<void> {
+  const UserTabRoute({List<PageRouteInfo>? children})
+    : super(UserTabRoute.name, initialChildren: children);
+
+  static const String name = 'UserTabRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      return const UserTabScreen();
     },
   );
 }

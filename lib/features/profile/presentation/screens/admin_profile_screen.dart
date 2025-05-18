@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:jamal/shared/widgets/user_app_bar.dart';
 
 @RoutePage()
-class ProfileScreen extends StatelessWidget {
-  const ProfileScreen({super.key});
+class AdminProfileScreen extends StatelessWidget {
+  const AdminProfileScreen({super.key});
 
   @override
   Widget build(BuildContext context) {

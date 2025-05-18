@@ -5,8 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:jamal/core/routes/app_router.dart';
 import 'package:jamal/features/auth/auth_provider.dart';
 
-class MyEndDrawer extends StatelessWidget {
-  const MyEndDrawer({Key? key}) : super(key: key);
+class UserEndDrawer extends StatelessWidget {
+  const UserEndDrawer({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {

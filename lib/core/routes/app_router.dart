@@ -6,14 +6,18 @@ import 'package:jamal/core/routes/duplicate_guard.dart';
 import 'package:jamal/data/models/menu_item_model.dart';
 import 'package:jamal/features/auth/presentation/screens/login_screen.dart';
 import 'package:jamal/features/cart/presentation/screens/cart_screen.dart';
+import 'package:jamal/features/home/presentation/screens/admin_home_screen.dart';
 import 'package:jamal/features/home/presentation/screens/home_screen.dart';
 import 'package:jamal/features/menu_item/presentation/screens/menu_item_upsert_screen.dart';
+import 'package:jamal/features/order/screens/create_order_screen.dart';
 import 'package:jamal/features/order/screens/order_screen.dart';
+import 'package:jamal/features/profile/presentation/screens/admin_profile_screen.dart';
 import 'package:jamal/features/profile/presentation/screens/profile_screen.dart';
 import 'package:jamal/features/menu_item/presentation/screens/menu_items_screen.dart';
 import 'package:jamal/features/menu_item/presentation/screens/menu_item_detail_screen.dart';
 import 'package:jamal/shared/screens/splash_screen.dart';
-import 'package:jamal/shared/widgets/main_tab_screen.dart';
+import 'package:jamal/shared/widgets/admin_tab_screen.dart';
+import 'package:jamal/shared/widgets/user_tab_screen.dart';
 
 part 'app_router.gr.dart';
 
@@ -35,8 +39,9 @@ class AppRouter extends RootStackRouter {
   List<AutoRoute> get routes => [
     AutoRoute(page: LoginRoute.page, initial: true),
 
+    // * User
     CustomRoute(
-      page: MainTabRoute.page,
+      page: UserTabRoute.page,
       guards: [_authGuard, _duplicateGuard],
       transitionsBuilder: TransitionsBuilders.fadeIn,
       children: [
@@ -47,7 +52,22 @@ class AppRouter extends RootStackRouter {
     AutoRoute(page: MenuItemsRoute.page),
     AutoRoute(page: MenuItemDetailRoute.page),
     AutoRoute(page: OrderRoute.page, guards: [_authGuard, _duplicateGuard]),
+    AutoRoute(
+      page: CreateOrderRoute.page,
+      guards: [_authGuard, _duplicateGuard],
+    ),
     AutoRoute(page: CartRoute.page, guards: [_authGuard, _duplicateGuard]),
+
+    // * Admin
+    CustomRoute(
+      page: AdminTabRoute.page,
+      guards: [_authGuard, _duplicateGuard],
+      transitionsBuilder: TransitionsBuilders.fadeIn,
+      children: [
+        AutoRoute(page: AdminHomeRoute.page),
+        AutoRoute(page: AdminProfileRoute.page),
+      ],
+    ),
   ];
 
   @override

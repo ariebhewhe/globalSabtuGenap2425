@@ -34,9 +34,9 @@ class AuthGuard extends AutoRouteGuard {
           "AuthGuard: Authenticated user attempting to navigate to LoginRoute. Listener should have handled this. Redirecting defensively.",
         );
         if (userModel.role == Role.admin) {
-          router.replaceAll([const ProfileRoute()]);
+          router.replaceAll([const AdminTabRoute()]);
         } else {
-          router.replaceAll([const MainTabRoute()]);
+          router.replaceAll([const UserTabRoute()]);
         }
         resolver.next(false); // Hentikan navigasi ke LoginRoute
         return;

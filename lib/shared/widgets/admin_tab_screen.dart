@@ -1,16 +1,15 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:jamal/core/routes/app_router.dart';
-import 'package:jamal/shared/widgets/my_app_bar.dart';
 
 @RoutePage()
-class MainTabScreen extends StatelessWidget {
-  const MainTabScreen({super.key});
+class AdminTabScreen extends StatelessWidget {
+  const AdminTabScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return AutoTabsScaffold(
-      routes: const [HomeRoute(), ProfileRoute()],
+      routes: const [AdminHomeRoute(), AdminProfileRoute()],
       bottomNavigationBuilder: (_, tabsRouter) {
         return NavigationBar(
           selectedIndex: tabsRouter.activeIndex,

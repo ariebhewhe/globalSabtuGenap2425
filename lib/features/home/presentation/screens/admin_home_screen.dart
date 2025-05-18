@@ -2,18 +2,18 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:jamal/features/menu_item/providers/menu_items_provider.dart';
-import 'package:jamal/shared/widgets/user_app_bar.dart';
-import 'package:jamal/shared/widgets/user_end_drawer.dart';
+import 'package:jamal/shared/widgets/admin_app_bar.dart';
+import 'package:jamal/shared/widgets/admin_end_drawer.dart';
 
 @RoutePage()
-class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key});
+class AdminHomeScreen extends StatelessWidget {
+  const AdminHomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const UserAppBar(),
-      endDrawer: const UserEndDrawer(),
+      appBar: const AdminAppBar(),
+      endDrawer: const AdminEndDrawer(),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         child: Consumer(

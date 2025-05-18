@@ -42,11 +42,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       if (mounted && authState.userModel != null) {
         _resetForm();
 
-        // if (authState.userModel!.role == Role.admin) {
-        //   AutoRouter.of(context).replaceAll([MenuItemUpsertRoute()]);
-        // } else {
-        //   AutoRouter.of(context).replaceAll([const MainTabRoute()]);
-        // }
+        if (authState.userModel!.role == Role.admin) {
+          context.replaceRoute(const AdminTabRoute());
+        } else {
+          context.replaceRoute(const UserTabRoute());
+        }
       } else if (mounted && authState.errorMessage != null) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -64,11 +64,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final authState = ref.read(authMutationProvider);
 
     if (mounted && authState.userModel != null) {
-      // if (authState.userModel!.role == Role.admin) {
-      //   AutoRouter.of(context).replaceAll([const ProfileRoute()]);
-      // } else {
-      //   AutoRouter.of(context).replaceAll([const MainTabRoute()]);
-      // }
+      if (authState.userModel!.role == Role.admin) {
+        context.replaceRoute(const AdminTabRoute());
+      } else {
+        context.replaceRoute(const UserTabRoute());
+      }
     } else if (mounted && authState.errorMessage != null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

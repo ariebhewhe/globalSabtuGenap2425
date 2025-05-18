@@ -112,16 +112,16 @@ class _MyAppState extends ConsumerState<MyApp> {
         final userModel = await currentUserStorage.getCurrentUser();
 
         if (userModel != null && userModel.role == Role.admin) {
-          if (currentRouteName != MenuItemUpsertRoute.name) {
-            appRouter.replaceAll([const ProfileRoute()]);
+          if (currentRouteName != AdminTabRoute.name) {
+            appRouter.replaceAll([const AdminTabRoute()]);
             logger.i(
               "MyApp Listener: Redirecting admin to MenuItemUpsertRoute.",
             );
           }
         } else {
-          if (currentRouteName != MainTabRoute.name) {
-            appRouter.replaceAll([const MainTabRoute()]);
-            logger.i("MyApp Listener: Redirecting user to MainTabRoute.");
+          if (currentRouteName != UserTabRoute.name) {
+            appRouter.replaceAll([const UserTabRoute()]);
+            logger.i("MyApp Listener: Redirecting user to UserTabRoute.");
           }
         }
       } else {

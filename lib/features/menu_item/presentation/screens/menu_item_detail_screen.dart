@@ -7,7 +7,7 @@ import 'package:jamal/core/routes/app_router.dart';
 import 'package:jamal/data/models/cart_item_model.dart';
 import 'package:jamal/data/models/menu_item_model.dart';
 import 'package:jamal/features/cart/providers/cart_item_mutation_provider.dart';
-import 'package:jamal/shared/widgets/my_app_bar.dart';
+import 'package:jamal/shared/widgets/user_app_bar.dart';
 import 'package:jamal/shared/widgets/my_screen_container.dart';
 
 @RoutePage()
@@ -20,7 +20,7 @@ class MenuItemDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const MyAppBar(),
+      appBar: const UserAppBar(),
       body: MyScreenContainer(
         child: SingleChildScrollView(
           child: Column(
