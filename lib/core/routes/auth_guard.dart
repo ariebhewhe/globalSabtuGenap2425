@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:jamal/core/routes/app_router.dart';
 import 'package:jamal/core/utils/enums.dart';
 import 'package:jamal/core/utils/logger.dart';
-import 'package:jamal/shared/services/current_user_storage.dart';
+import 'package:jamal/shared/services/current_user_storage_service.dart';
 
 final authGuardProvider = Provider<AuthGuard>((ref) {
   return AuthGuard(ref.watch(currentUserStorageServiceProvider));

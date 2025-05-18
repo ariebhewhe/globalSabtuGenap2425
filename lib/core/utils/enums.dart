@@ -27,7 +27,7 @@ extension LocationExtension on Location {
 }
 
 // * Order Type Enum
-enum OrderType { dineIn, takeaway }
+enum OrderType { dineIn, takeAway }
 
 extension OrderTypeExtension on OrderType {
   String toMap() {
@@ -37,7 +37,7 @@ extension OrderTypeExtension on OrderType {
   static OrderType fromMap(String orderType) {
     return OrderType.values.firstWhere(
       (e) => e.toString().split('.').last == orderType,
-      orElse: () => OrderType.takeaway, // * Default value if not found
+      orElse: () => OrderType.takeAway, // * Default value if not found
     );
   }
 }
@@ -59,17 +59,17 @@ extension OrderStatusExtension on OrderStatus {
 }
 
 // * Payment Method Enum
-enum PaymentMethod { cash, creditCard, debitCard, eWallet }
+enum PaymentMethodType { cash, creditCard, debitCard, eWallet }
 
-extension PaymentMethodExtension on PaymentMethod {
+extension PaymentMethodTypeExtension on PaymentMethodType {
   String toMap() {
     return toString().split('.').last;
   }
 
-  static PaymentMethod fromMap(String paymentMethod) {
-    return PaymentMethod.values.firstWhere(
+  static PaymentMethodType fromMap(String paymentMethod) {
+    return PaymentMethodType.values.firstWhere(
       (e) => e.toString().split('.').last == paymentMethod,
-      orElse: () => PaymentMethod.cash, // * Default value if not found
+      orElse: () => PaymentMethodType.cash, // * Default value if not found
     );
   }
 }

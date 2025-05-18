@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:auto_route/auto_route.dart';
+import 'package:jamal/core/routes/app_router.dart';
 
 class MyAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String? customTitle;
-  final List<Widget>? actions;
   final bool automaticLeading;
   final Widget? leading;
   final Color? backgroundColor;
@@ -13,8 +13,7 @@ class MyAppBar extends StatelessWidget implements PreferredSizeWidget {
   const MyAppBar({
     super.key,
     this.customTitle,
-    this.actions,
-    this.automaticLeading = false,
+    this.automaticLeading = true,
     this.leading,
     this.backgroundColor,
     this.elevation,
@@ -95,7 +94,22 @@ class MyAppBar extends StatelessWidget implements PreferredSizeWidget {
   Widget build(BuildContext context) {
     return AppBar(
       title: Text(_getAppBarTitle(context)),
-      actions: actions,
+      actions: [
+        IconButton(
+          onPressed: () => context.pushRoute(const CartRoute()),
+          icon: const Icon(Icons.shopping_cart),
+        ),
+        Builder(
+          builder:
+              (innerContext) => IconButton(
+                icon: const Icon(Icons.menu),
+                tooltip: 'Open Menu',
+                onPressed: () {
+                  Scaffold.of(innerContext).openEndDrawer();
+                },
+              ),
+        ),
+      ],
       automaticallyImplyLeading: automaticLeading,
       leading: leading,
       backgroundColor: backgroundColor,

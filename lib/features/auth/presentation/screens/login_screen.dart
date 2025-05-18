@@ -96,6 +96,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     FormBuilderTextField(
+                      initialValue: "rizzthenotable@gmail.com",
+                      keyboardType: TextInputType.emailAddress,
                       name: 'email',
                       decoration: const InputDecoration(
                         border: OutlineInputBorder(),
@@ -113,7 +115,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
                     FormBuilderTextField(
                       name: 'password',
-                      keyboardType: TextInputType.multiline,
+                      initialValue: "177013",
                       obscureText: true,
                       decoration: const InputDecoration(
                         border: OutlineInputBorder(),

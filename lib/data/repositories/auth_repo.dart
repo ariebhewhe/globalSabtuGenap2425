@@ -8,7 +8,7 @@ import 'package:jamal/core/helpers/success_response.dart';
 import 'package:jamal/core/utils/logger.dart';
 import 'package:jamal/data/models/user_model.dart';
 import 'package:jamal/providers.dart';
-import 'package:jamal/shared/services/current_user_storage.dart';
+import 'package:jamal/shared/services/current_user_storage_service.dart';
 
 final authRepoProvider = Provider<AuthRepo>((ref) {
   final firestore = ref.watch(firebaseFirestoreProvider);

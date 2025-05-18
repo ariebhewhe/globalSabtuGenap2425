@@ -9,7 +9,7 @@ import 'package:jamal/core/utils/enums.dart';
 import 'package:jamal/core/utils/logger.dart';
 import 'package:jamal/firebase_options.dart';
 import 'package:jamal/providers.dart';
-import 'package:jamal/shared/services/current_user_storage.dart';
+import 'package:jamal/shared/services/current_user_storage_service.dart';
 
 import 'package:jamal/features/auth/auth_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';

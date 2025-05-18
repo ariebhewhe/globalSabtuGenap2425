@@ -1,6 +1,7 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:jamal/core/routes/app_router.dart';
+import 'package:jamal/shared/widgets/my_app_bar.dart';
 
 @RoutePage()
 class MainTabScreen extends StatelessWidget {

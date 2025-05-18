@@ -11,7 +11,7 @@ class OrderModel extends BaseModel {
   final OrderType orderType;
   final OrderStatus status;
   final double totalAmount;
-  final PaymentMethod? paymentMethod;
+  final PaymentMethodType paymentMethodType;
   final PaymentStatus paymentStatus;
   final DateTime orderDate;
   final DateTime? estimatedReadyTime;
@@ -25,7 +25,7 @@ class OrderModel extends BaseModel {
     required this.orderType,
     this.status = OrderStatus.pending,
     required this.totalAmount,
-    this.paymentMethod,
+    required this.paymentMethodType,
     this.paymentStatus = PaymentStatus.unpaid,
     required this.orderDate,
     this.estimatedReadyTime,
@@ -42,7 +42,7 @@ class OrderModel extends BaseModel {
     OrderType? orderType,
     OrderStatus? status,
     double? totalAmount,
-    PaymentMethod? paymentMethod,
+    PaymentMethodType? paymentMethodType,
     PaymentStatus? paymentStatus,
     DateTime? orderDate,
     DateTime? estimatedReadyTime,
@@ -58,7 +58,7 @@ class OrderModel extends BaseModel {
       orderType: orderType ?? this.orderType,
       status: status ?? this.status,
       totalAmount: totalAmount ?? this.totalAmount,
-      paymentMethod: paymentMethod ?? this.paymentMethod,
+      paymentMethodType: paymentMethodType ?? this.paymentMethodType,
       paymentStatus: paymentStatus ?? this.paymentStatus,
       orderDate: orderDate ?? this.orderDate,
       estimatedReadyTime: estimatedReadyTime ?? this.estimatedReadyTime,
@@ -78,7 +78,7 @@ class OrderModel extends BaseModel {
       'orderType': orderType.toMap(),
       'status': status.toMap(),
       'totalAmount': totalAmount,
-      'paymentMethod': paymentMethod?.toMap(),
+      'paymentMethodType': paymentMethodType.toMap(),
       'paymentStatus': paymentStatus.toMap(),
       'orderDate': orderDate.millisecondsSinceEpoch,
       'estimatedReadyTime': estimatedReadyTime?.millisecondsSinceEpoch,
@@ -98,10 +98,9 @@ class OrderModel extends BaseModel {
       orderType: OrderTypeExtension.fromMap(map['orderType'] as String),
       status: OrderStatusExtension.fromMap(map['status'] as String),
       totalAmount: map['totalAmount'] as double,
-      paymentMethod:
-          map['paymentMethod'] != null
-              ? PaymentMethodExtension.fromMap(map['paymentMethod'] as String)
-              : null,
+      paymentMethodType: PaymentMethodTypeExtension.fromMap(
+        map['paymentMethodType'] as String,
+      ),
       paymentStatus: PaymentStatusExtension.fromMap(
         map['paymentStatus'] as String,
       ),
@@ -138,7 +137,7 @@ class OrderModel extends BaseModel {
 
   @override
   String toString() {
-    return 'OrderModel(id: $id, userId: $userId, tableId: $tableId, orderType: $orderType, status: $status, totalAmount: $totalAmount, paymentMethod: $paymentMethod, paymentStatus: $paymentStatus, orderDate: $orderDate, estimatedReadyTime: $estimatedReadyTime, specialInstructions: $specialInstructions, orderItems: $orderItems, createdAt: $createdAt, updatedAt: $updatedAt)';
+    return 'OrderModel(id: $id, userId: $userId, tableId: $tableId, orderType: $orderType, status: $status, totalAmount: $totalAmount, paymentMethodType: $paymentMethodType, paymentStatus: $paymentStatus, orderDate: $orderDate, estimatedReadyTime: $estimatedReadyTime, specialInstructions: $specialInstructions, orderItems: $orderItems, createdAt: $createdAt, updatedAt: $updatedAt)';
   }
 
   @override
@@ -151,7 +150,7 @@ class OrderModel extends BaseModel {
         other.orderType == orderType &&
         other.status == status &&
         other.totalAmount == totalAmount &&
-        other.paymentMethod == paymentMethod &&
+        other.paymentMethodType == paymentMethodType &&
         other.paymentStatus == paymentStatus &&
         other.orderDate == orderDate &&
         other.estimatedReadyTime == estimatedReadyTime &&
@@ -169,7 +168,7 @@ class OrderModel extends BaseModel {
         orderType.hashCode ^
         status.hashCode ^
         totalAmount.hashCode ^
-        paymentMethod.hashCode ^
+        paymentMethodType.hashCode ^
         paymentStatus.hashCode ^
         orderDate.hashCode ^
         estimatedReadyTime.hashCode ^
@@ -177,5 +176,72 @@ class OrderModel extends BaseModel {
         orderItems.hashCode ^
         createdAt.hashCode ^
         updatedAt.hashCode;
+  }
+}
+
+class CreateOrderDto {
+  final int? tableId;
+  final OrderType orderType;
+  final PaymentMethodType paymentMethodType;
+  final DateTime? estimatedReadyTime;
+  final String? specialInstructions;
+  final List<OrderItemModel> orderItems;
+
+  CreateOrderDto({
+    required this.tableId,
+    required this.orderType,
+    required this.paymentMethodType,
+    required this.estimatedReadyTime,
+    required this.specialInstructions,
+    required this.orderItems,
+  });
+
+  Map<String, dynamic> toMap() {
+    return {
+      'tableId': tableId,
+      'orderType': orderType.toMap(),
+      'paymentMethodType': paymentMethodType.toMap(),
+      'estimatedReadyTime': estimatedReadyTime,
+      'specialInstructions': specialInstructions,
+      'orderItems': orderItems.map((x) => x.toMap()).toList(),
+    };
+  }
+}
+
+class UpdateOrderDto {
+  final int? tableId;
+  final OrderType? orderType;
+  final OrderStatus? status;
+  final PaymentStatus? paymentStatus;
+  final DateTime? estimatedReadyTime;
+
+  UpdateOrderDto({
+    this.tableId,
+    this.orderType,
+    this.status,
+    this.paymentStatus,
+    this.estimatedReadyTime,
+  });
+
+  Map<String, dynamic> toMap() {
+    final map = <String, dynamic>{};
+
+    if (tableId != null) {
+      map['tableId'] = tableId;
+    }
+    if (orderType != null) {
+      map['orderType'] = orderType!.toMap();
+    }
+    if (status != null) {
+      map['status'] = status!.toMap();
+    }
+    if (paymentStatus != null) {
+      map['paymentStatus'] = paymentStatus!.toMap();
+    }
+    if (estimatedReadyTime != null) {
+      map['estimatedReadyTime'] = estimatedReadyTime!.millisecondsSinceEpoch;
+    }
+
+    return map;
   }
 }
