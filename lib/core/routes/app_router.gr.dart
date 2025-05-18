@@ -234,6 +234,52 @@ class OrderRoute extends PageRouteInfo<void> {
 }
 
 /// generated route for
+/// [PaymentMethodUpsertScreen]
+class PaymentMethodUpsertRoute
+    extends PageRouteInfo<PaymentMethodUpsertRouteArgs> {
+  PaymentMethodUpsertRoute({
+    Key? key,
+    PaymentMethodModel? paymentMethod,
+    List<PageRouteInfo>? children,
+  }) : super(
+         PaymentMethodUpsertRoute.name,
+         args: PaymentMethodUpsertRouteArgs(
+           key: key,
+           paymentMethod: paymentMethod,
+         ),
+         initialChildren: children,
+       );
+
+  static const String name = 'PaymentMethodUpsertRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      final args = data.argsAs<PaymentMethodUpsertRouteArgs>(
+        orElse: () => const PaymentMethodUpsertRouteArgs(),
+      );
+      return PaymentMethodUpsertScreen(
+        key: args.key,
+        paymentMethod: args.paymentMethod,
+      );
+    },
+  );
+}
+
+class PaymentMethodUpsertRouteArgs {
+  const PaymentMethodUpsertRouteArgs({this.key, this.paymentMethod});
+
+  final Key? key;
+
+  final PaymentMethodModel? paymentMethod;
+
+  @override
+  String toString() {
+    return 'PaymentMethodUpsertRouteArgs{key: $key, paymentMethod: $paymentMethod}';
+  }
+}
+
+/// generated route for
 /// [ProfileScreen]
 class ProfileRoute extends PageRouteInfo<void> {
   const ProfileRoute({List<PageRouteInfo>? children})

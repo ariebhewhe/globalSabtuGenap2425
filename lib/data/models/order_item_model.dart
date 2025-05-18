@@ -4,8 +4,8 @@ import 'package:jamal/core/abstractions/base_model.dart';
 import 'package:jamal/data/models/menu_item_model.dart';
 
 class OrderItemModel extends BaseModel {
-  final int orderId;
-  final int menuItemId;
+  final String orderId;
+  final String menuItemId;
   final int quantity;
   final double price;
   final double subtotal;
@@ -27,8 +27,8 @@ class OrderItemModel extends BaseModel {
 
   OrderItemModel copyWith({
     String? id,
-    int? orderId,
-    int? menuItemId,
+    String? orderId,
+    String? menuItemId,
     int? quantity,
     double? price,
     double? subtotal,
@@ -71,8 +71,8 @@ class OrderItemModel extends BaseModel {
   factory OrderItemModel.fromMap(Map<String, dynamic> map) {
     return OrderItemModel(
       id: map['id'] as String,
-      orderId: map['orderId'] as int,
-      menuItemId: map['menuItemId'] as int,
+      orderId: map['orderId'] as String,
+      menuItemId: map['menuItemId'] as String,
       quantity: map['quantity'] as int,
       price: map['price'] as double,
       subtotal: map['subtotal'] as double,

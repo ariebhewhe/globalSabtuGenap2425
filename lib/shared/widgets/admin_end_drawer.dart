@@ -11,11 +11,15 @@ class AdminEndDrawer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final List<Map<String, dynamic>> drawerItems = [
-      {'icon': Icons.person, 'title': 'Profile', 'route': const ProfileRoute()},
       {
-        'icon': Icons.food_bank,
-        'title': 'Foods',
-        'route': const MenuItemsRoute(),
+        'icon': Icons.person,
+        'title': 'Profile',
+        'route': const AdminProfileRoute(),
+      },
+      {
+        'icon': Icons.payment,
+        'title': 'Payment Method',
+        'route': PaymentMethodUpsertRoute(),
       },
     ];
 

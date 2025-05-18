@@ -41,7 +41,7 @@ class CloudinaryService {
       formData.files.add(file);
 
       // * Tambahkan parameter yang diperlukan
-      // formData.fields['upload_preset'] = CloudinaryKeys.uploadPreset;
+      formData.fields['upload_preset'] = CloudinaryKeys.uploadPreset;
       formData.fields['folder'] = folder;
       formData.fields['api_key'] = CloudinaryKeys.apiKey;
 

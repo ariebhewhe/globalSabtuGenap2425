@@ -37,8 +37,8 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
         selectedCartItems.map((cartItem) {
           return OrderItemModel(
             id: cartItem.id,
-            orderId: 0,
-            menuItemId: int.parse(cartItem.menuItemId),
+            orderId: '0',
+            menuItemId: cartItem.menuItemId,
             quantity: cartItem.quantity,
             price: cartItem.menuItem?.price ?? 0,
             subtotal: (cartItem.menuItem?.price ?? 0) * cartItem.quantity,

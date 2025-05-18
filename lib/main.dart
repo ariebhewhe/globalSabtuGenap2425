@@ -72,6 +72,7 @@ class _MyAppState extends ConsumerState<MyApp> {
   Widget build(BuildContext context) {
     final appRouter = ref.watch(appRouterProvider);
 
+    // Todo: Fix ketika user login google atau register untuk pertama kali gak redirect
     ref.listen<AsyncValue<User?>>(authStateProvider, (
       previousAsyncState,
       currentAsyncState,
