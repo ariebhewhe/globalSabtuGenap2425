@@ -5,6 +5,7 @@ import 'package:jamal/core/routes/auth_guard.dart';
 import 'package:jamal/core/routes/duplicate_guard.dart';
 import 'package:jamal/data/models/menu_item_model.dart';
 import 'package:jamal/data/models/payment_method_model.dart';
+import 'package:jamal/data/models/restaurant_table_model.dart';
 import 'package:jamal/features/auth/presentation/screens/login_screen.dart';
 import 'package:jamal/features/cart/presentation/screens/cart_screen.dart';
 import 'package:jamal/features/home/presentation/screens/admin_home_screen.dart';
@@ -17,6 +18,7 @@ import 'package:jamal/features/profile/presentation/screens/admin_profile_screen
 import 'package:jamal/features/profile/presentation/screens/profile_screen.dart';
 import 'package:jamal/features/menu_item/presentation/screens/menu_items_screen.dart';
 import 'package:jamal/features/menu_item/presentation/screens/menu_item_detail_screen.dart';
+import 'package:jamal/features/restaurant_table/presentation/screens/admin_restaurant_table_upsert_screen.dart';
 import 'package:jamal/shared/screens/splash_screen.dart';
 import 'package:jamal/shared/widgets/admin_tab_screen.dart';
 import 'package:jamal/shared/widgets/user_tab_screen.dart';
@@ -72,6 +74,10 @@ class AppRouter extends RootStackRouter {
     ),
     AutoRoute(
       page: PaymentMethodUpsertRoute.page,
+      guards: [_authGuard, _duplicateGuard],
+    ),
+    AutoRoute(
+      page: AdminRestaurantTableUpsertRoute.page,
       guards: [_authGuard, _duplicateGuard],
     ),
   ];

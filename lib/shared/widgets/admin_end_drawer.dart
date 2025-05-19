@@ -21,6 +21,11 @@ class AdminEndDrawer extends StatelessWidget {
         'title': 'Payment Method',
         'route': PaymentMethodUpsertRoute(),
       },
+      {
+        'icon': Icons.table_bar,
+        'title': 'Restaurant Table',
+        'route': AdminRestaurantTableUpsertRoute(),
+      },
     ];
 
     return Drawer(

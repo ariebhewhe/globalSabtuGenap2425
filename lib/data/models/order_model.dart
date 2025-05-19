@@ -1,17 +1,19 @@
+// ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
+
 import 'package:jamal/core/abstractions/base_model.dart';
 import 'package:jamal/core/utils/enums.dart';
 import 'package:jamal/data/models/order_item_model.dart';
 
 class OrderModel extends BaseModel {
-  final int userId;
-  final int? tableId;
+  final String userId;
+  final String? tableId;
+  final String? paymentMethodId;
   final OrderType orderType;
   final OrderStatus status;
   final double totalAmount;
-  final PaymentMethodType paymentMethodType;
   final PaymentStatus paymentStatus;
   final DateTime orderDate;
   final DateTime? estimatedReadyTime;
@@ -20,25 +22,26 @@ class OrderModel extends BaseModel {
 
   OrderModel({
     required String id,
+    required DateTime createdAt,
+    required DateTime updatedAt,
     required this.userId,
     this.tableId,
+    this.paymentMethodId,
     required this.orderType,
     this.status = OrderStatus.pending,
     required this.totalAmount,
-    required this.paymentMethodType,
     this.paymentStatus = PaymentStatus.unpaid,
     required this.orderDate,
     this.estimatedReadyTime,
     this.specialInstructions,
     this.orderItems,
-    required DateTime createdAt,
-    required DateTime updatedAt,
   }) : super(id: id, createdAt: createdAt, updatedAt: updatedAt);
 
   OrderModel copyWith({
     String? id,
-    int? userId,
-    int? tableId,
+    String? userId,
+    String? tableId,
+    String? paymentMethodId,
     OrderType? orderType,
     OrderStatus? status,
     double? totalAmount,
@@ -55,10 +58,10 @@ class OrderModel extends BaseModel {
       id: id ?? this.id,
       userId: userId ?? this.userId,
       tableId: tableId ?? this.tableId,
+      paymentMethodId: paymentMethodId ?? this.paymentMethodId,
       orderType: orderType ?? this.orderType,
       status: status ?? this.status,
       totalAmount: totalAmount ?? this.totalAmount,
-      paymentMethodType: paymentMethodType ?? this.paymentMethodType,
       paymentStatus: paymentStatus ?? this.paymentStatus,
       orderDate: orderDate ?? this.orderDate,
       estimatedReadyTime: estimatedReadyTime ?? this.estimatedReadyTime,
@@ -72,20 +75,17 @@ class OrderModel extends BaseModel {
   @override
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
-      'id': id,
       'userId': userId,
       'tableId': tableId,
+      'paymentMethodId': paymentMethodId,
       'orderType': orderType.toMap(),
       'status': status.toMap(),
       'totalAmount': totalAmount,
-      'paymentMethodType': paymentMethodType.toMap(),
       'paymentStatus': paymentStatus.toMap(),
       'orderDate': orderDate.millisecondsSinceEpoch,
       'estimatedReadyTime': estimatedReadyTime?.millisecondsSinceEpoch,
       'specialInstructions': specialInstructions,
       'orderItems': orderItems?.map((x) => x.toMap()).toList(),
-      'createdAt': createdAt.millisecondsSinceEpoch,
-      'updatedAt': updatedAt.millisecondsSinceEpoch,
     };
   }
 
@@ -93,14 +93,15 @@ class OrderModel extends BaseModel {
   factory OrderModel.fromMap(Map<String, dynamic> map) {
     return OrderModel(
       id: map['id'] as String,
-      userId: map['userId'] as int,
-      tableId: map['tableId'] != null ? map['tableId'] as int : null,
+      userId: map['userId'] as String,
+      tableId: map['tableId'] != null ? map['tableId'] as String : null,
+      paymentMethodId:
+          map['paymentMethodId'] != null
+              ? map['paymentMethodId'] as String
+              : null,
       orderType: OrderTypeExtension.fromMap(map['orderType'] as String),
       status: OrderStatusExtension.fromMap(map['status'] as String),
       totalAmount: map['totalAmount'] as double,
-      paymentMethodType: PaymentMethodTypeExtension.fromMap(
-        map['paymentMethodType'] as String,
-      ),
       paymentStatus: PaymentStatusExtension.fromMap(
         map['paymentStatus'] as String,
       ),
@@ -137,60 +138,54 @@ class OrderModel extends BaseModel {
 
   @override
   String toString() {
-    return 'OrderModel(id: $id, userId: $userId, tableId: $tableId, orderType: $orderType, status: $status, totalAmount: $totalAmount, paymentMethodType: $paymentMethodType, paymentStatus: $paymentStatus, orderDate: $orderDate, estimatedReadyTime: $estimatedReadyTime, specialInstructions: $specialInstructions, orderItems: $orderItems, createdAt: $createdAt, updatedAt: $updatedAt)';
+    return 'OrderModel(userId: $userId, tableId: $tableId, paymentMethodId: $paymentMethodId, orderType: $orderType, status: $status, totalAmount: $totalAmount, paymentStatus: $paymentStatus, orderDate: $orderDate, estimatedReadyTime: $estimatedReadyTime, specialInstructions: $specialInstructions, orderItems: $orderItems)';
   }
 
   @override
   bool operator ==(covariant OrderModel other) {
     if (identical(this, other)) return true;
 
-    return other.id == id &&
-        other.userId == userId &&
+    return other.userId == userId &&
         other.tableId == tableId &&
+        other.paymentMethodId == paymentMethodId &&
         other.orderType == orderType &&
         other.status == status &&
         other.totalAmount == totalAmount &&
-        other.paymentMethodType == paymentMethodType &&
         other.paymentStatus == paymentStatus &&
         other.orderDate == orderDate &&
         other.estimatedReadyTime == estimatedReadyTime &&
         other.specialInstructions == specialInstructions &&
-        listEquals(other.orderItems, orderItems) &&
-        other.createdAt == createdAt &&
-        other.updatedAt == updatedAt;
+        listEquals(other.orderItems, orderItems);
   }
 
   @override
   int get hashCode {
-    return id.hashCode ^
-        userId.hashCode ^
+    return userId.hashCode ^
         tableId.hashCode ^
+        paymentMethodId.hashCode ^
         orderType.hashCode ^
         status.hashCode ^
         totalAmount.hashCode ^
-        paymentMethodType.hashCode ^
         paymentStatus.hashCode ^
         orderDate.hashCode ^
         estimatedReadyTime.hashCode ^
         specialInstructions.hashCode ^
-        orderItems.hashCode ^
-        createdAt.hashCode ^
-        updatedAt.hashCode;
+        orderItems.hashCode;
   }
 }
 
 class CreateOrderDto {
-  final int? tableId;
+  final String? tableId;
+  final String paymentMethodId;
   final OrderType orderType;
-  final PaymentMethodType paymentMethodType;
   final DateTime? estimatedReadyTime;
   final String? specialInstructions;
   final List<OrderItemModel> orderItems;
 
   CreateOrderDto({
     required this.tableId,
+    required this.paymentMethodId,
     required this.orderType,
-    required this.paymentMethodType,
     required this.estimatedReadyTime,
     required this.specialInstructions,
     required this.orderItems,
@@ -199,8 +194,8 @@ class CreateOrderDto {
   Map<String, dynamic> toMap() {
     return {
       'tableId': tableId,
+      'paymentMethodId': paymentMethodId,
       'orderType': orderType.toMap(),
-      'paymentMethodType': paymentMethodType.toMap(),
       'estimatedReadyTime': estimatedReadyTime,
       'specialInstructions': specialInstructions,
       'orderItems': orderItems.map((x) => x.toMap()).toList(),
@@ -209,7 +204,8 @@ class CreateOrderDto {
 }
 
 class UpdateOrderDto {
-  final int? tableId;
+  final String? tableId;
+  final String? paymentMethodId;
   final OrderType? orderType;
   final OrderStatus? status;
   final PaymentStatus? paymentStatus;
@@ -217,6 +213,7 @@ class UpdateOrderDto {
 
   UpdateOrderDto({
     this.tableId,
+    this.paymentMethodId,
     this.orderType,
     this.status,
     this.paymentStatus,
@@ -228,6 +225,9 @@ class UpdateOrderDto {
 
     if (tableId != null) {
       map['tableId'] = tableId;
+    }
+    if (paymentMethodId != null) {
+      map['paymentMethodId'] = paymentMethodId;
     }
     if (orderType != null) {
       map['orderType'] = orderType!.toMap();

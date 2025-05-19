@@ -149,7 +149,7 @@ class PaymentMethodRepo {
             hasMore: hasMore,
             lastDocument: lastDocument,
           ),
-          message: 'Menu items retrieved successfully',
+          message: 'Payment methods retrieved successfully',
         ),
       );
     } catch (e) {
@@ -169,7 +169,7 @@ class PaymentMethodRepo {
           await _firebaseFirestore.collection(_collectionPath).doc(id).get();
 
       if (!querySnapshot.exists) {
-        return Left(ErrorResponse(message: "Menu item not found"));
+        return Left(ErrorResponse(message: "Payment method not found"));
       }
 
       final paymentMethod = PaymentMethodModel.fromMap(querySnapshot.data()!);
@@ -191,7 +191,7 @@ class PaymentMethodRepo {
     try {
       final paymentMethodResult = await getPaymentMethodById(id);
       if (paymentMethodResult.isLeft()) {
-        return Left(ErrorResponse(message: 'Menu item not found'));
+        return Left(ErrorResponse(message: 'Payment method not found'));
       }
 
       final existingPaymentMethod =
@@ -259,7 +259,7 @@ class PaymentMethodRepo {
       return Right(
         SuccessResponse(
           data: paymentMethodWithUpdatedTimestamp,
-          message: "Menu item updated",
+          message: "Payment method updated",
         ),
       );
     } catch (e) {
@@ -277,7 +277,7 @@ class PaymentMethodRepo {
     try {
       final paymentMethodResult = await getPaymentMethodById(id);
       if (paymentMethodResult.isLeft()) {
-        return Left(ErrorResponse(message: 'Menu item not found'));
+        return Left(ErrorResponse(message: 'Payment method not found'));
       }
 
       final paymentMethod = paymentMethodResult.getRight().toNullable()!.data;
@@ -314,7 +314,9 @@ class PaymentMethodRepo {
 
       await _firebaseFirestore.collection(_collectionPath).doc(id).delete();
 
-      return Right(SuccessResponse(data: id, message: "Menu item deleted"));
+      return Right(
+        SuccessResponse(data: id, message: "Payment method deleted"),
+      );
     } catch (e) {
       logger.e(e.toString());
       return Left(

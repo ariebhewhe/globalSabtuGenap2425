@@ -101,3 +101,49 @@ class RestaurantTableModel extends BaseModel {
         updatedAt.hashCode;
   }
 }
+
+class CreateRestaurantTableDto {
+  final String tableNumber;
+  final int capacity;
+  final bool isAvailable;
+  final Location location;
+
+  CreateRestaurantTableDto({
+    required this.tableNumber,
+    required this.capacity,
+    required this.isAvailable,
+    required this.location,
+  });
+
+  Map<String, dynamic> toMap() {
+    return {
+      "tableNumber": tableNumber,
+      "capacity": capacity,
+      "isAvailable": isAvailable,
+      "location": location.toMap(),
+    };
+  }
+}
+
+class UpdateRestaurantTableDto {
+  final String? tableNumber;
+  final int? capacity;
+  final bool? isAvailable;
+  final Location? location;
+
+  UpdateRestaurantTableDto({
+    this.tableNumber,
+    this.capacity,
+    this.isAvailable,
+    this.location,
+  });
+
+  Map<String, dynamic> toMap() {
+    return {
+      "tableNumber": tableNumber,
+      "capacity": capacity,
+      "isAvailable": isAvailable,
+      "location": location?.toMap(),
+    };
+  }
+}

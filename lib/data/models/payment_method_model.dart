@@ -57,8 +57,8 @@ class PaymentMethodModel extends BaseModel {
       'paymentMethodType': paymentMethodType.toMap(),
       'minimumAmount': minimumAmount,
       'maximumAmount': maximumAmount,
-      'createdAt': createdAt,
-      'updatedAt': updatedAt,
+      'createdAt': createdAt.millisecondsSinceEpoch,
+      'updatedAt': updatedAt.millisecondsSinceEpoch,
     };
   }
 

@@ -43,6 +43,52 @@ class AdminProfileRoute extends PageRouteInfo<void> {
 }
 
 /// generated route for
+/// [AdminRestaurantTableUpsertScreen]
+class AdminRestaurantTableUpsertRoute
+    extends PageRouteInfo<AdminRestaurantTableUpsertRouteArgs> {
+  AdminRestaurantTableUpsertRoute({
+    Key? key,
+    RestaurantTableModel? restaurantTable,
+    List<PageRouteInfo>? children,
+  }) : super(
+         AdminRestaurantTableUpsertRoute.name,
+         args: AdminRestaurantTableUpsertRouteArgs(
+           key: key,
+           restaurantTable: restaurantTable,
+         ),
+         initialChildren: children,
+       );
+
+  static const String name = 'AdminRestaurantTableUpsertRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      final args = data.argsAs<AdminRestaurantTableUpsertRouteArgs>(
+        orElse: () => const AdminRestaurantTableUpsertRouteArgs(),
+      );
+      return AdminRestaurantTableUpsertScreen(
+        key: args.key,
+        restaurantTable: args.restaurantTable,
+      );
+    },
+  );
+}
+
+class AdminRestaurantTableUpsertRouteArgs {
+  const AdminRestaurantTableUpsertRouteArgs({this.key, this.restaurantTable});
+
+  final Key? key;
+
+  final RestaurantTableModel? restaurantTable;
+
+  @override
+  String toString() {
+    return 'AdminRestaurantTableUpsertRouteArgs{key: $key, restaurantTable: $restaurantTable}';
+  }
+}
+
+/// generated route for
 /// [AdminTabScreen]
 class AdminTabRoute extends PageRouteInfo<void> {
   const AdminTabRoute({List<PageRouteInfo>? children})
