@@ -5,19 +5,21 @@ import 'package:jamal/core/routes/app_router.dart';
 import 'package:jamal/data/models/menu_item_model.dart';
 import 'package:jamal/features/menu_item/presentation/widgets/menu_items_card.dart';
 import 'package:jamal/features/menu_item/providers/menu_items_provider.dart';
-import 'package:jamal/shared/widgets/user_app_bar.dart';
+import 'package:jamal/shared/widgets/admin_app_bar.dart';
+import 'package:jamal/shared/widgets/admin_end_drawer.dart';
 import 'package:jamal/shared/widgets/my_screen_container.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
 @RoutePage()
-class MenuItemsScreen extends ConsumerStatefulWidget {
-  const MenuItemsScreen({Key? key}) : super(key: key);
+class AdminMenuItemsScreen extends ConsumerStatefulWidget {
+  const AdminMenuItemsScreen({Key? key}) : super(key: key);
 
   @override
-  ConsumerState<MenuItemsScreen> createState() => _MenuItemsScreenState();
+  ConsumerState<AdminMenuItemsScreen> createState() =>
+      _AdminMenuItemsScreenState();
 }
 
-class _MenuItemsScreenState extends ConsumerState<MenuItemsScreen> {
+class _AdminMenuItemsScreenState extends ConsumerState<AdminMenuItemsScreen> {
   final ScrollController _scrollController = ScrollController();
 
   @override
@@ -51,7 +53,12 @@ class _MenuItemsScreenState extends ConsumerState<MenuItemsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const UserAppBar(),
+      floatingActionButton: IconButton(
+        onPressed: () => context.pushRoute(AdminMenuItemUpsertRoute()),
+        icon: const Icon(Icons.add),
+      ),
+      appBar: const AdminAppBar(),
+      endDrawer: const AdminEndDrawer(),
       body: MyScreenContainer(
         child: Consumer(
           builder: (context, ref, child) {
@@ -65,7 +72,6 @@ class _MenuItemsScreenState extends ConsumerState<MenuItemsScreen> {
                   () => ref.read(menuItemsProvider.notifier).refreshMenuItems(),
               child: Column(
                 children: [
-                  //  Error message jika ada
                   if (menuItemsState.errorMessage != null)
                     Container(
                       padding: const EdgeInsets.all(8.0),
@@ -77,7 +83,6 @@ class _MenuItemsScreenState extends ConsumerState<MenuItemsScreen> {
                       ),
                     ),
 
-                  //  Konten utama
                   Expanded(
                     child: Skeletonizer(
                       enabled: isLoading,

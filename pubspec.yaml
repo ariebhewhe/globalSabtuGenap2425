@@ -67,6 +67,7 @@ dependencies:
   http_parser: ^4.1.2
   crypto: ^3.0.6
   flutter_native_splash: ^2.4.6
+  intl: ^0.19.0
 
 dev_dependencies:
   flutter_test:

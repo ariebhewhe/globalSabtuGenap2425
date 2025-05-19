@@ -10,18 +10,18 @@ import 'package:jamal/features/payment_method/providers/payment_method_mutation_
 import 'package:jamal/core/utils/enums.dart';
 
 @RoutePage()
-class PaymentMethodUpsertScreen extends ConsumerStatefulWidget {
+class AdminPaymentMethodUpsertScreen extends ConsumerStatefulWidget {
   final PaymentMethodModel? paymentMethod;
 
-  const PaymentMethodUpsertScreen({super.key, this.paymentMethod});
+  const AdminPaymentMethodUpsertScreen({super.key, this.paymentMethod});
 
   @override
-  ConsumerState<PaymentMethodUpsertScreen> createState() =>
-      _PaymentMethodUpsertScreenState();
+  ConsumerState<AdminPaymentMethodUpsertScreen> createState() =>
+      _AdminPaymentMethodUpsertScreenState();
 }
 
-class _PaymentMethodUpsertScreenState
-    extends ConsumerState<PaymentMethodUpsertScreen> {
+class _AdminPaymentMethodUpsertScreenState
+    extends ConsumerState<AdminPaymentMethodUpsertScreen> {
   final _formKey = GlobalKey<FormBuilderState>();
   File? _selectedImageFile;
   final ImagePicker _picker = ImagePicker();

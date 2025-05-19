@@ -71,13 +71,15 @@ class PaymentMethodRepo {
       return Right(
         SuccessResponse(
           data: paymentMethodWithId,
-          message: 'New menu item added',
+          message: 'New payment method item added',
         ),
       );
     } catch (e) {
       logger.e(e.toString());
       return Left(
-        ErrorResponse(message: 'Failed to add new menu ${e.toString()}'),
+        ErrorResponse(
+          message: 'Failed to add new payment method ${e.toString()}',
+        ),
       );
     }
   }
@@ -97,7 +99,9 @@ class PaymentMethodRepo {
     } catch (e) {
       logger.e(e.toString());
       return Left(
-        ErrorResponse(message: 'Failed to get all menu items ${e.toString()}'),
+        ErrorResponse(
+          message: 'Failed to get all payment method items ${e.toString()}',
+        ),
       );
     }
   }
@@ -156,7 +160,8 @@ class PaymentMethodRepo {
       logger.e(e.toString());
       return Left(
         ErrorResponse(
-          message: 'Failed to get paginated menu items: ${e.toString()}',
+          message:
+              'Failed to get paginated payment method items: ${e.toString()}',
         ),
       );
     }
@@ -177,7 +182,7 @@ class PaymentMethodRepo {
       return Right(SuccessResponse(data: paymentMethod));
     } catch (e) {
       logger.e(e.toString());
-      return Left(ErrorResponse(message: "Failed to get menu item"));
+      return Left(ErrorResponse(message: "Failed to get payment method item"));
     }
   }
 
@@ -265,7 +270,9 @@ class PaymentMethodRepo {
     } catch (e) {
       logger.e(e.toString());
       return Left(
-        ErrorResponse(message: 'Failed to update menu ${e.toString()}'),
+        ErrorResponse(
+          message: 'Failed to update payment method ${e.toString()}',
+        ),
       );
     }
   }
@@ -320,7 +327,9 @@ class PaymentMethodRepo {
     } catch (e) {
       logger.e(e.toString());
       return Left(
-        ErrorResponse(message: 'Failed to delete menu ${e.toString()}'),
+        ErrorResponse(
+          message: 'Failed to delete payment method ${e.toString()}',
+        ),
       );
     }
   }

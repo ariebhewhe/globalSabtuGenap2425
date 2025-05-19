@@ -11,6 +11,62 @@
 part of 'app_router.dart';
 
 /// generated route for
+/// [AdminCategoriesScreen]
+class AdminCategoriesRoute extends PageRouteInfo<void> {
+  const AdminCategoriesRoute({List<PageRouteInfo>? children})
+    : super(AdminCategoriesRoute.name, initialChildren: children);
+
+  static const String name = 'AdminCategoriesRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      return const AdminCategoriesScreen();
+    },
+  );
+}
+
+/// generated route for
+/// [AdminCategoryUpsertScreen]
+class AdminCategoryUpsertRoute
+    extends PageRouteInfo<AdminCategoryUpsertRouteArgs> {
+  AdminCategoryUpsertRoute({
+    Key? key,
+    CategoryModel? category,
+    List<PageRouteInfo>? children,
+  }) : super(
+         AdminCategoryUpsertRoute.name,
+         args: AdminCategoryUpsertRouteArgs(key: key, category: category),
+         initialChildren: children,
+       );
+
+  static const String name = 'AdminCategoryUpsertRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      final args = data.argsAs<AdminCategoryUpsertRouteArgs>(
+        orElse: () => const AdminCategoryUpsertRouteArgs(),
+      );
+      return AdminCategoryUpsertScreen(key: args.key, category: args.category);
+    },
+  );
+}
+
+class AdminCategoryUpsertRouteArgs {
+  const AdminCategoryUpsertRouteArgs({this.key, this.category});
+
+  final Key? key;
+
+  final CategoryModel? category;
+
+  @override
+  String toString() {
+    return 'AdminCategoryUpsertRouteArgs{key: $key, category: $category}';
+  }
+}
+
+/// generated route for
 /// [AdminHomeScreen]
 class AdminHomeRoute extends PageRouteInfo<void> {
   const AdminHomeRoute({List<PageRouteInfo>? children})
@@ -24,6 +80,130 @@ class AdminHomeRoute extends PageRouteInfo<void> {
       return const AdminHomeScreen();
     },
   );
+}
+
+/// generated route for
+/// [AdminMenuItemUpsertScreen]
+class AdminMenuItemUpsertRoute
+    extends PageRouteInfo<AdminMenuItemUpsertRouteArgs> {
+  AdminMenuItemUpsertRoute({
+    Key? key,
+    MenuItemModel? menuItemModel,
+    List<PageRouteInfo>? children,
+  }) : super(
+         AdminMenuItemUpsertRoute.name,
+         args: AdminMenuItemUpsertRouteArgs(
+           key: key,
+           menuItemModel: menuItemModel,
+         ),
+         initialChildren: children,
+       );
+
+  static const String name = 'AdminMenuItemUpsertRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      final args = data.argsAs<AdminMenuItemUpsertRouteArgs>(
+        orElse: () => const AdminMenuItemUpsertRouteArgs(),
+      );
+      return AdminMenuItemUpsertScreen(
+        key: args.key,
+        menuItem: args.menuItemModel,
+      );
+    },
+  );
+}
+
+class AdminMenuItemUpsertRouteArgs {
+  const AdminMenuItemUpsertRouteArgs({this.key, this.menuItemModel});
+
+  final Key? key;
+
+  final MenuItemModel? menuItemModel;
+
+  @override
+  String toString() {
+    return 'AdminMenuItemUpsertRouteArgs{key: $key, menuItemModel: $menuItemModel}';
+  }
+}
+
+/// generated route for
+/// [AdminMenuItemsScreen]
+class AdminMenuItemsRoute extends PageRouteInfo<void> {
+  const AdminMenuItemsRoute({List<PageRouteInfo>? children})
+    : super(AdminMenuItemsRoute.name, initialChildren: children);
+
+  static const String name = 'AdminMenuItemsRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      return const AdminMenuItemsScreen();
+    },
+  );
+}
+
+/// generated route for
+/// [AdminOrdersScreen]
+class AdminOrdersRoute extends PageRouteInfo<void> {
+  const AdminOrdersRoute({List<PageRouteInfo>? children})
+    : super(AdminOrdersRoute.name, initialChildren: children);
+
+  static const String name = 'AdminOrdersRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      return const AdminOrdersScreen();
+    },
+  );
+}
+
+/// generated route for
+/// [AdminPaymentMethodUpsertScreen]
+class AdminPaymentMethodUpsertRoute
+    extends PageRouteInfo<AdminPaymentMethodUpsertRouteArgs> {
+  AdminPaymentMethodUpsertRoute({
+    Key? key,
+    PaymentMethodModel? paymentMethod,
+    List<PageRouteInfo>? children,
+  }) : super(
+         AdminPaymentMethodUpsertRoute.name,
+         args: AdminPaymentMethodUpsertRouteArgs(
+           key: key,
+           paymentMethod: paymentMethod,
+         ),
+         initialChildren: children,
+       );
+
+  static const String name = 'AdminPaymentMethodUpsertRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      final args = data.argsAs<AdminPaymentMethodUpsertRouteArgs>(
+        orElse: () => const AdminPaymentMethodUpsertRouteArgs(),
+      );
+      return AdminPaymentMethodUpsertScreen(
+        key: args.key,
+        paymentMethod: args.paymentMethod,
+      );
+    },
+  );
+}
+
+class AdminPaymentMethodUpsertRouteArgs {
+  const AdminPaymentMethodUpsertRouteArgs({this.key, this.paymentMethod});
+
+  final Key? key;
+
+  final PaymentMethodModel? paymentMethod;
+
+  @override
+  String toString() {
+    return 'AdminPaymentMethodUpsertRouteArgs{key: $key, paymentMethod: $paymentMethod}';
+  }
 }
 
 /// generated route for
@@ -206,48 +386,6 @@ class MenuItemDetailRouteArgs {
 }
 
 /// generated route for
-/// [MenuItemUpsertScreen]
-class MenuItemUpsertRoute extends PageRouteInfo<MenuItemUpsertRouteArgs> {
-  MenuItemUpsertRoute({
-    Key? key,
-    MenuItemModel? menuItemModel,
-    List<PageRouteInfo>? children,
-  }) : super(
-         MenuItemUpsertRoute.name,
-         args: MenuItemUpsertRouteArgs(key: key, menuItemModel: menuItemModel),
-         initialChildren: children,
-       );
-
-  static const String name = 'MenuItemUpsertRoute';
-
-  static PageInfo page = PageInfo(
-    name,
-    builder: (data) {
-      final args = data.argsAs<MenuItemUpsertRouteArgs>(
-        orElse: () => const MenuItemUpsertRouteArgs(),
-      );
-      return MenuItemUpsertScreen(
-        key: args.key,
-        menuItemModel: args.menuItemModel,
-      );
-    },
-  );
-}
-
-class MenuItemUpsertRouteArgs {
-  const MenuItemUpsertRouteArgs({this.key, this.menuItemModel});
-
-  final Key? key;
-
-  final MenuItemModel? menuItemModel;
-
-  @override
-  String toString() {
-    return 'MenuItemUpsertRouteArgs{key: $key, menuItemModel: $menuItemModel}';
-  }
-}
-
-/// generated route for
 /// [MenuItemsScreen]
 class MenuItemsRoute extends PageRouteInfo<void> {
   const MenuItemsRoute({List<PageRouteInfo>? children})
@@ -277,52 +415,6 @@ class OrdersRoute extends PageRouteInfo<void> {
       return const OrdersScreen();
     },
   );
-}
-
-/// generated route for
-/// [PaymentMethodUpsertScreen]
-class PaymentMethodUpsertRoute
-    extends PageRouteInfo<PaymentMethodUpsertRouteArgs> {
-  PaymentMethodUpsertRoute({
-    Key? key,
-    PaymentMethodModel? paymentMethod,
-    List<PageRouteInfo>? children,
-  }) : super(
-         PaymentMethodUpsertRoute.name,
-         args: PaymentMethodUpsertRouteArgs(
-           key: key,
-           paymentMethod: paymentMethod,
-         ),
-         initialChildren: children,
-       );
-
-  static const String name = 'PaymentMethodUpsertRoute';
-
-  static PageInfo page = PageInfo(
-    name,
-    builder: (data) {
-      final args = data.argsAs<PaymentMethodUpsertRouteArgs>(
-        orElse: () => const PaymentMethodUpsertRouteArgs(),
-      );
-      return PaymentMethodUpsertScreen(
-        key: args.key,
-        paymentMethod: args.paymentMethod,
-      );
-    },
-  );
-}
-
-class PaymentMethodUpsertRouteArgs {
-  const PaymentMethodUpsertRouteArgs({this.key, this.paymentMethod});
-
-  final Key? key;
-
-  final PaymentMethodModel? paymentMethod;
-
-  @override
-  String toString() {
-    return 'PaymentMethodUpsertRouteArgs{key: $key, paymentMethod: $paymentMethod}';
-  }
 }
 
 /// generated route for

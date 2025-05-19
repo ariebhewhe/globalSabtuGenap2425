@@ -82,7 +82,7 @@ class MenuItemDetailScreen extends StatelessWidget {
               const SizedBox(height: 16.0),
 
               Text(
-                'Kategori: ${menuItem.category}',
+                'Kategori: ${menuItem.categoryId}',
                 style: const TextStyle(fontSize: 16.0),
               ),
               const SizedBox(height: 8.0),

@@ -12,14 +12,19 @@ class AdminEndDrawer extends StatelessWidget {
   Widget build(BuildContext context) {
     final List<Map<String, dynamic>> drawerItems = [
       {
-        'icon': Icons.person,
-        'title': 'Profile',
-        'route': const AdminProfileRoute(),
+        'icon': Icons.food_bank,
+        'title': 'Menu',
+        'route': const AdminMenuItemsRoute(),
+      },
+      {
+        'icon': Icons.category,
+        'title': 'Categories',
+        'route': AdminCategoryUpsertRoute(),
       },
       {
         'icon': Icons.payment,
         'title': 'Payment Method',
-        'route': PaymentMethodUpsertRoute(),
+        'route': AdminPaymentMethodUpsertRoute(),
       },
       {
         'icon': Icons.table_bar,
@@ -70,6 +75,9 @@ class AdminEndDrawer extends StatelessWidget {
                           onPressed: () {
                             if (isAuth) {
                               ref.read(authMutationProvider.notifier).logout();
+                              if (context.mounted) {
+                                context.replaceRoute(const LoginRoute());
+                              }
                             } else {
                               context.router.pushAll([const LoginRoute()]);
                             }

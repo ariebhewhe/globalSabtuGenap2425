@@ -1,6 +1,8 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:jamal/core/routes/app_router.dart';
+import 'package:jamal/shared/widgets/user_app_bar.dart';
+import 'package:jamal/shared/widgets/user_end_drawer.dart';
 
 @RoutePage()
 class UserTabScreen extends StatelessWidget {
@@ -9,12 +11,17 @@ class UserTabScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AutoTabsScaffold(
+      appBarBuilder: (context, tabsRouter) {
+        return const UserAppBar();
+      },
+      endDrawer: const UserEndDrawer(),
       routes: const [
         HomeRoute(),
         OrdersRoute(),
         ReservationsRoute(),
         ProfileRoute(),
       ],
+
       bottomNavigationBuilder: (_, tabsRouter) {
         return NavigationBar(
           selectedIndex: tabsRouter.activeIndex,

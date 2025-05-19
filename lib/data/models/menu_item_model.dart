@@ -6,7 +6,7 @@ class MenuItemModel extends BaseModel {
   final String name;
   final String description;
   final double price;
-  final String category;
+  final String categoryId;
   final String? imageUrl;
   final bool isAvailable;
   final bool isVegetarian;
@@ -17,7 +17,7 @@ class MenuItemModel extends BaseModel {
     required this.name,
     required this.description,
     required this.price,
-    required this.category,
+    required this.categoryId,
     this.imageUrl,
     required this.isAvailable,
     required this.isVegetarian,
@@ -31,7 +31,7 @@ class MenuItemModel extends BaseModel {
     String? name,
     String? description,
     double? price,
-    String? category,
+    String? categoryId,
     String? imageUrl,
     bool? isAvailable,
     bool? isVegetarian,
@@ -44,7 +44,7 @@ class MenuItemModel extends BaseModel {
       name: name ?? this.name,
       description: description ?? this.description,
       price: price ?? this.price,
-      category: category ?? this.category,
+      categoryId: categoryId ?? this.categoryId,
       imageUrl: imageUrl ?? this.imageUrl,
       isAvailable: isAvailable ?? this.isAvailable,
       isVegetarian: isVegetarian ?? this.isVegetarian,
@@ -61,7 +61,7 @@ class MenuItemModel extends BaseModel {
       'name': name,
       'description': description,
       'price': price,
-      'category': category,
+      'categoryId': categoryId,
       'imageUrl': imageUrl,
       'isAvailable': isAvailable,
       'isVegetarian': isVegetarian,
@@ -78,7 +78,7 @@ class MenuItemModel extends BaseModel {
       name: map['name'] as String,
       description: map['description'] as String,
       price: map['price'] as double,
-      category: map['category'] as String,
+      categoryId: map['categoryId'] as String,
       imageUrl: map['imageUrl'] != null ? map['imageUrl'] as String : null,
       isAvailable: map['isAvailable'] as bool,
       isVegetarian: map['isVegetarian'] as bool,
@@ -97,7 +97,7 @@ class MenuItemModel extends BaseModel {
 
   @override
   String toString() {
-    return 'MenuItemModel(id: $id, name: $name, description: $description, price: $price, category: $category, imageUrl: $imageUrl, isAvailable: $isAvailable, isVegetarian: $isVegetarian, spiceLevel: $spiceLevel, createdAt: $createdAt, updatedAt: $updatedAt)';
+    return 'MenuItemModel(id: $id, name: $name, description: $description, price: $price, categoryId: $categoryId, imageUrl: $imageUrl, isAvailable: $isAvailable, isVegetarian: $isVegetarian, spiceLevel: $spiceLevel, createdAt: $createdAt, updatedAt: $updatedAt)';
   }
 
   @override
@@ -108,7 +108,7 @@ class MenuItemModel extends BaseModel {
         other.name == name &&
         other.description == description &&
         other.price == price &&
-        other.category == category &&
+        other.categoryId == categoryId &&
         other.imageUrl == imageUrl &&
         other.isAvailable == isAvailable &&
         other.isVegetarian == isVegetarian &&
@@ -123,7 +123,7 @@ class MenuItemModel extends BaseModel {
         name.hashCode ^
         description.hashCode ^
         price.hashCode ^
-        category.hashCode ^
+        categoryId.hashCode ^
         imageUrl.hashCode ^
         isAvailable.hashCode ^
         isVegetarian.hashCode ^
@@ -137,7 +137,7 @@ class CreateMenuItemDto {
   final String name;
   final String description;
   final double price;
-  final String category;
+  final String categoryId;
   final String? imageUrl;
   final bool isAvailable;
   final bool isVegetarian;
@@ -147,7 +147,7 @@ class CreateMenuItemDto {
     required this.name,
     required this.description,
     required this.price,
-    required this.category,
+    required this.categoryId,
     this.imageUrl,
     required this.isAvailable,
     required this.isVegetarian,
@@ -159,7 +159,7 @@ class CreateMenuItemDto {
       'name': name,
       'description': description,
       'price': price,
-      'category': category,
+      'categoryId': categoryId,
       'imageUrl': imageUrl,
       'isAvailable': isAvailable,
       'isVegetarian': isVegetarian,
@@ -174,7 +174,7 @@ class UpdateMenuItemDto {
   final String? name;
   final String? description;
   final double? price;
-  final String? category;
+  final String? categoryId;
   final String? imageUrl;
   final bool? isAvailable;
   final bool? isVegetarian;
@@ -184,7 +184,7 @@ class UpdateMenuItemDto {
     this.name,
     this.description,
     this.price,
-    this.category,
+    this.categoryId,
     this.imageUrl,
     this.isAvailable,
     this.isVegetarian,
@@ -196,7 +196,7 @@ class UpdateMenuItemDto {
     if (name != null) map['name'] = name;
     if (description != null) map['description'] = description;
     if (price != null) map['price'] = price;
-    if (category != null) map['category'] = category;
+    if (categoryId != null) map['categoryId'] = categoryId;
     if (imageUrl != null) map['imageUrl'] = imageUrl;
     if (isAvailable != null) map['isAvailable'] = isAvailable;
     if (isVegetarian != null) map['isVegetarian'] = isVegetarian;

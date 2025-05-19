@@ -2,22 +2,24 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:jamal/core/routes/app_router.dart';
-import 'package:jamal/data/models/menu_item_model.dart';
-import 'package:jamal/features/menu_item/presentation/widgets/menu_items_card.dart';
-import 'package:jamal/features/menu_item/providers/menu_items_provider.dart';
-import 'package:jamal/shared/widgets/user_app_bar.dart';
+import 'package:jamal/data/models/category_model.dart';
+import 'package:jamal/features/category/providers/categories_provider.dart';
+import 'package:jamal/features/category/widgets/category_card.dart';
+import 'package:jamal/shared/widgets/admin_app_bar.dart';
+import 'package:jamal/shared/widgets/admin_end_drawer.dart';
 import 'package:jamal/shared/widgets/my_screen_container.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
 @RoutePage()
-class MenuItemsScreen extends ConsumerStatefulWidget {
-  const MenuItemsScreen({Key? key}) : super(key: key);
+class AdminCategoriesScreen extends ConsumerStatefulWidget {
+  const AdminCategoriesScreen({Key? key}) : super(key: key);
 
   @override
-  ConsumerState<MenuItemsScreen> createState() => _MenuItemsScreenState();
+  ConsumerState<AdminCategoriesScreen> createState() =>
+      _AdminCategoriesScreenState();
 }
 
-class _MenuItemsScreenState extends ConsumerState<MenuItemsScreen> {
+class _AdminCategoriesScreenState extends ConsumerState<AdminCategoriesScreen> {
   final ScrollController _scrollController = ScrollController();
 
   @override
@@ -38,11 +40,11 @@ class _MenuItemsScreenState extends ConsumerState<MenuItemsScreen> {
         _scrollController.position.maxScrollExtent - 200) {
       // * Ketika pengguna scroll mendekati bawah, muat lebih banyak data
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        final menuItemsState = ref.watch(menuItemsProvider);
+        final categoriesState = ref.watch(categoriesProvider);
 
         // * Periksa apakah sedang loading more dan masih ada data untuk dimuat
-        if (!menuItemsState.isLoadingMore && menuItemsState.hasMore) {
-          ref.read(menuItemsProvider.notifier).loadMoreMenuItems();
+        if (!categoriesState.isLoadingMore && categoriesState.hasMore) {
+          ref.read(categoriesProvider.notifier).loadMoreCategories();
         }
       });
     }
@@ -51,33 +53,33 @@ class _MenuItemsScreenState extends ConsumerState<MenuItemsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const UserAppBar(),
+      appBar: const AdminAppBar(),
+      endDrawer: const AdminEndDrawer(),
       body: MyScreenContainer(
         child: Consumer(
           builder: (context, ref, child) {
-            final menuItemsState = ref.watch(menuItemsProvider);
-            final menuItems = menuItemsState.menuItems;
-            final isLoading = menuItemsState.isLoading;
+            final categoriesState = ref.watch(categoriesProvider);
+            final categories = categoriesState.categories;
+            final isLoading = categoriesState.isLoading;
             const int skeletonItemCount = 6;
 
             return RefreshIndicator(
               onRefresh:
-                  () => ref.read(menuItemsProvider.notifier).refreshMenuItems(),
+                  () =>
+                      ref.read(categoriesProvider.notifier).refreshCategories(),
               child: Column(
                 children: [
-                  //  Error message jika ada
-                  if (menuItemsState.errorMessage != null)
+                  if (categoriesState.errorMessage != null)
                     Container(
                       padding: const EdgeInsets.all(8.0),
                       color: Colors.red.shade100,
                       width: double.infinity,
                       child: Text(
-                        menuItemsState.errorMessage!,
+                        categoriesState.errorMessage!,
                         style: TextStyle(color: Colors.red.shade800),
                       ),
                     ),
 
-                  //  Konten utama
                   Expanded(
                     child: Skeletonizer(
                       enabled: isLoading,
@@ -93,12 +95,12 @@ class _MenuItemsScreenState extends ConsumerState<MenuItemsScreen> {
                         itemCount:
                             isLoading
                                 ? skeletonItemCount
-                                : menuItems.length +
-                                    (menuItemsState.isLoadingMore ? 1 : 0),
+                                : categories.length +
+                                    (categoriesState.isLoadingMore ? 1 : 0),
                         itemBuilder: (context, index) {
                           if (!isLoading &&
-                              index == menuItems.length &&
-                              menuItemsState.isLoadingMore) {
+                              index == categories.length &&
+                              categoriesState.isLoadingMore) {
                             return const Center(
                               child: Padding(
                                 padding: EdgeInsets.all(8.0),
@@ -107,37 +109,32 @@ class _MenuItemsScreenState extends ConsumerState<MenuItemsScreen> {
                             );
                           }
 
-                          final menuItem =
+                          final category =
                               isLoading
-                                  ? MenuItemModel(
+                                  ? CategoryModel(
                                     id: '',
                                     name: 'Loading Item',
                                     description: '',
-                                    price: 0.0,
-                                    categoryId: '',
-                                    imageUrl: null,
-                                    isAvailable: true,
-                                    isVegetarian: false,
-                                    spiceLevel: 0,
+                                    picture: null,
                                     createdAt: DateTime.now(),
                                     updatedAt: DateTime.now(),
                                   )
-                                  : menuItems[index];
+                                  : categories[index];
 
-                          return MenuItemCard(
-                            menuItem: menuItem,
-                            onTap:
-                                isLoading
-                                    ? null
-                                    : () {
-                                      if (index < menuItems.length) {
-                                        context.router.push(
-                                          MenuItemDetailRoute(
-                                            menuItem: menuItems[index],
-                                          ),
-                                        );
-                                      }
-                                    },
+                          return CategoryCard(
+                            category: category,
+                            // onTap:
+                            //     isLoading
+                            //         ? null
+                            //         : () {
+                            //           // if (index < categories.length) {
+                            //           //   context.router.push(
+                            //           //     CategoryDetailRoute(
+                            //           //       category: categories[index],
+                            //           //     ),
+                            //           //   );
+                            //           // }
+                            //         },
                           );
                         },
                       ),

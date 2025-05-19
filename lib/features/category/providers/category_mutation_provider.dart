@@ -1,27 +1,24 @@
 import 'dart:io';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:jamal/data/models/menu_item_model.dart';
-import 'package:jamal/data/repositories/menu_item_repo.dart';
-import 'package:jamal/features/menu_item/providers/menu_item_mutation_state.dart';
-import 'package:jamal/features/menu_item/providers/menu_item_provider.dart';
-import 'package:jamal/features/menu_item/providers/menu_items_provider.dart';
+import 'package:jamal/data/models/category_model.dart';
+import 'package:jamal/data/repositories/category_repo.dart';
+import 'package:jamal/features/category/providers/category_mutation_state.dart';
+import 'package:jamal/features/category/providers/category_provider.dart';
+import 'package:jamal/features/category/providers/categories_provider.dart';
 
-class MenuItemMutationNotifier extends StateNotifier<MenuItemMutationState> {
-  final MenuItemRepo _menuItemRepo;
+class CategoryMutationNotifier extends StateNotifier<CategoryMutationState> {
+  final CategoryRepo _categoryRepo;
   final Ref _ref;
 
-  MenuItemMutationNotifier(this._menuItemRepo, this._ref)
-    : super(MenuItemMutationState());
+  CategoryMutationNotifier(this._categoryRepo, this._ref)
+    : super(CategoryMutationState());
 
-  Future<void> addMenuItem(
-    CreateMenuItemDto newMenuItem, {
-    File? imageFile,
-  }) async {
+  Future<void> addCategory(CategoryModel newCategory, {File? imageFile}) async {
     state = state.copyWith(isLoading: true);
 
-    final result = await _menuItemRepo.addMenuItem(
-      newMenuItem,
+    final result = await _categoryRepo.addCategory(
+      newCategory,
       imageFile: imageFile,
     );
 
@@ -35,22 +32,22 @@ class MenuItemMutationNotifier extends StateNotifier<MenuItemMutationState> {
         );
 
         // * Refresh menu items list
-        _ref.read(menuItemsProvider.notifier).refreshMenuItems();
+        _ref.read(categoriesProvider.notifier).refreshCategories();
       },
     );
   }
 
-  Future<void> updateMenuItem(
+  Future<void> updateCategory(
     String id,
-    UpdateMenuItemDto updatedMenuItem, {
+    CategoryModel updatedCategory, {
     File? imageFile,
     bool deleteExistingImage = false,
   }) async {
     state = state.copyWith(isLoading: true);
 
-    final result = await _menuItemRepo.updateMenuItem(
+    final result = await _categoryRepo.updateCategory(
       id,
-      updatedMenuItem,
+      updatedCategory,
       imageFile: imageFile,
       deleteExistingImage: deleteExistingImage,
     );
@@ -65,20 +62,20 @@ class MenuItemMutationNotifier extends StateNotifier<MenuItemMutationState> {
         );
 
         // * Refresh menu items dan menu items
-        _ref.read(menuItemsProvider.notifier).refreshMenuItems();
+        _ref.read(categoriesProvider.notifier).refreshCategories();
 
-        final activeId = _ref.read(activeMenuItemIdProvider);
+        final activeId = _ref.read(activeCategoryIdProvider);
         if (activeId == id) {
-          _ref.read(activeMenuItemProvider.notifier).refreshMenuItem();
+          _ref.read(activeCategoryProvider.notifier).refreshCategory();
         }
       },
     );
   }
 
-  Future<void> deleteMenuItem(String id, {bool deleteImage = true}) async {
+  Future<void> deleteCategory(String id, {bool deleteImage = true}) async {
     state = state.copyWith(isLoading: true);
 
-    final result = await _menuItemRepo.deleteMenuItem(
+    final result = await _categoryRepo.deleteCategory(
       id,
       deleteImage: deleteImage,
     );
@@ -93,12 +90,12 @@ class MenuItemMutationNotifier extends StateNotifier<MenuItemMutationState> {
         );
 
         // * Refresh menu items
-        _ref.read(menuItemsProvider.notifier).refreshMenuItems();
+        _ref.read(categoriesProvider.notifier).refreshCategories();
 
         // * Kalo delete clear active item id
-        final activeId = _ref.read(activeMenuItemIdProvider);
+        final activeId = _ref.read(activeCategoryIdProvider);
         if (activeId == id) {
-          _ref.read(activeMenuItemIdProvider.notifier).state = null;
+          _ref.read(activeCategoryIdProvider.notifier).state = null;
         }
       },
     );
@@ -115,10 +112,10 @@ class MenuItemMutationNotifier extends StateNotifier<MenuItemMutationState> {
   }
 }
 
-final menuItemMutationProvider =
-    StateNotifierProvider<MenuItemMutationNotifier, MenuItemMutationState>((
+final categoryMutationProvider =
+    StateNotifierProvider<CategoryMutationNotifier, CategoryMutationState>((
       ref,
     ) {
-      final MenuItemRepo menuItemRepo = ref.watch(menuItemRepoProvider);
-      return MenuItemMutationNotifier(menuItemRepo, ref);
+      final CategoryRepo categoryRepo = ref.watch(categoryRepoProvider);
+      return CategoryMutationNotifier(categoryRepo, ref);
     });
