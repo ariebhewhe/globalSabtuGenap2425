@@ -180,7 +180,7 @@ class MenuItemDetailScreen extends StatelessWidget {
                   Expanded(
                     flex: 2,
                     child: ElevatedButton(
-                      onPressed: () => context.pushRoute(const OrderRoute()),
+                      onPressed: () => context.pushRoute(const OrdersRoute()),
                       child: const Text('Order', style: TextStyle()),
                     ),
                   ),

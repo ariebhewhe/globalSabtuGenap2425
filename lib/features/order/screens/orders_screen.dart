@@ -1,0 +1,23 @@
+import 'package:auto_route/auto_route.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_form_builder/flutter_form_builder.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:jamal/features/cart/providers/selected_cart_items_provider.dart';
+import 'package:jamal/features/order/providers/order_mutation_provider.dart';
+import 'package:jamal/shared/widgets/user_app_bar.dart';
+import 'package:jamal/shared/widgets/my_screen_container.dart';
+
+@RoutePage()
+class OrdersScreen extends StatelessWidget {
+  const OrdersScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: UserAppBar(),
+      body: MyScreenContainer(
+        child: SingleChildScrollView(child: Column(children: [Text('Kintil')])),
+      ),
+    );
+  }
+}

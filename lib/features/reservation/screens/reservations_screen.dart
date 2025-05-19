@@ -8,15 +8,15 @@ import 'package:jamal/shared/widgets/user_app_bar.dart';
 import 'package:jamal/shared/widgets/my_screen_container.dart';
 
 @RoutePage()
-class OrderScreen extends StatelessWidget {
-  const OrderScreen({super.key});
+class ReservationsScreen extends StatelessWidget {
+  const ReservationsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: UserAppBar(),
       body: MyScreenContainer(
-        child: SingleChildScrollView(child: Column(children: [])),
+        child: SingleChildScrollView(child: Column(children: [Text('Kintil')])),
       ),
     );
   }

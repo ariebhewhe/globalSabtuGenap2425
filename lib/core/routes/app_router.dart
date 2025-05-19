@@ -12,12 +12,13 @@ import 'package:jamal/features/home/presentation/screens/admin_home_screen.dart'
 import 'package:jamal/features/home/presentation/screens/home_screen.dart';
 import 'package:jamal/features/menu_item/presentation/screens/menu_item_upsert_screen.dart';
 import 'package:jamal/features/order/screens/create_order_screen.dart';
-import 'package:jamal/features/order/screens/order_screen.dart';
+import 'package:jamal/features/order/screens/orders_screen.dart';
 import 'package:jamal/features/payment_method/screens/payment_method_upsert_screen.dart';
 import 'package:jamal/features/profile/presentation/screens/admin_profile_screen.dart';
 import 'package:jamal/features/profile/presentation/screens/profile_screen.dart';
 import 'package:jamal/features/menu_item/presentation/screens/menu_items_screen.dart';
 import 'package:jamal/features/menu_item/presentation/screens/menu_item_detail_screen.dart';
+import 'package:jamal/features/reservation/screens/reservations_screen.dart';
 import 'package:jamal/features/restaurant_table/presentation/screens/admin_restaurant_table_upsert_screen.dart';
 import 'package:jamal/shared/screens/splash_screen.dart';
 import 'package:jamal/shared/widgets/admin_tab_screen.dart';
@@ -41,7 +42,8 @@ class AppRouter extends RootStackRouter {
 
   @override
   List<AutoRoute> get routes => [
-    AutoRoute(page: LoginRoute.page, initial: true),
+    AutoRoute(page: SplashRoute.page, initial: true),
+    AutoRoute(page: LoginRoute.page),
 
     // * User
     CustomRoute(
@@ -50,12 +52,13 @@ class AppRouter extends RootStackRouter {
       transitionsBuilder: TransitionsBuilders.fadeIn,
       children: [
         AutoRoute(page: HomeRoute.page),
+        AutoRoute(page: OrdersRoute.page),
+        AutoRoute(page: ReservationsRoute.page),
         AutoRoute(page: ProfileRoute.page),
       ],
     ),
     AutoRoute(page: MenuItemsRoute.page),
     AutoRoute(page: MenuItemDetailRoute.page),
-    AutoRoute(page: OrderRoute.page, guards: [_authGuard, _duplicateGuard]),
     AutoRoute(
       page: CreateOrderRoute.page,
       guards: [_authGuard, _duplicateGuard],
