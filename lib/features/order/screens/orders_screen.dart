@@ -14,7 +14,6 @@ class OrdersScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: UserAppBar(),
       body: MyScreenContainer(
         child: SingleChildScrollView(child: Column(children: [Text('Kintil')])),
       ),

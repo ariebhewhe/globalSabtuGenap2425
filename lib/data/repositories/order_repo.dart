@@ -22,6 +22,7 @@ class OrderRepo {
   final CurrentUserStorageService _currentUserStorageService;
 
   final String _collectionPath = 'orders';
+  final String _reservationsCollectionPath = 'table_reservations';
   final AppLogger logger = AppLogger();
 
   OrderRepo(this._firebaseFirestore, this._currentUserStorageService);
@@ -32,10 +33,12 @@ class OrderRepo {
     try {
       final userId = await _getCurrentUserId();
 
-      final ordersCollection = _firebaseFirestore.collection(_collectionPath);
-      final docRef = ordersCollection.doc();
+      final batch = _firebaseFirestore.batch();
 
-      // Menghitung totalAmount dari orderItems
+      final ordersCollection = _firebaseFirestore.collection(_collectionPath);
+      final orderDocRef = ordersCollection.doc();
+      final orderId = orderDocRef.id;
+
       double totalAmount = 0;
       for (var item in dto.orderItems) {
         totalAmount += item.price * item.quantity;
@@ -43,7 +46,7 @@ class OrderRepo {
 
       final orderData = dto.toMap();
 
-      orderData['id'] = docRef.id;
+      orderData['id'] = orderId;
       orderData['userId'] = userId;
       orderData['status'] = OrderStatus.pending.toMap();
       orderData['paymentStatus'] = PaymentStatus.unpaid.toMap();
@@ -52,7 +55,33 @@ class OrderRepo {
       orderData['createdAt'] = DateTime.now().millisecondsSinceEpoch;
       orderData['updatedAt'] = DateTime.now().millisecondsSinceEpoch;
 
-      await docRef.set(orderData);
+      batch.set(orderDocRef, orderData);
+
+      if (dto.orderType == OrderType.dineIn && dto.tableReservation != null) {
+        final reservationsCollection = _firebaseFirestore.collection(
+          _reservationsCollectionPath,
+        );
+        final reservationDocRef = reservationsCollection.doc();
+
+        final reservationData = {
+          'id': reservationDocRef.id,
+          'tableId': dto.tableReservation!.tableId,
+          'orderId': orderId,
+          'reservationTime':
+              dto.tableReservation!.reservationTime.millisecondsSinceEpoch,
+          'status': ReservationStatus.reserved.toMap(),
+          'table': dto.tableReservation!.table?.toMap(),
+          'createdAt': DateTime.now().millisecondsSinceEpoch,
+          'updatedAt': DateTime.now().millisecondsSinceEpoch,
+        };
+
+        batch.set(reservationDocRef, reservationData);
+
+        orderData['reservationId'] = reservationDocRef.id;
+        batch.update(orderDocRef, {'reservationId': reservationDocRef.id});
+      }
+
+      await batch.commit();
 
       final order = OrderModel.fromMap(orderData);
 
@@ -204,9 +233,7 @@ class OrderRepo {
           .doc(id)
           .update(updateData);
 
-      // Perbarui model order dengan data baru
       final updatedOrder = currentOrder.copyWith(
-        tableId: dto.tableId,
         orderType: dto.orderType,
         status: dto.status,
         paymentStatus: dto.paymentStatus,

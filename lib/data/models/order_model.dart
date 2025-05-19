@@ -1,4 +1,3 @@
-// ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
@@ -6,10 +5,10 @@ import 'package:flutter/foundation.dart';
 import 'package:jamal/core/abstractions/base_model.dart';
 import 'package:jamal/core/utils/enums.dart';
 import 'package:jamal/data/models/order_item_model.dart';
+import 'package:jamal/data/models/table_reservation_model.dart';
 
 class OrderModel extends BaseModel {
   final String userId;
-  final String? tableId;
   final String? paymentMethodId;
   final OrderType orderType;
   final OrderStatus status;
@@ -25,7 +24,6 @@ class OrderModel extends BaseModel {
     required DateTime createdAt,
     required DateTime updatedAt,
     required this.userId,
-    this.tableId,
     this.paymentMethodId,
     required this.orderType,
     this.status = OrderStatus.pending,
@@ -40,7 +38,6 @@ class OrderModel extends BaseModel {
   OrderModel copyWith({
     String? id,
     String? userId,
-    String? tableId,
     String? paymentMethodId,
     OrderType? orderType,
     OrderStatus? status,
@@ -57,7 +54,6 @@ class OrderModel extends BaseModel {
     return OrderModel(
       id: id ?? this.id,
       userId: userId ?? this.userId,
-      tableId: tableId ?? this.tableId,
       paymentMethodId: paymentMethodId ?? this.paymentMethodId,
       orderType: orderType ?? this.orderType,
       status: status ?? this.status,
@@ -76,7 +72,6 @@ class OrderModel extends BaseModel {
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
       'userId': userId,
-      'tableId': tableId,
       'paymentMethodId': paymentMethodId,
       'orderType': orderType.toMap(),
       'status': status.toMap(),
@@ -94,7 +89,6 @@ class OrderModel extends BaseModel {
     return OrderModel(
       id: map['id'] as String,
       userId: map['userId'] as String,
-      tableId: map['tableId'] != null ? map['tableId'] as String : null,
       paymentMethodId:
           map['paymentMethodId'] != null
               ? map['paymentMethodId'] as String
@@ -138,7 +132,7 @@ class OrderModel extends BaseModel {
 
   @override
   String toString() {
-    return 'OrderModel(userId: $userId, tableId: $tableId, paymentMethodId: $paymentMethodId, orderType: $orderType, status: $status, totalAmount: $totalAmount, paymentStatus: $paymentStatus, orderDate: $orderDate, estimatedReadyTime: $estimatedReadyTime, specialInstructions: $specialInstructions, orderItems: $orderItems)';
+    return 'OrderModel(userId: $userId, paymentMethodId: $paymentMethodId, orderType: $orderType, status: $status, totalAmount: $totalAmount, paymentStatus: $paymentStatus, orderDate: $orderDate, estimatedReadyTime: $estimatedReadyTime, specialInstructions: $specialInstructions, orderItems: $orderItems)';
   }
 
   @override
@@ -146,7 +140,6 @@ class OrderModel extends BaseModel {
     if (identical(this, other)) return true;
 
     return other.userId == userId &&
-        other.tableId == tableId &&
         other.paymentMethodId == paymentMethodId &&
         other.orderType == orderType &&
         other.status == status &&
@@ -161,7 +154,6 @@ class OrderModel extends BaseModel {
   @override
   int get hashCode {
     return userId.hashCode ^
-        tableId.hashCode ^
         paymentMethodId.hashCode ^
         orderType.hashCode ^
         status.hashCode ^
@@ -175,36 +167,35 @@ class OrderModel extends BaseModel {
 }
 
 class CreateOrderDto {
-  final String? tableId;
   final String paymentMethodId;
   final OrderType orderType;
   final DateTime? estimatedReadyTime;
   final String? specialInstructions;
+  final CreateTableReservationDto? tableReservation;
   final List<OrderItemModel> orderItems;
 
   CreateOrderDto({
-    required this.tableId,
     required this.paymentMethodId,
     required this.orderType,
-    required this.estimatedReadyTime,
-    required this.specialInstructions,
+    this.estimatedReadyTime,
+    this.specialInstructions,
+    this.tableReservation,
     required this.orderItems,
   });
 
   Map<String, dynamic> toMap() {
-    return {
-      'tableId': tableId,
+    return <String, dynamic>{
       'paymentMethodId': paymentMethodId,
       'orderType': orderType.toMap(),
-      'estimatedReadyTime': estimatedReadyTime,
+      'estimatedReadyTime': estimatedReadyTime?.millisecondsSinceEpoch,
       'specialInstructions': specialInstructions,
+      'tableReservation': tableReservation?.toMap(),
       'orderItems': orderItems.map((x) => x.toMap()).toList(),
     };
   }
 }
 
 class UpdateOrderDto {
-  final String? tableId;
   final String? paymentMethodId;
   final OrderType? orderType;
   final OrderStatus? status;
@@ -212,7 +203,6 @@ class UpdateOrderDto {
   final DateTime? estimatedReadyTime;
 
   UpdateOrderDto({
-    this.tableId,
     this.paymentMethodId,
     this.orderType,
     this.status,
@@ -223,9 +213,6 @@ class UpdateOrderDto {
   Map<String, dynamic> toMap() {
     final map = <String, dynamic>{};
 
-    if (tableId != null) {
-      map['tableId'] = tableId;
-    }
     if (paymentMethodId != null) {
       map['paymentMethodId'] = paymentMethodId;
     }

@@ -1,4 +1,5 @@
 import 'package:auto_route/auto_route.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
@@ -6,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:jamal/core/utils/enums.dart';
 import 'package:jamal/data/models/order_item_model.dart';
 import 'package:jamal/data/models/order_model.dart';
+import 'package:jamal/data/models/table_reservation_model.dart';
 import 'package:jamal/features/cart/providers/selected_cart_items_provider.dart';
 import 'package:jamal/features/order/providers/order_mutation_provider.dart';
 import 'package:jamal/features/payment_method/providers/payment_methods_provider.dart';
@@ -69,16 +71,33 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
     if (isValid) {
       final formValues = _formKey.currentState!.value;
 
+      // * Membuat objek CreateTableReservationDto jika tipe pesanan adalah dineIn
+      CreateTableReservationDto? tableReservation;
+      if (_selectedOrderType == OrderType.dineIn &&
+          formValues['tableId'] != null) {
+        // * Mendapatkan objek table dari list available tables
+        final selectedTableId = formValues['tableId'] as String;
+        final restaurantTablesState = ref.read(restaurantTablesProvider);
+        final selectedTable = restaurantTablesState.restaurantTables.firstWhere(
+          (table) => table.id == selectedTableId,
+        );
+
+        // * Membuat objek reservasi meja
+        tableReservation = CreateTableReservationDto(
+          tableId: selectedTableId,
+          reservationTime:
+              formValues['estimatedReadyTime'] as DateTime? ?? DateTime.now(),
+          table: selectedTable,
+        );
+      }
+
       final newOrder = CreateOrderDto(
-        tableId:
-            _selectedOrderType == OrderType.dineIn &&
-                    formValues['tableId'] != null
-                ? formValues['tableId'] as String
-                : null,
         paymentMethodId: formValues['paymentMethodId'] as String,
         orderType: _selectedOrderType,
         estimatedReadyTime: formValues['estimatedReadyTime'] as DateTime?,
         specialInstructions: formValues['specialInstructions'] as String?,
+        tableReservation:
+            tableReservation, // * Menggunakan tableReservation yang sudah dibuat
         orderItems: _orderItems,
       );
 
@@ -148,6 +167,7 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
                 const SizedBox(height: 16),
 
                 if (_selectedOrderType == OrderType.dineIn) ...[
+                  // * Tampilkan pemilihan meja dan jadwal reservasi
                   restaurantTablesState.isLoading
                       ? const Center(child: CircularProgressIndicator())
                       : restaurantTablesState.errorMessage != null
@@ -180,18 +200,41 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
                         ),
                       ),
                   const SizedBox(height: 16),
-                ],
 
-                FormBuilderDateTimePicker(
-                  name: 'estimatedReadyTime',
-                  decoration: const InputDecoration(
-                    labelText: 'Perkiraan Waktu Siap',
-                    border: OutlineInputBorder(),
-                    hintText: 'Pilih waktu',
+                  // * Jadwal reservasi untuk meja
+                  FormBuilderDateTimePicker(
+                    name: 'estimatedReadyTime',
+                    decoration: const InputDecoration(
+                      labelText: 'Waktu Reservasi',
+                      border: OutlineInputBorder(),
+                      hintText: 'Pilih waktu reservasi',
+                    ),
+                    initialTime: const TimeOfDay(hour: 8, minute: 0),
+                    initialValue: DateTime.now().add(
+                      const Duration(minutes: 30),
+                    ),
+                    validator:
+                        _selectedOrderType == OrderType.dineIn
+                            ? FormBuilderValidators.required(
+                              errorText: 'Silakan pilih waktu reservasi',
+                            )
+                            : null,
                   ),
-                  initialTime: const TimeOfDay(hour: 8, minute: 0),
-                  initialValue: DateTime.now().add(const Duration(minutes: 30)),
-                ),
+                ] else ...[
+                  // * Untuk takeAway, estimasi waktu saat pesanan siap
+                  FormBuilderDateTimePicker(
+                    name: 'estimatedReadyTime',
+                    decoration: const InputDecoration(
+                      labelText: 'Perkiraan Waktu Siap',
+                      border: OutlineInputBorder(),
+                      hintText: 'Pilih waktu',
+                    ),
+                    initialTime: const TimeOfDay(hour: 8, minute: 0),
+                    initialValue: DateTime.now().add(
+                      const Duration(minutes: 30),
+                    ),
+                  ),
+                ],
                 const SizedBox(height: 16),
 
                 paymentMethodsState.isLoading
@@ -284,22 +327,33 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
                   separatorBuilder: (context, index) => const Divider(),
                   itemBuilder: (context, index) {
                     final item = _orderItems[index];
+                    // print(item.menuItem!.imageUrl!);
                     return ListTile(
                       leading:
                           item.menuItem?.imageUrl != null
                               ? ClipRRect(
                                 borderRadius: BorderRadius.circular(8),
-                                child: Image.network(
-                                  item.menuItem!.imageUrl!,
+                                child: CachedNetworkImage(
                                   width: 60,
                                   height: 60,
+                                  imageUrl:
+                                      item.menuItem?.imageUrl ??
+                                      "https://i.pinimg.com/736x/4f/6d/7e/4f6d7e577a4f3ae5045fd151fa16c2c7.jpg",
                                   fit: BoxFit.cover,
-                                  errorBuilder:
-                                      (context, error, stackTrace) => Container(
-                                        width: 60,
-                                        height: 60,
-                                        color: Colors.grey[300],
-                                        child: const Icon(Icons.restaurant),
+                                  placeholder:
+                                      (context, url) => const Center(
+                                        child: CircularProgressIndicator(),
+                                      ),
+                                  errorWidget:
+                                      (context, url, error) => Container(
+                                        color: Colors.grey.withOpacity(0.2),
+                                        child: const Center(
+                                          child: Icon(
+                                            Icons.fastfood_outlined,
+                                            size: 30,
+                                            color: Colors.grey,
+                                          ),
+                                        ),
                                       ),
                                 ),
                               )
