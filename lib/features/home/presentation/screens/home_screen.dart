@@ -5,6 +5,7 @@ import 'package:jamal/core/routes/app_router.dart';
 import 'package:jamal/data/models/menu_item_model.dart';
 import 'package:jamal/data/models/category_model.dart';
 import 'package:jamal/features/category/providers/categories_provider.dart';
+import 'package:jamal/features/menu_item/presentation/widgets/menu_items_card.dart';
 import 'package:jamal/features/menu_item/providers/menu_items_provider.dart';
 
 import 'package:jamal/shared/widgets/my_screen_container.dart';
@@ -103,7 +104,6 @@ class HomeScreen extends ConsumerWidget {
                     },
                   ),
                 ),
-
                 const SizedBox(height: 24),
 
                 const Text(
@@ -111,19 +111,23 @@ class HomeScreen extends ConsumerWidget {
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 12),
+
                 Skeletonizer(
                   enabled: isLoadingPopular,
-                  child: ListView.separated(
+                  child: GridView.builder(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
-                    itemCount:
-                        isLoadingPopular
-                            ? skeletonPopularItemCount
-                            : popularItems.length,
-                    separatorBuilder:
-                        (context, index) => const SizedBox(height: 12),
+                    padding: const EdgeInsets.all(16.0),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          crossAxisSpacing: 16.0,
+                          mainAxisSpacing: 16.0,
+                          childAspectRatio: 0.8,
+                        ),
+                    itemCount: popularItems.length,
                     itemBuilder: (context, index) {
-                      final item =
+                      final menuItem =
                           isLoadingPopular
                               ? MenuItemModel(
                                 id: '',
@@ -140,21 +144,18 @@ class HomeScreen extends ConsumerWidget {
                               )
                               : popularItems[index];
 
-                      return PopularMenuItemCard(
-                        menuItem: item,
-
-                        // onTap:
-                        //     isLoadingPopular
-                        //         ? null
-                        //         : () {
-                        //           if (index < popularItems.length) {
-                        //             context.router.push(
-                        //               MenuItemDetailRoute(
-                        //                 menuItem: popularItems[index],
-                        //               ),
-                        //             );
-                        //           }
-                        //         },
+                      return MenuItemCard(
+                        menuItem: menuItem,
+                        onTap:
+                            isLoadingPopular
+                                ? null
+                                : () {
+                                  context.router.push(
+                                    AdminMenuItemUpsertRoute(
+                                      menuItem: menuItem,
+                                    ),
+                                  );
+                                },
                       );
                     },
                   ),
