@@ -23,6 +23,8 @@ class OrderRepo {
 
   final String _collectionPath = 'orders';
   final String _reservationsCollectionPath = 'table_reservations';
+  final String _cartCollectionPath =
+      'cart_items'; // * Collection path untuk cart
   final AppLogger logger = AppLogger();
 
   OrderRepo(this._firebaseFirestore, this._currentUserStorageService);
@@ -55,8 +57,12 @@ class OrderRepo {
       orderData['createdAt'] = DateTime.now().millisecondsSinceEpoch;
       orderData['updatedAt'] = DateTime.now().millisecondsSinceEpoch;
 
+      // * Hapus tableReservation dari orderData jika ada (karena tidak ada di model)
+      orderData.remove('tableReservation');
+
       batch.set(orderDocRef, orderData);
 
+      // * Jika dine-in, buat table reservation terpisah
       if (dto.orderType == OrderType.dineIn && dto.tableReservation != null) {
         final reservationsCollection = _firebaseFirestore.collection(
           _reservationsCollectionPath,
@@ -65,6 +71,7 @@ class OrderRepo {
 
         final reservationData = {
           'id': reservationDocRef.id,
+          'userId': userId,
           'tableId': dto.tableReservation!.tableId,
           'orderId': orderId,
           'reservationTime':
@@ -76,9 +83,29 @@ class OrderRepo {
         };
 
         batch.set(reservationDocRef, reservationData);
+      }
 
-        orderData['reservationId'] = reservationDocRef.id;
-        batch.update(orderDocRef, {'reservationId': reservationDocRef.id});
+      // * Hapus cart items berdasarkan menuItemId dari orderItems
+      if (dto.orderItems.isNotEmpty) {
+        final cartCollection = _firebaseFirestore.collection(
+          _cartCollectionPath,
+        );
+
+        // * Ambil semua menuItemId dari order items
+        final menuItemIds =
+            dto.orderItems.map((item) => item.menuItemId).toList();
+
+        // * Query cart items berdasarkan userId dan menuItemId
+        final cartQuery =
+            await cartCollection
+                .where('userId', isEqualTo: userId)
+                .where('menuItemId', whereIn: menuItemIds)
+                .get();
+
+        // * Hapus cart items yang sesuai
+        for (var cartDoc in cartQuery.docs) {
+          batch.delete(cartDoc.reference);
+        }
       }
 
       await batch.commit();

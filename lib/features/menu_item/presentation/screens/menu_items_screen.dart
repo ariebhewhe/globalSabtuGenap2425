@@ -7,6 +7,7 @@ import 'package:jamal/features/menu_item/presentation/widgets/menu_items_card.da
 import 'package:jamal/features/menu_item/providers/menu_items_provider.dart';
 import 'package:jamal/shared/widgets/user_app_bar.dart';
 import 'package:jamal/shared/widgets/my_screen_container.dart';
+import 'package:jamal/shared/widgets/user_end_drawer.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
 @RoutePage()
@@ -52,6 +53,7 @@ class _MenuItemsScreenState extends ConsumerState<MenuItemsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: const UserAppBar(),
+      endDrawer: const UserEndDrawer(),
       body: MyScreenContainer(
         child: Consumer(
           builder: (context, ref, child) {

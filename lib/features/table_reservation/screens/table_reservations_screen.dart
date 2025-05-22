@@ -10,14 +10,16 @@ import 'package:jamal/shared/widgets/my_screen_container.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
 @RoutePage()
-class ReservationsScreen extends ConsumerStatefulWidget {
-  const ReservationsScreen({Key? key}) : super(key: key);
+class TableReservationsScreen extends ConsumerStatefulWidget {
+  const TableReservationsScreen({Key? key}) : super(key: key);
 
   @override
-  ConsumerState<ReservationsScreen> createState() => _ReservationsScreenState();
+  ConsumerState<TableReservationsScreen> createState() =>
+      _TableReservationsScreenState();
 }
 
-class _ReservationsScreenState extends ConsumerState<ReservationsScreen> {
+class _TableReservationsScreenState
+    extends ConsumerState<TableReservationsScreen> {
   final ScrollController _scrollController = ScrollController();
 
   @override

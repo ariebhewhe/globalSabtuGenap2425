@@ -434,17 +434,17 @@ class ProfileRoute extends PageRouteInfo<void> {
 }
 
 /// generated route for
-/// [ReservationsScreen]
-class ReservationsRoute extends PageRouteInfo<void> {
-  const ReservationsRoute({List<PageRouteInfo>? children})
-    : super(ReservationsRoute.name, initialChildren: children);
+/// [TableReservationsScreen]
+class TableReservationsRoute extends PageRouteInfo<void> {
+  const TableReservationsRoute({List<PageRouteInfo>? children})
+    : super(TableReservationsRoute.name, initialChildren: children);
 
-  static const String name = 'ReservationsRoute';
+  static const String name = 'TableReservationsRoute';
 
   static PageInfo page = PageInfo(
     name,
     builder: (data) {
-      return const ReservationsScreen();
+      return const TableReservationsScreen();
     },
   );
 }

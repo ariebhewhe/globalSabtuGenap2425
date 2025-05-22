@@ -23,7 +23,7 @@ import 'package:jamal/features/profile/presentation/screens/admin_profile_screen
 import 'package:jamal/features/profile/presentation/screens/profile_screen.dart';
 import 'package:jamal/features/menu_item/presentation/screens/menu_items_screen.dart';
 import 'package:jamal/features/menu_item/presentation/screens/menu_item_detail_screen.dart';
-import 'package:jamal/features/reservation/screens/reservations_screen.dart';
+import 'package:jamal/features/table_reservation/screens/table_reservations_screen.dart';
 import 'package:jamal/features/restaurant_table/presentation/screens/admin_restaurant_table_upsert_screen.dart';
 import 'package:jamal/shared/screens/splash_screen.dart';
 import 'package:jamal/shared/widgets/admin_tab_screen.dart';
@@ -58,7 +58,7 @@ class AppRouter extends RootStackRouter {
       children: [
         AutoRoute(page: HomeRoute.page),
         AutoRoute(page: OrdersRoute.page),
-        AutoRoute(page: ReservationsRoute.page),
+        AutoRoute(page: TableReservationsRoute.page),
         AutoRoute(page: ProfileRoute.page),
       ],
     ),

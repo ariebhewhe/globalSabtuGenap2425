@@ -18,7 +18,7 @@ class UserTabScreen extends StatelessWidget {
       routes: const [
         HomeRoute(),
         OrdersRoute(),
-        ReservationsRoute(),
+        TableReservationsRoute(),
         ProfileRoute(),
       ],
 

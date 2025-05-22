@@ -5,6 +5,7 @@ import 'package:jamal/core/utils/enums.dart';
 import 'package:jamal/data/models/restaurant_table_model.dart';
 
 class TableReservationModel extends BaseModel {
+  final String userId;
   final String tableId;
   final String orderId;
   final DateTime reservationTime;
@@ -13,6 +14,7 @@ class TableReservationModel extends BaseModel {
 
   TableReservationModel({
     required String id,
+    required this.userId,
     required this.tableId,
     required this.orderId,
     required this.reservationTime,
@@ -24,6 +26,7 @@ class TableReservationModel extends BaseModel {
 
   TableReservationModel copyWith({
     String? id,
+    String? userId,
     String? tableId,
     String? orderId,
     DateTime? reservationTime,
@@ -35,6 +38,7 @@ class TableReservationModel extends BaseModel {
   }) {
     return TableReservationModel(
       id: id ?? this.id,
+      userId: userId ?? this.userId,
       tableId: tableId ?? this.tableId,
       orderId: orderId ?? this.orderId,
       reservationTime: reservationTime ?? this.reservationTime,
@@ -49,6 +53,7 @@ class TableReservationModel extends BaseModel {
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
       'id': id,
+      'userId': userId,
       'tableId': tableId,
       'orderId': orderId,
       'reservationTime': reservationTime.millisecondsSinceEpoch,
@@ -63,6 +68,7 @@ class TableReservationModel extends BaseModel {
   factory TableReservationModel.fromMap(Map<String, dynamic> map) {
     return TableReservationModel(
       id: map['id'] as String,
+      userId: map['userId'] as String,
       tableId: map['tableId'] as String,
       orderId: map['orderId'] as String,
       reservationTime: DateTime.fromMillisecondsSinceEpoch(
@@ -91,7 +97,7 @@ class TableReservationModel extends BaseModel {
 
   @override
   String toString() {
-    return 'TableReservationModel(id: $id, tableId: $tableId, orderId: $orderId, reservationTime: $reservationTime, status: $status, table: $table, createdAt: $createdAt, updatedAt: $updatedAt)';
+    return 'TableReservationModel(id: $id, userId: $userId, tableId: $tableId, orderId: $orderId, reservationTime: $reservationTime, status: $status, table: $table, createdAt: $createdAt, updatedAt: $updatedAt)';
   }
 
   @override
@@ -99,6 +105,7 @@ class TableReservationModel extends BaseModel {
     if (identical(this, other)) return true;
 
     return other.id == id &&
+        other.userId == userId &&
         other.tableId == tableId &&
         other.orderId == orderId &&
         other.reservationTime == reservationTime &&
@@ -111,6 +118,7 @@ class TableReservationModel extends BaseModel {
   @override
   int get hashCode {
     return id.hashCode ^
+        userId.hashCode ^
         tableId.hashCode ^
         orderId.hashCode ^
         reservationTime.hashCode ^
