@@ -12,6 +12,7 @@ class OrderTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final currencyFormatter = NumberFormat.currency(
       locale: 'id_ID',
       symbol: 'Rp',
@@ -23,7 +24,9 @@ class OrderTile extends StatelessWidget {
       elevation: 1,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: Colors.grey.shade200),
+        side: BorderSide(
+          color: theme.dividerTheme.color ?? theme.colorScheme.outline,
+        ),
       ),
       child: InkWell(
         onTap: onTap,
@@ -32,62 +35,56 @@ class OrderTile extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Order ID and Date
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Expanded(
                     child: Text(
                       'Order #${order.id.substring(0, 8)}',
-                      style: const TextStyle(
+                      style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
-                        fontSize: 16,
                       ),
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
                   Text(
                     DateFormat('dd MMM yyyy, HH:mm').format(order.orderDate),
-                    style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                    style: theme.textTheme.bodySmall,
                   ),
                 ],
               ),
 
               const SizedBox(height: 12),
 
-              // Order Type and Status
               Row(
                 children: [
-                  _buildOrderTypeChip(order.orderType),
+                  _buildOrderTypeChip(context, order.orderType),
                   const SizedBox(width: 8),
-                  _buildStatusChip(order.status),
+                  _buildStatusChip(context, order.status),
                 ],
               ),
 
               const SizedBox(height: 12),
 
-              // Payment Status and Amount
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  _buildPaymentStatusChip(order.paymentStatus),
+                  _buildPaymentStatusChip(context, order.paymentStatus),
                   Text(
                     currencyFormatter.format(order.totalAmount),
-                    style: const TextStyle(
+                    style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
-                      fontSize: 16,
                     ),
                   ),
                 ],
               ),
 
-              // If there are items, show count
               if (order.orderItems != null && order.orderItems!.isNotEmpty)
                 Padding(
                   padding: const EdgeInsets.only(top: 12.0),
                   child: Text(
                     '${order.orderItems!.length} item(s)',
-                    style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                    style: theme.textTheme.bodySmall,
                   ),
                 ),
             ],
@@ -97,7 +94,8 @@ class OrderTile extends StatelessWidget {
     );
   }
 
-  Widget _buildOrderTypeChip(OrderType orderType) {
+  Widget _buildOrderTypeChip(BuildContext context, OrderType orderType) {
+    final theme = Theme.of(context);
     IconData icon;
     String label;
 
@@ -113,51 +111,54 @@ class OrderTile extends StatelessWidget {
     }
 
     return Chip(
-      backgroundColor: Colors.blue.shade50,
+      backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.1),
       labelPadding: const EdgeInsets.symmetric(horizontal: 4.0),
       visualDensity: VisualDensity.compact,
-      avatar: Icon(icon, size: 16, color: Colors.blue.shade700),
+      avatar: Icon(icon, size: 16, color: theme.colorScheme.primary),
       label: Text(
         label,
-        style: TextStyle(fontSize: 12, color: Colors.blue.shade700),
+        style: theme.textTheme.labelSmall?.copyWith(
+          color: theme.colorScheme.primary,
+        ),
       ),
     );
   }
 
-  Widget _buildStatusChip(OrderStatus status) {
+  Widget _buildStatusChip(BuildContext context, OrderStatus status) {
+    final theme = Theme.of(context);
     Color backgroundColor;
     Color textColor;
     String label;
 
     switch (status) {
       case OrderStatus.pending:
-        backgroundColor = Colors.orange.shade50;
+        backgroundColor = Colors.orange.withValues(alpha: 0.1);
         textColor = Colors.orange.shade700;
         label = 'Pending';
         break;
       case OrderStatus.confirmed:
-        backgroundColor = Colors.blue.shade50;
-        textColor = Colors.blue.shade700;
+        backgroundColor = theme.colorScheme.primary.withValues(alpha: 0.1);
+        textColor = theme.colorScheme.primary;
         label = 'Confirmed';
         break;
       case OrderStatus.preparing:
-        backgroundColor = Colors.purple.shade50;
-        textColor = Colors.purple.shade700;
+        backgroundColor = theme.colorScheme.secondary.withValues(alpha: 0.1);
+        textColor = theme.colorScheme.secondary;
         label = 'Preparing';
         break;
       case OrderStatus.ready:
-        backgroundColor = Colors.green.shade50;
+        backgroundColor = Colors.green.withValues(alpha: 0.1);
         textColor = Colors.green.shade700;
         label = 'Ready';
         break;
       case OrderStatus.completed:
-        backgroundColor = Colors.teal.shade50;
+        backgroundColor = Colors.teal.withValues(alpha: 0.1);
         textColor = Colors.teal.shade700;
         label = 'Completed';
         break;
       case OrderStatus.cancelled:
-        backgroundColor = Colors.red.shade50;
-        textColor = Colors.red.shade700;
+        backgroundColor = theme.colorScheme.error.withValues(alpha: 0.1);
+        textColor = theme.colorScheme.error;
         label = 'Cancelled';
         break;
     }
@@ -166,11 +167,15 @@ class OrderTile extends StatelessWidget {
       backgroundColor: backgroundColor,
       visualDensity: VisualDensity.compact,
       labelPadding: const EdgeInsets.symmetric(horizontal: 8.0),
-      label: Text(label, style: TextStyle(fontSize: 12, color: textColor)),
+      label: Text(
+        label,
+        style: theme.textTheme.labelSmall?.copyWith(color: textColor),
+      ),
     );
   }
 
-  Widget _buildPaymentStatusChip(PaymentStatus status) {
+  Widget _buildPaymentStatusChip(BuildContext context, PaymentStatus status) {
+    final theme = Theme.of(context);
     Color backgroundColor;
     Color textColor;
     String label;
@@ -178,13 +183,13 @@ class OrderTile extends StatelessWidget {
 
     switch (status) {
       case PaymentStatus.unpaid:
-        backgroundColor = Colors.red.shade50;
-        textColor = Colors.red.shade700;
+        backgroundColor = theme.colorScheme.error.withValues(alpha: 0.1);
+        textColor = theme.colorScheme.error;
         label = 'Unpaid';
         icon = Icons.payment_outlined;
         break;
       case PaymentStatus.paid:
-        backgroundColor = Colors.green.shade50;
+        backgroundColor = Colors.green.withValues(alpha: 0.1);
         textColor = Colors.green.shade700;
         label = 'Paid';
         icon = Icons.check_circle_outline;
@@ -196,7 +201,10 @@ class OrderTile extends StatelessWidget {
       labelPadding: const EdgeInsets.symmetric(horizontal: 4.0),
       visualDensity: VisualDensity.compact,
       avatar: Icon(icon, size: 16, color: textColor),
-      label: Text(label, style: TextStyle(fontSize: 12, color: textColor)),
+      label: Text(
+        label,
+        style: theme.textTheme.labelSmall?.copyWith(color: textColor),
+      ),
     );
   }
 }

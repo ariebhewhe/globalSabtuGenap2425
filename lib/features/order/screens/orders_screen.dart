@@ -69,11 +69,15 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
                   if (ordersState.errorMessage != null)
                     Container(
                       padding: const EdgeInsets.all(8.0),
-                      color: Colors.red.shade100,
+                      color: context.theme.colorScheme.error.withValues(
+                        alpha: 0.1,
+                      ),
                       width: double.infinity,
                       child: Text(
                         ordersState.errorMessage!,
-                        style: TextStyle(color: Colors.red.shade800),
+                        style: context.theme.textTheme.bodyMedium?.copyWith(
+                          color: context.theme.colorScheme.error,
+                        ),
                       ),
                     ),
 
@@ -81,7 +85,7 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
                   Expanded(
                     child:
                         orders.isEmpty && !isLoading
-                            ? _buildEmptyState()
+                            ? _buildEmptyState(context, context.theme)
                             : Skeletonizer(
                               enabled: isLoading,
                               child: ListView.builder(
@@ -95,10 +99,13 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
                                   if (!isLoading &&
                                       index == orders.length &&
                                       ordersState.isLoadingMore) {
-                                    return const Center(
+                                    return Center(
                                       child: Padding(
-                                        padding: EdgeInsets.all(8.0),
-                                        child: CircularProgressIndicator(),
+                                        padding: const EdgeInsets.all(8.0),
+                                        child: CircularProgressIndicator(
+                                          color:
+                                              context.theme.colorScheme.primary,
+                                        ),
                                       ),
                                     );
                                   }
@@ -141,30 +148,32 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
     );
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState(BuildContext context, ThemeData theme) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.receipt_long_outlined, size: 64, color: Colors.grey[400]),
+          Icon(
+            Icons.receipt_long_outlined,
+            size: 64,
+            color: context.theme.textTheme.bodySmall?.color,
+          ),
           const SizedBox(height: 16),
           Text(
-            'No Orders Yet',
-            style: TextStyle(
-              fontSize: 18,
+            'Belum Ada Pesanan',
+            style: context.theme.textTheme.titleLarge?.copyWith(
               fontWeight: FontWeight.bold,
-              color: Colors.grey[700],
             ),
           ),
           const SizedBox(height: 8),
           Text(
-            'Your order history will appear here',
-            style: TextStyle(color: Colors.grey[600]),
+            'Riwayat pesanan Anda akan muncul di sini',
+            style: context.theme.textTheme.bodyMedium,
           ),
           const SizedBox(height: 24),
           ElevatedButton(
             onPressed: () => context.router.push(const MenuItemsRoute()),
-            child: const Text('Browse Menu'),
+            child: const Text('Lihat Menu'),
           ),
         ],
       ),

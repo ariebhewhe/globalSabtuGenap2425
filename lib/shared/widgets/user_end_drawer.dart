@@ -3,19 +3,59 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:jamal/core/routes/app_router.dart';
+import 'package:jamal/core/utils/enums.dart';
 import 'package:jamal/features/auth/auth_provider.dart';
+import 'package:jamal/shared/providers/theme_provider.dart';
 
 class UserEndDrawer extends StatelessWidget {
   const UserEndDrawer({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    final List<Map<String, dynamic>> drawerItems = [
+    final List<Map<String, dynamic>> userDrawerItems = [
       {'icon': Icons.person, 'title': 'Profile', 'route': const ProfileRoute()},
       {
         'icon': Icons.food_bank,
         'title': 'Foods',
         'route': const MenuItemsRoute(),
+      },
+      {
+        'icon': Icons.receipt_long,
+        'title': 'Orders',
+        'route': const OrdersRoute(),
+      },
+    ];
+
+    final List<Map<String, dynamic>> adminDrawerItems = [
+      // {
+      //   'icon': Icons.dashboard,
+      //   'title': 'Dashboard',
+      //   'route': const AdminDashboardRoute(),
+      // },
+      {
+        'icon': Icons.food_bank,
+        'title': 'Menu',
+        'route': const AdminMenuItemsRoute(),
+      },
+      {
+        'icon': Icons.category,
+        'title': 'Categories',
+        'route': AdminCategoryUpsertRoute(),
+      },
+      {
+        'icon': Icons.payment,
+        'title': 'Payment Method',
+        'route': AdminPaymentMethodUpsertRoute(),
+      },
+      {
+        'icon': Icons.table_bar,
+        'title': 'Restaurant Table',
+        'route': AdminRestaurantTableUpsertRoute(),
+      },
+      {
+        'icon': Icons.receipt_long,
+        'title': 'All Orders',
+        'route': const AdminOrdersRoute(),
       },
     ];
 
@@ -23,55 +63,82 @@ class UserEndDrawer extends StatelessWidget {
       child: SafeArea(
         child: Consumer(
           builder: (context, ref, child) {
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                _buildDrawerHeader(context),
+            final currentUserState = ref.watch(currentUserProvider);
 
-                Expanded(
-                  child: ListView(
-                    padding: const EdgeInsets.symmetric(vertical: 8.0),
-                    children:
-                        drawerItems.map((item) {
-                          return _buildDrawerItem(
-                            context,
-                            icon: item['icon'],
-                            title: item['title'],
-                            route: item['route'],
-                            onTap: () {
-                              Navigator.of(context).pop();
-                              context.router.push(item['route']);
-                            },
-                          );
-                        }).toList(),
-                  ),
-                ),
+            return currentUserState.when(
+              data: (userData) {
+                final bool isAdmin = userData?.role == Role.admin;
+                final drawerItems =
+                    isAdmin ? adminDrawerItems : userDrawerItems;
 
-                Consumer(
-                  builder: (context, ref, child) {
-                    final authState = ref.watch(authStateProvider);
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _buildDrawerHeader(context, ref, userData),
 
-                    return authState.when(
-                      loading: () => const CircularProgressIndicator(),
-                      error: (err, stack) => Text('Error: $err'),
-                      data: (user) {
-                        final bool isAuth = user != null;
+                    Expanded(
+                      child: ListView(
+                        padding: const EdgeInsets.symmetric(vertical: 8.0),
+                        children: [
+                          // Role-specific menu items
+                          ...drawerItems.map((item) {
+                            return _buildDrawerItem(
+                              context,
+                              icon: item['icon'],
+                              title: item['title'],
+                              route: item['route'],
+                              onTap: () {
+                                Navigator.of(context).pop();
+                                context.router.push(item['route']);
+                              },
+                            );
+                          }).toList(),
 
-                        return ElevatedButton(
+                          // Theme selector
+                          _buildThemeSelector(context, ref),
+                        ],
+                      ),
+                    ),
+
+                    Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: _buildAuthButton(context, ref, userData),
+                    ),
+                  ],
+                );
+              },
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error:
+                  (error, stackTrace) => Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.error_outline,
+                          size: 48,
+                          color: context.theme.colorScheme.error,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Error loading user data',
+                          style: context.theme.textTheme.titleMedium,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          error.toString(),
+                          style: context.theme.textTheme.bodySmall,
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 16),
+                        ElevatedButton(
                           onPressed: () {
-                            if (isAuth) {
-                              ref.read(authMutationProvider.notifier).logout();
-                            } else {
-                              context.router.pushAll([const LoginRoute()]);
-                            }
+                            ref.invalidate(currentUserProvider);
                           },
-                          child: Text(isAuth ? "Logout" : "Login"),
-                        );
-                      },
-                    );
-                  },
-                ),
-              ],
+                          child: const Text('Retry'),
+                        ),
+                      ],
+                    ),
+                  ),
             );
           },
         ),
@@ -79,123 +146,250 @@ class UserEndDrawer extends StatelessWidget {
     );
   }
 
-  Widget _buildDrawerHeader(BuildContext context) {
+  Widget _buildDrawerHeader(
+    BuildContext context,
+    WidgetRef ref,
+    dynamic userData,
+  ) {
     return Container(
       padding: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+        color: context.theme.colorScheme.primary.withValues(alpha: 0.1),
         borderRadius: const BorderRadius.only(
           bottomRight: Radius.circular(16.0),
           bottomLeft: Radius.circular(16.0),
         ),
       ),
-      child: Consumer(
-        builder: (context, ref, child) {
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Main Menu',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-                  ),
-                  IconButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    icon: const Icon(Icons.close),
-                    style: IconButton.styleFrom(
-                      backgroundColor: Theme.of(context).colorScheme.surface,
-                      foregroundColor: Theme.of(context).colorScheme.primary,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Container(
-                    decoration: BoxDecoration(
-                      border: Border.all(
-                        color: Theme.of(context).colorScheme.primary,
-                        width: 2,
-                      ),
-                      borderRadius: BorderRadius.circular(30),
-                    ),
-                    child: ClipOval(
-                      child: CachedNetworkImage(
-                        imageUrl:
-                            'https://i.pinimg.com/474x/36/55/14/36551495c272fdd6d9205975b1badb83.jpg',
-                        width: 48,
-                        height: 48,
-                        fit: BoxFit.cover,
-                        placeholder:
-                            (context, url) => const Center(
-                              child: CircularProgressIndicator(),
-                            ),
-                        errorWidget:
-                            (context, url, error) => CircleAvatar(
-                              backgroundColor: Theme.of(
-                                context,
-                              ).colorScheme.primary.withValues(alpha: 0.3),
-                              child: Icon(
-                                Icons.person,
-                                color: Theme.of(context).colorScheme.primary,
-                              ),
-                            ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'user.username',
-                          style: Theme.of(context).textTheme.titleMedium
-                              ?.copyWith(fontWeight: FontWeight.bold),
-                        ),
-                        Text(
-                          'user.email',
-                          style: Theme.of(
-                            context,
-                          ).textTheme.bodyMedium?.copyWith(
-                            color: Theme.of(context).textTheme.bodyMedium?.color
-                                ?.withValues(alpha: 0.7),
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 4,
+              Text(
+                'Main Menu',
+                style: context.theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: context.theme.colorScheme.primary,
                 ),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primary,
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Text(
-                  'user.role',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onPrimary,
-                    fontWeight: FontWeight.bold,
-                  ),
+              ),
+              IconButton(
+                onPressed: () => Navigator.of(context).pop(),
+                icon: const Icon(Icons.close),
+                style: IconButton.styleFrom(
+                  backgroundColor: context.theme.colorScheme.surface,
+                  foregroundColor: context.theme.colorScheme.primary,
                 ),
               ),
             ],
-          );
-        },
+          ),
+          const SizedBox(height: 16),
+
+          // User profile section
+          if (userData != null) ...[
+            Row(
+              children: [
+                Container(
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                      color: context.theme.colorScheme.primary,
+                      width: 2,
+                    ),
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                  child: ClipOval(
+                    child: CachedNetworkImage(
+                      imageUrl:
+                          userData.profilePicture ??
+                          'https://i.pinimg.com/474x/36/55/14/36551495c272fdd6d9205975b1badb83.jpg',
+                      width: 48,
+                      height: 48,
+                      fit: BoxFit.cover,
+                      placeholder:
+                          (context, url) => Container(
+                            width: 48,
+                            height: 48,
+                            color: context.theme.colorScheme.primary.withValues(
+                              alpha: 0.1,
+                            ),
+                            child: const Center(
+                              child: CircularProgressIndicator(),
+                            ),
+                          ),
+                      errorWidget:
+                          (context, url, error) => CircleAvatar(
+                            backgroundColor: context.theme.colorScheme.primary
+                                .withValues(alpha: 0.3),
+                            child: Icon(
+                              Icons.person,
+                              color: context.theme.colorScheme.primary,
+                            ),
+                          ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        userData.username ?? "User",
+                        style: context.theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Text(
+                        userData.email ?? "user@example.com",
+                        style: context.theme.textTheme.bodyMedium?.copyWith(
+                          color: context.theme.textTheme.bodyMedium?.color
+                              ?.withValues(alpha: 0.7),
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+
+            // Role badge
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: _getRoleColor(userData.role, context),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    _getRoleIcon(userData.role),
+                    size: 16,
+                    color: context.theme.colorScheme.onPrimary,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    _getRoleDisplayName(userData.role),
+                    style: context.theme.textTheme.bodySmall?.copyWith(
+                      color: context.theme.colorScheme.onPrimary,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ] else ...[
+            // Guest user section
+            Row(
+              children: [
+                CircleAvatar(
+                  radius: 24,
+                  backgroundColor: context.theme.colorScheme.primary.withValues(
+                    alpha: 0.3,
+                  ),
+                  child: Icon(
+                    Icons.person,
+                    color: context.theme.colorScheme.primary,
+                    size: 28,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Guest User',
+                        style: context.theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Text(
+                        'Please login to access all features',
+                        style: context.theme.textTheme.bodyMedium?.copyWith(
+                          color: context.theme.textTheme.bodyMedium?.color
+                              ?.withValues(alpha: 0.7),
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ],
       ),
+    );
+  }
+
+  Widget _buildAuthButton(
+    BuildContext context,
+    WidgetRef ref,
+    dynamic userData,
+  ) {
+    final bool isAuthenticated = userData != null;
+
+    return ElevatedButton.icon(
+      onPressed: () {
+        if (isAuthenticated) {
+          _showLogoutDialog(context, ref);
+        } else {
+          Navigator.of(context).pop();
+          context.replaceRoute(const LoginRoute());
+        }
+      },
+      icon: Icon(isAuthenticated ? Icons.logout : Icons.login),
+      label: Text(isAuthenticated ? "Logout" : "Login"),
+      style: ElevatedButton.styleFrom(
+        backgroundColor:
+            isAuthenticated
+                ? context.theme.colorScheme.tertiary
+                : context.theme.colorScheme.primary,
+        foregroundColor: context.theme.colorScheme.onPrimary,
+        padding: const EdgeInsets.symmetric(vertical: 12),
+      ),
+    );
+  }
+
+  void _showLogoutDialog(BuildContext context, WidgetRef ref) {
+    showDialog(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          title: Text('Logout', style: context.theme.textTheme.titleLarge),
+          content: Text(
+            'Are you sure you want to logout?',
+            style: context.theme.textTheme.bodyMedium,
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+              },
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+                Navigator.of(context).pop();
+                ref.read(authMutationProvider.notifier).logout();
+
+                if (context.mounted) {
+                  context.replaceRoute(const LoginRoute());
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: context.theme.colorScheme.error,
+                foregroundColor: context.theme.colorScheme.onError,
+              ),
+              child: const Text('Logout'),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -210,29 +404,198 @@ class UserEndDrawer extends StatelessWidget {
 
     if (route is PageRouteInfo) {
       final currentRouteName = context.router.current.name;
-
       isActive = currentRouteName == route.routeName;
     }
 
     return Card(
       color:
           isActive
-              ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.1)
-              : Theme.of(context).cardColor,
+              ? context.theme.colorScheme.primary.withValues(alpha: 0.1)
+              : context.theme.cardColor,
       elevation: 1,
       margin: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
       child: ListTile(
-        leading: Icon(icon, color: Theme.of(context).colorScheme.primary),
-        title: Text(title),
+        leading: Icon(
+          icon,
+          color:
+              isActive
+                  ? context.theme.colorScheme.primary
+                  : context.theme.colorScheme.onSurface.withValues(alpha: 0.7),
+        ),
+        title: Text(
+          title,
+          style: context.theme.textTheme.bodyMedium?.copyWith(
+            color: isActive ? context.theme.colorScheme.primary : null,
+            fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
+          ),
+        ),
         onTap: onTap,
         dense: true,
         trailing: Icon(
           Icons.chevron_right,
           size: 18,
-          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.6),
+          color: context.theme.colorScheme.primary.withValues(alpha: 0.6),
         ),
       ),
     );
+  }
+
+  Widget _buildThemeSelector(BuildContext context, WidgetRef ref) {
+    final currentTheme = ref.watch(themeProvider);
+
+    return Card(
+      elevation: 1,
+      margin: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
+      child: ExpansionTile(
+        leading: Icon(
+          Icons.palette_outlined,
+          color: context.theme.colorScheme.primary,
+        ),
+        title: Text('Theme', style: context.theme.textTheme.bodyMedium),
+        subtitle: Text(
+          _getThemeDisplayName(currentTheme),
+          style: context.theme.textTheme.bodySmall?.copyWith(
+            color: context.theme.colorScheme.primary,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        trailing: Icon(
+          Icons.expand_more,
+          color: context.theme.colorScheme.primary.withValues(alpha: 0.6),
+        ),
+        children: [
+          _buildThemeOption(
+            context,
+            ref,
+            ThemeMode.system,
+            Icons.settings_suggest_outlined,
+            'System Default',
+            'Mengikuti pengaturan sistem',
+            currentTheme == ThemeMode.system,
+          ),
+          _buildThemeOption(
+            context,
+            ref,
+            ThemeMode.light,
+            Icons.light_mode_outlined,
+            'Light Mode',
+            'Tema terang',
+            currentTheme == ThemeMode.light,
+          ),
+          _buildThemeOption(
+            context,
+            ref,
+            ThemeMode.dark,
+            Icons.dark_mode_outlined,
+            'Dark Mode',
+            'Tema gelap',
+            currentTheme == ThemeMode.dark,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildThemeOption(
+    BuildContext context,
+    WidgetRef ref,
+    ThemeMode mode,
+    IconData icon,
+    String title,
+    String subtitle,
+    bool isSelected,
+  ) {
+    return ListTile(
+      dense: true,
+      leading: Icon(
+        icon,
+        color:
+            isSelected
+                ? context.theme.colorScheme.primary
+                : context.theme.colorScheme.onSurface.withValues(alpha: 0.6),
+        size: 20,
+      ),
+      title: Text(
+        title,
+        style: context.theme.textTheme.bodyMedium?.copyWith(
+          color: isSelected ? context.theme.colorScheme.primary : null,
+          fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+        ),
+      ),
+      subtitle: Text(
+        subtitle,
+        style: context.theme.textTheme.bodySmall?.copyWith(
+          color:
+              isSelected
+                  ? context.theme.colorScheme.primary.withValues(alpha: 0.8)
+                  : context.theme.colorScheme.onSurface.withValues(alpha: 0.6),
+        ),
+      ),
+      trailing:
+          isSelected
+              ? Icon(
+                Icons.check_circle,
+                color: context.theme.colorScheme.primary,
+                size: 20,
+              )
+              : null,
+      onTap: () {
+        ref.read(themeProvider.notifier).setTheme(mode);
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Theme berhasil diubah ke $title'),
+            duration: const Duration(seconds: 2),
+            backgroundColor: context.theme.colorScheme.primary,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      },
+    );
+  }
+
+  // Helper methods for role-based styling
+  Color _getRoleColor(Role? role, BuildContext context) {
+    switch (role) {
+      case Role.admin:
+        return context.theme.colorScheme.error;
+      case Role.user:
+      default:
+        return context.theme.colorScheme.primary;
+    }
+  }
+
+  IconData _getRoleIcon(Role? role) {
+    switch (role) {
+      case Role.admin:
+        return Icons.admin_panel_settings;
+      case Role.user:
+      default:
+        return Icons.person;
+    }
+  }
+
+  String _getRoleDisplayName(Role? role) {
+    switch (role) {
+      case Role.admin:
+        return 'Administrator';
+      case Role.user:
+        return 'User';
+      default:
+        return 'Guest';
+    }
+  }
+
+  String _getThemeDisplayName(ThemeMode mode) {
+    switch (mode) {
+      case ThemeMode.system:
+        return 'System Default';
+      case ThemeMode.light:
+        return 'Light Mode';
+      case ThemeMode.dark:
+        return 'Dark Mode';
+    }
   }
 }

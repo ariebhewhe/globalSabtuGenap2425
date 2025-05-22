@@ -70,6 +70,22 @@ class AuthMutationNotifier extends StateNotifier<AuthMutationState> {
     );
   }
 
+  Future<void> updateCurrentUser(UserModel user) async {
+    state = state.copyWith(isLoading: true);
+
+    final result = await _authRepo.updateCurrentUser(user);
+
+    result.match(
+      (error) =>
+          state = state.copyWith(isLoading: false, errorMessage: error.message),
+      (success) async {
+        _ref.invalidate(currentUserProvider);
+        _ref.invalidate(authStateProvider);
+        state = state.copyWith(isLoading: false, userModel: success.data);
+      },
+    );
+  }
+
   Future<void> logout() async {
     state = state.copyWith(isLoading: true);
 

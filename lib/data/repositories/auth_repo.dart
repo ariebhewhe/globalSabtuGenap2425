@@ -200,6 +200,23 @@ class AuthRepo {
     return currentUser;
   }
 
+  Future<Either<ErrorResponse, SuccessResponse<UserModel>>> updateCurrentUser(
+    UserModel user,
+  ) async {
+    try {
+      await _currentUserStorageService.saveCurrentUser(user);
+
+      final updatedUser = await _currentUserStorageService.getCurrentUser();
+
+      return Right(
+        SuccessResponse(data: updatedUser!, message: 'Update user successful'),
+      );
+    } catch (e) {
+      logger.e('Logout error: $e');
+      return Left(ErrorResponse(message: 'Failed to logout: ${e.toString()}'));
+    }
+  }
+
   Future<Either<ErrorResponse, SuccessResponse<String>>> logout() async {
     try {
       await _googleSignIn.signOut();
