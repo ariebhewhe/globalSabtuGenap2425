@@ -80,6 +80,51 @@ class MenuItemRepo {
     }
   }
 
+  Future<Either<ErrorResponse, SuccessResponse<Null>>> batchAddMenuItems(
+    List<CreateMenuItemDto> dtos,
+  ) async {
+    if (dtos.isEmpty) {
+      return Right(
+        SuccessResponse(data: null, message: 'No menu items to add.'),
+      );
+    }
+
+    try {
+      final batch = _firebaseFirestore.batch();
+      final menuItemsCollection = _firebaseFirestore.collection(
+        _collectionPath,
+      );
+      final now = DateTime.now().millisecondsSinceEpoch;
+
+      for (final dto in dtos) {
+        final docRef = menuItemsCollection.doc();
+        final Map<String, dynamic> menuItemData = dto.toMap();
+
+        menuItemData['id'] = docRef.id;
+        menuItemData['createdAt'] = now;
+        menuItemData['updatedAt'] = now;
+
+        batch.set(docRef, menuItemData);
+      }
+
+      await batch.commit();
+      logger.i('${dtos.length} menu items successfully added in batch.');
+      return Right(
+        SuccessResponse(
+          data: null,
+          message: '${dtos.length} menu items added successfully in batch.',
+        ),
+      );
+    } catch (e) {
+      logger.e('Failed to batch add menu items: ${e.toString()}');
+      return Left(
+        ErrorResponse(
+          message: 'Failed to batch add menu items: ${e.toString()}',
+        ),
+      );
+    }
+  }
+
   Future<Either<ErrorResponse, SuccessResponse<List<MenuItemModel>>>>
   getAllMenuItem() async {
     try {

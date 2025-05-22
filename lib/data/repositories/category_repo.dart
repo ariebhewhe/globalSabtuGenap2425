@@ -77,6 +77,54 @@ class CategoryRepo {
   }
 
   Future<Either<ErrorResponse, SuccessResponse<List<CategoryModel>>>>
+  batchAddCategories(List<CreateCategoryDto> dtos) async {
+    if (dtos.isEmpty) {
+      return Right(SuccessResponse(data: [], message: 'No categories to add.'));
+    }
+    try {
+      final batch = _firebaseFirestore.batch();
+      final categoriesCollection = _firebaseFirestore.collection(
+        _collectionPath,
+      );
+      final now = DateTime.now();
+      List<CategoryModel> createdCategories = [];
+
+      for (final dto in dtos) {
+        final docRef = categoriesCollection.doc(); // ID baru
+        final Map<String, dynamic> categoryData = dto.toMap();
+
+        categoryData['id'] = docRef.id;
+        // 'picture' sudah ada di dto.toMap() jika disediakan
+        categoryData['createdAt'] = now.millisecondsSinceEpoch;
+        categoryData['updatedAt'] = now.millisecondsSinceEpoch;
+
+        batch.set(docRef, categoryData);
+        createdCategories.add(
+          CategoryModel.fromMap(categoryData),
+        ); // Buat model dari data yang akan disimpan
+      }
+
+      await batch.commit();
+      logger.i(
+        '${createdCategories.length} categories successfully added in batch.',
+      );
+      return Right(
+        SuccessResponse(
+          data: createdCategories,
+          message: '${createdCategories.length} categories added successfully.',
+        ),
+      );
+    } catch (e) {
+      logger.e('Failed to batch add categories: ${e.toString()}');
+      return Left(
+        ErrorResponse(
+          message: 'Failed to batch add categories: ${e.toString()}',
+        ),
+      );
+    }
+  }
+
+  Future<Either<ErrorResponse, SuccessResponse<List<CategoryModel>>>>
   getAllCategory() async {
     try {
       final querySnapshot =

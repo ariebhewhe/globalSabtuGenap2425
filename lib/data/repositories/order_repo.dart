@@ -22,9 +22,9 @@ class OrderRepo {
   final CurrentUserStorageService _currentUserStorageService;
 
   final String _collectionPath = 'orders';
-  final String _reservationsCollectionPath = 'table_reservations';
+  final String _reservationsCollectionPath = 'tableReservations';
   final String _cartCollectionPath =
-      'cart_items'; // * Collection path untuk cart
+      'cartItems'; // * Collection path untuk cart
   final AppLogger logger = AppLogger();
 
   OrderRepo(this._firebaseFirestore, this._currentUserStorageService);
@@ -123,34 +123,64 @@ class OrderRepo {
     }
   }
 
-  Future<Either<ErrorResponse, SuccessResponse<List<OrderModel>>>>
-  getAllOrders() async {
+  Future<Either<ErrorResponse, SuccessResponse<PaginatedResult<OrderModel>>>>
+  getPaginatedOrders({
+    int limit = 10,
+    DocumentSnapshot? startAfter,
+    String orderBy = 'createdAt',
+    bool descending = true,
+  }) async {
     try {
-      final userId = await _getCurrentUserId();
-      final querySnapshot =
-          await _firebaseFirestore
-              .collection(_collectionPath)
-              .where('userId', isEqualTo: userId)
-              .get();
+      Query query = _firebaseFirestore
+          .collection(_collectionPath)
+          .orderBy(orderBy, descending: descending)
+          .limit(limit);
 
+      // * Tambahkan startAfter jika disediakan (untuk load more)
+      if (startAfter != null) {
+        query = query.startAfterDocument(startAfter);
+      }
+
+      final querySnapshot = await query.get();
+
+      // * Konversi hasil query menjadi model
       final orders =
           querySnapshot.docs
-              .map((doc) => OrderModel.fromMap(doc.data()))
+              .map(
+                (doc) => OrderModel.fromMap(doc.data() as Map<String, dynamic>),
+              )
               .toList();
 
+      // * Cek apakah masih ada data lagi yang bisa dimuat
+      final hasMore = querySnapshot.docs.length >= limit;
+
+      // * Simpan dokumen terakhir untuk digunakan sebagai startAfter pada request berikutnya
+      final lastDocument =
+          querySnapshot.docs.isNotEmpty ? querySnapshot.docs.last : null;
+
+      // * Kembalikan hasil dengan metadata pagination
       return Right(
-        SuccessResponse(data: orders, message: 'Orders retrieved successfully'),
+        SuccessResponse(
+          data: PaginatedResult(
+            items: orders,
+            hasMore: hasMore,
+            lastDocument: lastDocument,
+          ),
+          message: 'Orders retrieved successfully',
+        ),
       );
     } catch (e) {
       logger.e(e.toString());
       return Left(
-        ErrorResponse(message: 'Failed to get all orders: ${e.toString()}'),
+        ErrorResponse(
+          message: 'Failed to get paginated orders: ${e.toString()}',
+        ),
       );
     }
   }
 
   Future<Either<ErrorResponse, SuccessResponse<PaginatedResult<OrderModel>>>>
-  getPaginatedOrders({
+  getPaginatedUserOrders({
     int limit = 10,
     DocumentSnapshot? startAfter,
     String orderBy = 'createdAt',
