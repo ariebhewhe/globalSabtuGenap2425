@@ -85,6 +85,7 @@ class OrderModel extends BaseModel {
   }
 
   @override
+  @override
   factory OrderModel.fromMap(Map<String, dynamic> map) {
     return OrderModel(
       id: map['id'] as String,
@@ -113,7 +114,7 @@ class OrderModel extends BaseModel {
       orderItems:
           map['orderItems'] != null
               ? List<OrderItemModel>.from(
-                (map['orderItems'] as List<int>).map<OrderItemModel?>(
+                (map['orderItems'] as List<dynamic>).map<OrderItemModel>(
                   (x) => OrderItemModel.fromMap(x as Map<String, dynamic>),
                 ),
               )
