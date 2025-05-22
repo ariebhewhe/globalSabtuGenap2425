@@ -2,11 +2,14 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:jamal/core/routes/app_router.dart';
+import 'package:jamal/core/theme/app_theme.dart';
+import 'package:jamal/core/utils/enums.dart'; // Meskipun diimpor, tidak digunakan di snippet ini
 import 'package:jamal/data/models/category_model.dart';
 import 'package:jamal/features/category/providers/categories_provider.dart';
+import 'package:jamal/features/category/providers/search_categories_provider.dart';
 import 'package:jamal/features/category/widgets/category_card.dart';
 import 'package:jamal/shared/widgets/admin_app_bar.dart';
-import 'package:jamal/shared/widgets/admin_end_drawer.dart';
+import 'package:jamal/shared/widgets/my_end_drawer.dart';
 import 'package:jamal/shared/widgets/my_screen_container.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
@@ -21,6 +24,21 @@ class AdminCategoriesScreen extends ConsumerStatefulWidget {
 
 class _AdminCategoriesScreenState extends ConsumerState<AdminCategoriesScreen> {
   final ScrollController _scrollController = ScrollController();
+  final TextEditingController _searchController = TextEditingController();
+
+  String _selectedSearchBy = 'name';
+  final List<String> _searchByOptions = ['name', 'description'];
+
+  String _selectedOrderBy = 'createdAt';
+  bool _isDescending = true;
+  final Map<String, String> _orderByOptions = {
+    'createdAt': 'Created Date',
+    'updatedAt': 'Updated Date',
+    'name': 'Name',
+  };
+
+  bool isSearching = false;
+  bool _showFilters = false;
 
   @override
   void initState() {
@@ -32,21 +50,100 @@ class _AdminCategoriesScreenState extends ConsumerState<AdminCategoriesScreen> {
   void dispose() {
     _scrollController.removeListener(_scrollListener);
     _scrollController.dispose();
+    _searchController.dispose();
     super.dispose();
   }
 
   void _scrollListener() {
     if (_scrollController.position.pixels >
         _scrollController.position.maxScrollExtent - 200) {
-      // * Ketika pengguna scroll mendekati bawah, muat lebih banyak data
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        final categoriesState = ref.watch(categoriesProvider);
-
-        // * Periksa apakah sedang loading more dan masih ada data untuk dimuat
-        if (!categoriesState.isLoadingMore && categoriesState.hasMore) {
-          ref.read(categoriesProvider.notifier).loadMoreCategories();
+        if (isSearching) {
+          final searchState = ref.read(searchCategoriesProvider);
+          if (!searchState.isLoadingMore && searchState.hasMore) {
+            ref.read(searchCategoriesProvider.notifier).loadMoreCategories();
+          }
+        } else {
+          final categoriesState = ref.read(categoriesProvider);
+          if (!categoriesState.isLoadingMore && categoriesState.hasMore) {
+            ref.read(categoriesProvider.notifier).loadMoreCategories();
+          }
         }
       });
+    }
+  }
+
+  void _onSearchChanged(String query) {
+    setState(() {
+      isSearching = query.trim().isNotEmpty;
+    });
+
+    if (isSearching) {
+      ref
+          .read(searchCategoriesProvider.notifier)
+          .searchCategories(query: query, searchBy: _selectedSearchBy);
+    } else {
+      ref.read(searchCategoriesProvider.notifier).clearSearch();
+    }
+  }
+
+  void _applyFilters() {
+    if (isSearching) {
+      ref
+          .read(searchCategoriesProvider.notifier)
+          .searchCategories(
+            query: _searchController.text,
+            searchBy: _selectedSearchBy,
+          );
+    } else {
+      ref
+          .read(categoriesProvider.notifier)
+          .loadCategoriesWithFilter(
+            orderBy: _selectedOrderBy,
+            descending: _isDescending,
+          );
+    }
+  }
+
+  Future<void> _refreshData() async {
+    if (isSearching) {
+      ref.read(searchCategoriesProvider.notifier).refreshCategories();
+    } else {
+      ref.read(categoriesProvider.notifier).refreshCategories();
+    }
+  }
+
+  bool get isLoading {
+    if (isSearching) {
+      final searchState = ref.watch(searchCategoriesProvider);
+      return searchState.isLoading && searchState.categories.isEmpty;
+    } else {
+      final categoriesState = ref.watch(categoriesProvider);
+      return categoriesState.isLoading && categoriesState.categories.isEmpty;
+    }
+  }
+
+  List<CategoryModel> get categories {
+    if (isSearching) {
+      return ref.watch(searchCategoriesProvider).categories;
+    } else {
+      return ref.watch(categoriesProvider).categories;
+    }
+  }
+
+  bool get isLoadingMore {
+    if (isSearching) {
+      return ref.watch(searchCategoriesProvider).isLoadingMore;
+    } else {
+      return ref.watch(categoriesProvider).isLoadingMore;
+    }
+  }
+
+  String? get errorMessage {
+    if (isSearching) {
+      return ref.watch(searchCategoriesProvider).errorMessage;
+    } else {
+      return ref.watch(categoriesProvider).errorMessage;
     }
   }
 
@@ -54,97 +151,469 @@ class _AdminCategoriesScreenState extends ConsumerState<AdminCategoriesScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: const AdminAppBar(),
-      endDrawer: const AdminEndDrawer(),
+      endDrawer: const MyEndDrawer(),
+      floatingActionButton: SafeArea(
+        child: Container(
+          decoration: BoxDecoration(
+            color: context.theme.primaryColor,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: IconButton(
+            onPressed: () => context.pushRoute(AdminCategoryUpsertRoute()),
+            icon: const Icon(Icons.add),
+          ),
+        ),
+      ),
       body: MyScreenContainer(
         child: Consumer(
           builder: (context, ref, child) {
-            final categoriesState = ref.watch(categoriesProvider);
-            final categories = categoriesState.categories;
-            final isLoading = categoriesState.isLoading;
             const int skeletonItemCount = 6;
 
             return RefreshIndicator(
-              onRefresh:
-                  () =>
-                      ref.read(categoriesProvider.notifier).refreshCategories(),
+              onRefresh: _refreshData,
+              color: context.colors.primary,
+              backgroundColor: context.colors.surface,
               child: Column(
                 children: [
-                  if (categoriesState.errorMessage != null)
-                    Container(
-                      padding: const EdgeInsets.all(8.0),
-                      color: Colors.red.shade100,
-                      width: double.infinity,
-                      child: Text(
-                        categoriesState.errorMessage!,
-                        style: TextStyle(color: Colors.red.shade800),
-                      ),
-                    ),
-
-                  Expanded(
-                    child: Skeletonizer(
-                      enabled: isLoading,
-                      child: GridView.builder(
-                        controller: _scrollController,
-                        gridDelegate:
-                            const SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 2,
-                              crossAxisSpacing: 16.0,
-                              mainAxisSpacing: 16.0,
-                              childAspectRatio: 0.8,
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: _searchController,
+                          decoration: InputDecoration(
+                            hintText: 'Search categories...',
+                            prefixIcon: Icon(
+                              Icons.search,
+                              color: context.textStyles.bodyMedium?.color,
                             ),
-                        itemCount:
-                            isLoading
-                                ? skeletonItemCount
-                                : categories.length +
-                                    (categoriesState.isLoadingMore ? 1 : 0),
-                        itemBuilder: (context, index) {
-                          if (!isLoading &&
-                              index == categories.length &&
-                              categoriesState.isLoadingMore) {
-                            return const Center(
-                              child: Padding(
-                                padding: EdgeInsets.all(8.0),
-                                child: CircularProgressIndicator(),
-                              ),
-                            );
-                          }
-
-                          final category =
-                              isLoading
-                                  ? CategoryModel(
-                                    id: '',
-                                    name: 'Loading Item',
-                                    description: '',
-                                    picture: null,
-                                    createdAt: DateTime.now(),
-                                    updatedAt: DateTime.now(),
-                                  )
-                                  : categories[index];
-
-                          return CategoryCard(
-                            category: category,
-                            // onTap:
-                            //     isLoading
-                            //         ? null
-                            //         : () {
-                            //           // if (index < categories.length) {
-                            //           //   context.router.push(
-                            //           //     CategoryDetailRoute(
-                            //           //       category: categories[index],
-                            //           //     ),
-                            //           //   );
-                            //           // }
-                            //         },
-                          );
+                            suffixIcon:
+                                _searchController.text.isNotEmpty
+                                    ? IconButton(
+                                      icon: Icon(
+                                        Icons.clear,
+                                        color:
+                                            context
+                                                .textStyles
+                                                .bodyMedium
+                                                ?.color,
+                                      ),
+                                      onPressed: () {
+                                        _searchController.clear();
+                                        _onSearchChanged('');
+                                      },
+                                    )
+                                    : null,
+                            // fillColor dari InputDecorationTheme sudah diatur di AppTheme
+                            // border, enabledBorder, focusedBorder juga dari AppTheme
+                          ),
+                          onChanged: _onSearchChanged,
+                          style: context.textStyles.bodyMedium,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      IconButton(
+                        icon: Icon(
+                          _showFilters
+                              ? Icons.filter_list
+                              : Icons.filter_list_outlined,
+                          color:
+                              _showFilters
+                                  ? context.colors.primary
+                                  : context.colors.onSurface.withOpacity(0.6),
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _showFilters = !_showFilters;
+                          });
                         },
+                      ),
+                    ],
+                  ),
+
+                  // Filters Section (Collapsible)
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 300),
+                    height: _showFilters ? null : 0,
+                    child: AnimatedOpacity(
+                      duration: const Duration(milliseconds: 300),
+                      opacity: _showFilters ? 1.0 : 0.0,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16.0,
+                        ).copyWith(bottom: 16.0), // Added bottom padding
+                        child: Card(
+                          // CardTheme color dan shape sudah diatur di AppTheme
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                if (isSearching) ...[
+                                  Text(
+                                    'Search In:',
+                                    style: context.textStyles.titleSmall,
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Wrap(
+                                    spacing: 8,
+                                    children:
+                                        _searchByOptions.map((option) {
+                                          return ChoiceChip(
+                                            label: Text(option.toUpperCase()),
+                                            selected:
+                                                _selectedSearchBy == option,
+                                            onSelected: (selected) {
+                                              if (selected) {
+                                                setState(() {
+                                                  _selectedSearchBy = option;
+                                                });
+                                                _applyFilters();
+                                              }
+                                            },
+                                            labelStyle: context
+                                                .textStyles
+                                                .bodySmall
+                                                ?.copyWith(
+                                                  color:
+                                                      _selectedSearchBy ==
+                                                              option
+                                                          ? context
+                                                              .colors
+                                                              .onPrimary // atau warna lain yang kontras dari theme
+                                                          : context
+                                                              .textStyles
+                                                              .bodySmall
+                                                              ?.color,
+                                                ),
+                                            selectedColor:
+                                                context.colors.primary,
+                                            backgroundColor:
+                                                context
+                                                    .colors
+                                                    .surfaceVariant, // Atau dari cardTheme.color
+                                          );
+                                        }).toList(),
+                                  ),
+                                  const Divider(), // DividerTheme sudah diatur di AppTheme
+                                ],
+                                Text(
+                                  'Sort By:',
+                                  style: context.textStyles.titleSmall,
+                                ),
+                                const SizedBox(height: 8),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: DropdownButtonFormField<String>(
+                                        value: _selectedOrderBy,
+                                        decoration: const InputDecoration(
+                                          // Menggunakan default dari AppTheme
+                                          // border: OutlineInputBorder(),
+                                          contentPadding: EdgeInsets.symmetric(
+                                            horizontal: 12,
+                                            vertical: 8,
+                                          ),
+                                        ),
+                                        items:
+                                            _orderByOptions.entries.map((
+                                              entry,
+                                            ) {
+                                              return DropdownMenuItem(
+                                                value: entry.key,
+                                                child: Text(
+                                                  entry.value,
+                                                  style:
+                                                      context
+                                                          .textStyles
+                                                          .bodyMedium,
+                                                ),
+                                              );
+                                            }).toList(),
+                                        onChanged: (value) {
+                                          if (value != null) {
+                                            setState(() {
+                                              _selectedOrderBy = value;
+                                            });
+                                            _applyFilters();
+                                          }
+                                        },
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        IconButton(
+                                          icon: Icon(
+                                            Icons.keyboard_arrow_up,
+                                            color:
+                                                !_isDescending
+                                                    ? context.colors.primary
+                                                    : context.colors.onSurface
+                                                        .withOpacity(0.6),
+                                          ),
+                                          onPressed: () {
+                                            if (_isDescending) {
+                                              setState(() {
+                                                _isDescending = false;
+                                              });
+                                              _applyFilters();
+                                            }
+                                          },
+                                          tooltip: 'Ascending',
+                                        ),
+                                        IconButton(
+                                          icon: Icon(
+                                            Icons.keyboard_arrow_down,
+                                            color:
+                                                _isDescending
+                                                    ? context.colors.primary
+                                                    : context.colors.onSurface
+                                                        .withOpacity(0.6),
+                                          ),
+                                          onPressed: () {
+                                            if (!_isDescending) {
+                                              setState(() {
+                                                _isDescending = true;
+                                              });
+                                              _applyFilters();
+                                            }
+                                          },
+                                          tooltip: 'Descending',
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
                       ),
                     ),
                   ),
+
+                  // Current Search/Filter Info
+                  if (isSearching ||
+                      _selectedOrderBy != 'createdAt' ||
+                      !_isDescending)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16.0,
+                        vertical: 8.0,
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              _buildFilterInfoText(),
+                              style: context.textStyles.bodySmall?.copyWith(
+                                fontStyle: FontStyle.italic,
+                                // Warna sudah diatur oleh textStyles.bodySmall dari theme (textTertiaryLight/Dark)
+                              ),
+                            ),
+                          ),
+                          TextButton(
+                            // TextButtonTheme sudah diatur di AppTheme
+                            onPressed: () {
+                              _searchController.clear();
+                              setState(() {
+                                isSearching = false;
+                                _selectedSearchBy = 'name';
+                                _selectedOrderBy = 'createdAt';
+                                _isDescending = true;
+                              });
+                              ref
+                                  .read(searchCategoriesProvider.notifier)
+                                  .clearSearch();
+                              ref
+                                  .read(categoriesProvider.notifier)
+                                  .refreshCategories();
+                            },
+                            child: const Text('Reset'),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                  // Error Message
+                  if (errorMessage != null)
+                    Container(
+                      margin: const EdgeInsets.symmetric(
+                        horizontal: 16.0,
+                        vertical: 8.0,
+                      ),
+                      padding: const EdgeInsets.all(12.0),
+                      decoration: BoxDecoration(
+                        color: context.colors.error.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: context.colors.error.withOpacity(0.3),
+                        ),
+                      ),
+                      width: double.infinity,
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.error_outline,
+                            color: context.colors.error,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              errorMessage!,
+                              style: context.textStyles.bodyMedium?.copyWith(
+                                color: context.colors.error,
+                              ),
+                            ),
+                          ),
+                          TextButton(
+                            // TextButtonTheme sudah diatur di AppTheme
+                            onPressed: _refreshData,
+                            child: Text(
+                              'Retry',
+                              style: TextStyle(color: context.colors.error),
+                            ), // Explicitly color retry to match error context
+                          ),
+                        ],
+                      ),
+                    ),
+
+                  // Categories Grid
+                  Expanded(child: _buildCategoriesGrid(skeletonItemCount)),
                 ],
               ),
             );
           },
         ),
+      ),
+    );
+  }
+
+  String _buildFilterInfoText() {
+    List<String> info = [];
+
+    if (isSearching) {
+      info.add('Searching "${_searchController.text}" in $_selectedSearchBy');
+    }
+
+    if (_selectedOrderBy != 'createdAt' || !_isDescending) {
+      // Simplified condition to show sort info
+      String sortOrder = _orderByOptions[_selectedOrderBy] ?? _selectedOrderBy;
+      String direction = _isDescending ? "Descending" : "Ascending";
+      if (_selectedOrderBy != 'createdAt' || !_isDescending) {
+        // Show default sort only if not createdAt & Descending
+        info.add('Sorted by $sortOrder ($direction)');
+      } else if (_selectedOrderBy == 'createdAt' && !_isDescending) {
+        // Special case for createdAt Ascending
+        info.add('Sorted by $sortOrder ($direction)');
+      }
+    }
+
+    return info.join(' • ');
+  }
+
+  Widget _buildCategoriesGrid(int skeletonItemCount) {
+    if (!isLoading && categories.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              isSearching ? Icons.search_off : Icons.category_outlined,
+              size: 64,
+              color:
+                  context.isDarkMode
+                      ? AppTheme.textMutedDark
+                      : AppTheme.textMutedLight,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              isSearching
+                  ? 'No categories found for "${_searchController.text}"'
+                  : 'No categories available',
+              style: context.textStyles.titleMedium?.copyWith(
+                color:
+                    context.isDarkMode
+                        ? AppTheme.textTertiaryDark
+                        : AppTheme.textTertiaryLight,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            if (isSearching)
+              ElevatedButton(
+                // ElevatedButtonTheme sudah diatur di AppTheme
+                onPressed: () {
+                  _searchController.clear();
+                  _onSearchChanged('');
+                },
+                child: const Text('Clear Search'),
+              )
+            else
+              ElevatedButton(
+                // ElevatedButtonTheme sudah diatur di AppTheme
+                onPressed: _refreshData,
+                child: const Text('Refresh'),
+              ),
+          ],
+        ),
+      );
+    }
+
+    return Skeletonizer(
+      enabled: isLoading,
+      child: GridView.builder(
+        controller: _scrollController,
+        padding: const EdgeInsets.all(16.0),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          crossAxisSpacing: 16.0,
+          mainAxisSpacing: 16.0,
+          childAspectRatio: 0.8,
+        ),
+        itemCount:
+            isLoading
+                ? skeletonItemCount
+                : categories.length + (isLoadingMore ? 1 : 0),
+        itemBuilder: (context, index) {
+          if (!isLoading && index == categories.length && isLoadingMore) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    context.colors.primary,
+                  ),
+                ),
+              ),
+            );
+          }
+
+          final category =
+              isLoading
+                  ? CategoryModel(
+                    id: index.toString(), // Provide unique dummy IDs for keys
+                    name: 'Loading Item',
+                    description: 'Loading description...',
+                    picture: null,
+                    createdAt: DateTime.now(),
+                    updatedAt: DateTime.now(),
+                  )
+                  : categories[index];
+
+          return CategoryCard(
+            category: category,
+            onTap:
+                isLoading
+                    ? null
+                    : () {
+                      context.router.push(
+                        AdminCategoryUpsertRoute(category: category),
+                      );
+                    },
+          );
+        },
       ),
     );
   }

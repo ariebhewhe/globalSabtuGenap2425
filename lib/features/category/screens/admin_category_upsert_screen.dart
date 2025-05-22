@@ -1,12 +1,17 @@
 import 'dart:io';
 import 'package:auto_route/annotations.dart';
+import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:jamal/core/routes/app_router.dart';
+import 'package:jamal/core/utils/enums.dart';
 import 'package:jamal/data/models/category_model.dart';
 import 'package:jamal/features/category/providers/category_mutation_provider.dart';
+import 'package:jamal/shared/widgets/admin_app_bar.dart';
+import 'package:jamal/shared/widgets/my_screen_container.dart';
 
 @RoutePage()
 class AdminCategoryUpsertScreen extends ConsumerStatefulWidget {
@@ -46,9 +51,9 @@ class _AdminCategoryUpsertScreenState
 
     if (widget.category == null && _selectedImageFile == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please select a picture image.'),
-          backgroundColor: Colors.red,
+        SnackBar(
+          content: const Text('Please select a picture image.'),
+          backgroundColor: context.theme.colorScheme.error,
         ),
       );
       return;
@@ -58,11 +63,11 @@ class _AdminCategoryUpsertScreenState
         widget.category!.picture == null &&
         _selectedImageFile == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
+        SnackBar(
+          content: const Text(
             'Please select a picture image or ensure an existing one exists.',
           ),
-          backgroundColor: Colors.red,
+          backgroundColor: context.theme.colorScheme.error,
         ),
       );
       return;
@@ -92,6 +97,7 @@ class _AdminCategoryUpsertScreenState
         await ref
             .read(categoryMutationProvider.notifier)
             .addCategory(category, imageFile: _selectedImageFile);
+        context.replaceRoute(const AdminCategoriesRoute());
       }
 
       if (ref.read(categoryMutationProvider).successMessage != null) {
@@ -103,11 +109,8 @@ class _AdminCategoryUpsertScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.category != null ? 'Edit Category' : 'Add Category'),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      appBar: const AdminAppBar(),
+      body: MyScreenContainer(
         child: SingleChildScrollView(
           child: Consumer(
             builder: (context, ref, child) {
@@ -128,7 +131,7 @@ class _AdminCategoryUpsertScreenState
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text(mutationState.errorMessage!),
-                      backgroundColor: Colors.red,
+                      backgroundColor: context.theme.colorScheme.error,
                     ),
                   );
 
@@ -201,7 +204,9 @@ class _AdminCategoryUpsertScreenState
                               width: 100,
                               height: 100,
                               decoration: BoxDecoration(
-                                border: Border.all(color: Colors.grey),
+                                border: Border.all(
+                                  color: context.colors.primary,
+                                ),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Center(
@@ -222,10 +227,10 @@ class _AdminCategoryUpsertScreenState
                                                     stackTrace,
                                                   ) => const Icon(Icons.error),
                                             )
-                                            : const Icon(
+                                            : Icon(
                                               Icons.camera_alt,
                                               size: 40,
-                                              color: Colors.grey,
+                                              color: context.colors.secondary,
                                             )),
                               ),
                             ),
@@ -244,14 +249,12 @@ class _AdminCategoryUpsertScreenState
                               padding: const EdgeInsets.symmetric(vertical: 12),
                               child:
                                   isSubmitting
-                                      ? const CircularProgressIndicator(
-                                        color: Colors.white,
-                                      )
+                                      ? const CircularProgressIndicator()
                                       : Text(
                                         widget.category != null
                                             ? 'Update'
                                             : 'Submit',
-                                        style: TextStyle(fontSize: 18),
+                                        style: const TextStyle(fontSize: 18),
                                       ),
                             ),
                           ),

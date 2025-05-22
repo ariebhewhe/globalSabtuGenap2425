@@ -124,26 +124,6 @@ class CategoryRepo {
     }
   }
 
-  Future<Either<ErrorResponse, SuccessResponse<List<CategoryModel>>>>
-  getAllCategory() async {
-    try {
-      final querySnapshot =
-          await _firebaseFirestore.collection(_collectionPath).get();
-
-      final categories =
-          querySnapshot.docs
-              .map((doc) => CategoryModel.fromMap(doc.data()))
-              .toList();
-
-      return Right(SuccessResponse(data: categories));
-    } catch (e) {
-      logger.e(e.toString());
-      return Left(
-        ErrorResponse(message: 'Failed to get all categories ${e.toString()}'),
-      );
-    }
-  }
-
   Future<Either<ErrorResponse, SuccessResponse<PaginatedResult<CategoryModel>>>>
   getPaginatedCategories({
     int limit = 10,
@@ -197,6 +177,86 @@ class CategoryRepo {
         ErrorResponse(
           message: 'Failed to get paginated categories: ${e.toString()}',
         ),
+      );
+    }
+  }
+
+  Future<Either<ErrorResponse, SuccessResponse<PaginatedResult<CategoryModel>>>>
+  searchCategories({
+    String searchBy = "name",
+    String? searchQuery,
+    Object? isEqualTo,
+    int limit = 10,
+    DocumentSnapshot? startAfter,
+    String orderBy = 'createdAt',
+    bool descending = true,
+  }) async {
+    try {
+      Query query = _firebaseFirestore.collection(_collectionPath);
+
+      if (searchQuery != null && searchQuery.isNotEmpty) {
+        query = query.where(
+          'searchableKeywords',
+          arrayContains: searchQuery.toLowerCase(),
+        );
+      }
+
+      if (isEqualTo != null) {
+        query = query.where(searchBy, isEqualTo: isEqualTo);
+      }
+
+      query = query.orderBy(orderBy, descending: descending).limit(limit);
+
+      if (startAfter != null) {
+        query = query.startAfterDocument(startAfter);
+      }
+
+      final querySnapshot = await query.get();
+
+      final categories =
+          querySnapshot.docs
+              .map(
+                (doc) =>
+                    CategoryModel.fromMap(doc.data() as Map<String, dynamic>),
+              )
+              .toList();
+
+      if (searchQuery != null && searchQuery.isNotEmpty) {
+        final lowercaseQuery = searchQuery.toLowerCase();
+        categories.retainWhere((category) {
+          switch (searchBy) {
+            case 'name':
+              return category.name.toLowerCase().contains(lowercaseQuery);
+            case 'description':
+              return category.description?.toLowerCase().contains(
+                    lowercaseQuery,
+                  ) ??
+                  false;
+            default:
+              return false;
+          }
+        });
+      }
+
+      final hasMore = querySnapshot.docs.length >= limit;
+
+      final lastDocument =
+          querySnapshot.docs.isNotEmpty ? querySnapshot.docs.last : null;
+
+      return Right(
+        SuccessResponse(
+          data: PaginatedResult(
+            items: categories,
+            hasMore: hasMore,
+            lastDocument: lastDocument,
+          ),
+          message: 'Categories retrieved successfully',
+        ),
+      );
+    } catch (e) {
+      logger.e(e.toString());
+      return Left(
+        ErrorResponse(message: 'Failed to search categories: ${e.toString()}'),
       );
     }
   }

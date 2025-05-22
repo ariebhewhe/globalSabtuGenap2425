@@ -94,7 +94,11 @@ class AuthMutationNotifier extends StateNotifier<AuthMutationState> {
     result.match(
       (error) =>
           state = state.copyWith(isLoading: false, errorMessage: error.message),
-      (success) => state = AuthMutationState(),
+      (success) {
+        _ref.invalidate(currentUserProvider);
+        _ref.invalidate(authStateProvider);
+        return state = AuthMutationState();
+      },
     );
   }
 

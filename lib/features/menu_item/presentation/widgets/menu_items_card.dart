@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:jamal/core/utils/enums.dart';
 import 'package:jamal/data/models/menu_item_model.dart';
 
 class MenuItemCard extends StatelessWidget {
@@ -30,19 +31,30 @@ class MenuItemCard extends StatelessWidget {
                           imageUrl: menuItem.imageUrl!,
                           fit: BoxFit.cover,
                           placeholder:
-                              (context, url) => const Center(
-                                child: CircularProgressIndicator(),
+                              (context, url) => Center(
+                                child: CircularProgressIndicator(
+                                  color: context.colors.primary,
+                                ),
                               ),
                           errorWidget:
-                              (context, url, error) => const Center(
+                              (context, url, error) => Center(
                                 child: Icon(
                                   Icons.fastfood_outlined,
                                   size: 40,
-                                  color: Colors.grey,
+                                  color: context.colors.onSurface.withOpacity(
+                                    0.5,
+                                  ),
                                 ),
                               ),
                         )
-                        : const Center(child: Text('No Image Available')),
+                        : Center(
+                          child: Text(
+                            'No Image Available',
+                            style: context.textStyles.bodyMedium?.copyWith(
+                              color: context.colors.onSurface.withOpacity(0.5),
+                            ),
+                          ),
+                        ),
               ),
             ),
             Padding(
@@ -52,8 +64,7 @@ class MenuItemCard extends StatelessWidget {
                 children: [
                   Text(
                     menuItem.name,
-                    style: const TextStyle(
-                      fontSize: 16.0,
+                    style: context.textStyles.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
                     maxLines: 1,
@@ -62,9 +73,8 @@ class MenuItemCard extends StatelessWidget {
                   const SizedBox(height: 4.0),
                   Text(
                     'Rp ${menuItem.price.toStringAsFixed(0)}',
-                    style: TextStyle(
-                      fontSize: 14.0,
-                      color: Theme.of(context).primaryColor,
+                    style: context.textStyles.bodyMedium?.copyWith(
+                      color: context.colors.primary,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -77,35 +87,36 @@ class MenuItemCard extends StatelessWidget {
                             : Icons.fastfood,
                         size: 16,
                         color:
-                            menuItem.isVegetarian ? Colors.green : Colors.brown,
+                            menuItem.isVegetarian
+                                ? Colors.green
+                                : context.colors.tertiary,
                       ),
                       const SizedBox(width: 4),
                       Text(
                         menuItem.isVegetarian ? 'Vegetarian' : 'Non-Veg',
-                        style: const TextStyle(fontSize: 12),
+                        style: context.textStyles.bodySmall,
                       ),
                       const Spacer(),
                       if (menuItem.spiceLevel > 0)
                         Row(
                           children: List.generate(
                             menuItem.spiceLevel,
-                            (i) => const Icon(
+                            (i) => Icon(
                               Icons.local_fire_department,
                               size: 16,
-                              color: Colors.red,
+                              color: context.colors.tertiary,
                             ),
                           ),
                         ),
                     ],
                   ),
                   if (!menuItem.isAvailable)
-                    const Padding(
-                      padding: EdgeInsets.only(top: 4.0),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4.0),
                       child: Text(
                         'Tidak Tersedia',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.red,
+                        style: context.textStyles.bodySmall?.copyWith(
+                          color: context.colors.error,
                           fontWeight: FontWeight.bold,
                         ),
                       ),

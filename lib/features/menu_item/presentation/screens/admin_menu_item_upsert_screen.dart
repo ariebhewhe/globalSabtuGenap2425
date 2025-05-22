@@ -6,11 +6,12 @@ import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:jamal/core/utils/enums.dart';
 import 'package:jamal/data/models/menu_item_model.dart';
 import 'package:jamal/features/category/providers/categories_provider.dart';
 import 'package:jamal/features/menu_item/providers/menu_item_mutation_provider.dart';
 import 'package:jamal/shared/widgets/admin_app_bar.dart';
-import 'package:jamal/shared/widgets/admin_end_drawer.dart';
+import 'package:jamal/shared/widgets/my_end_drawer.dart';
 import 'package:jamal/shared/widgets/my_screen_container.dart';
 
 @RoutePage()
@@ -78,16 +79,14 @@ class _AdminMenuItemUpsertScreenState
 
     final bool isAdding = widget.menuItem == null;
     final bool hasExistingImage = widget.menuItem?.imageUrl != null;
-    final bool isDeletingExisting =
-        _formKey.currentState?.fields['deleteExistingImage']?.value ?? false;
 
     if (_selectedImageFile == null && !hasExistingImage && !isAdding) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
+        SnackBar(
+          content: const Text(
             'Please select a new image or ensure an existing one is kept.',
           ),
-          backgroundColor: Colors.red,
+          backgroundColor: context.colors.error,
         ),
       );
       return;
@@ -95,9 +94,9 @@ class _AdminMenuItemUpsertScreenState
 
     if (isAdding && _selectedImageFile == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please select an image.'),
-          backgroundColor: Colors.red,
+        SnackBar(
+          content: const Text('Please select an image.'),
+          backgroundColor: context.colors.error,
         ),
       );
       return;
@@ -159,8 +158,8 @@ class _AdminMenuItemUpsertScreenState
     final hasExistingImage = widget.menuItem?.imageUrl != null;
 
     return Scaffold(
-      appBar: AdminAppBar(),
-      endDrawer: const AdminEndDrawer(),
+      appBar: const AdminAppBar(),
+      endDrawer: const MyEndDrawer(),
       body: MyScreenContainer(
         child: SingleChildScrollView(
           child: Consumer(
@@ -181,7 +180,7 @@ class _AdminMenuItemUpsertScreenState
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text(mutationState.errorMessage!),
-                      backgroundColor: Colors.red,
+                      backgroundColor: context.colors.error,
                     ),
                   );
                   ref
@@ -260,7 +259,7 @@ class _AdminMenuItemUpsertScreenState
                         ? Center(
                           child: Text(
                             'Error loading categories: ${categoriesState.errorMessage}',
-                            style: const TextStyle(color: Colors.red),
+                            style: TextStyle(color: context.colors.error),
                           ),
                         )
                         : FormBuilderDropdown<String>(
@@ -338,9 +337,11 @@ class _AdminMenuItemUpsertScreenState
                             width: double.infinity,
                             height: 200,
                             decoration: BoxDecoration(
-                              color: Colors.grey[200],
+                              color: context.colors.secondary,
                               borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: Colors.grey),
+                              border: Border.all(
+                                color: context.colors.secondary,
+                              ),
                             ),
                             child:
                                 _selectedImageFile != null
@@ -356,13 +357,13 @@ class _AdminMenuItemUpsertScreenState
                                           (context, error, stackTrace) => Icon(
                                             Icons.fastfood,
                                             size: 50,
-                                            color: Colors.grey[600],
+                                            color: context.colors.secondary,
                                           ),
                                     )
                                     : Icon(
                                       Icons.add_a_photo,
                                       size: 50,
-                                      color: Colors.grey[600],
+                                      color: context.colors.secondary,
                                     ),
                           ),
                         ),

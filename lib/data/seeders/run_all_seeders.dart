@@ -12,7 +12,7 @@ import 'package:jamal/data/seeders/menu_item_seeder.dart';
 
 import 'package:jamal/shared/services/cloudinary_service.dart';
 
-Future<void> main() async {
+Future<void> runSeeder() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   try {

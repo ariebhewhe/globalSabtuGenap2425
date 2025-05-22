@@ -15,7 +15,7 @@ extension RoleExtension on Role {
 }
 
 // * Location Enum
-enum Location { indoor, outdorr, vip }
+enum Location { indoor, outdoor, vip }
 
 extension LocationExtension on Location {
   String toMap() {

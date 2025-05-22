@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:jamal/core/routes/app_router.dart';
 import 'package:jamal/core/utils/enums.dart';
-import 'package:jamal/data/models/order_model.dart';
-import 'package:jamal/features/order/providers/orders_provider.dart';
-import 'package:jamal/features/order/widgets/order_tile.dart';
+import 'package:jamal/data/models/table_reservation_model.dart';
+import 'package:jamal/features/table_reservation/providers/user_table_reservations_provider.dart';
+import 'package:jamal/features/table_reservation/widgets/table_reservation_tile.dart';
 import 'package:jamal/shared/widgets/my_screen_container.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
@@ -40,11 +40,14 @@ class _TableReservationsScreenState
         _scrollController.position.maxScrollExtent - 200) {
       // * When user scrolls near the bottom, load more data
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        final ordersState = ref.watch(ordersProvider);
+        final tableReservationsState = ref.watch(userTableReservationsProvider);
 
         // * Check if currently loading more and there's more data to load
-        if (!ordersState.isLoadingMore && ordersState.hasMore) {
-          ref.read(ordersProvider.notifier).loadMoreOrders();
+        if (!tableReservationsState.isLoadingMore &&
+            tableReservationsState.hasMore) {
+          ref
+              .read(userTableReservationsProvider.notifier)
+              .loadMoreTableReservations();
         }
       });
     }
@@ -56,19 +59,24 @@ class _TableReservationsScreenState
       body: MyScreenContainer(
         child: Consumer(
           builder: (context, ref, child) {
-            final ordersState = ref.watch(ordersProvider);
-            final orders = ordersState.orders;
-            final isLoading = ordersState.isLoading;
+            final tableReservationsState = ref.watch(
+              userTableReservationsProvider,
+            );
+            final tableReservations = tableReservationsState.tableReservations;
+            final isLoading = tableReservationsState.isLoading;
             const int skeletonItemCount = 8;
 
             return RefreshIndicator(
               onRefresh:
-                  () => ref.read(ordersProvider.notifier).refreshOrders(),
+                  () =>
+                      ref
+                          .read(userTableReservationsProvider.notifier)
+                          .refreshTableReservations(),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Error message if any
-                  if (ordersState.errorMessage != null)
+                  if (tableReservationsState.errorMessage != null)
                     Container(
                       padding: const EdgeInsets.all(8.0),
                       color: context.theme.colorScheme.error.withValues(
@@ -76,7 +84,7 @@ class _TableReservationsScreenState
                       ),
                       width: double.infinity,
                       child: Text(
-                        ordersState.errorMessage!,
+                        tableReservationsState.errorMessage!,
                         style: context.theme.textTheme.bodyMedium?.copyWith(
                           color: context.theme.colorScheme.error,
                         ),
@@ -86,7 +94,7 @@ class _TableReservationsScreenState
                   // Main content
                   Expanded(
                     child:
-                        orders.isEmpty && !isLoading
+                        tableReservations.isEmpty && !isLoading
                             ? _buildEmptyState(context, context.theme)
                             : Skeletonizer(
                               enabled: isLoading,
@@ -95,12 +103,15 @@ class _TableReservationsScreenState
                                 itemCount:
                                     isLoading
                                         ? skeletonItemCount
-                                        : orders.length +
-                                            (ordersState.isLoadingMore ? 1 : 0),
+                                        : tableReservations.length +
+                                            (tableReservationsState
+                                                    .isLoadingMore
+                                                ? 1
+                                                : 0),
                                 itemBuilder: (context, index) {
                                   if (!isLoading &&
-                                      index == orders.length &&
-                                      ordersState.isLoadingMore) {
+                                      index == tableReservations.length &&
+                                      tableReservationsState.isLoadingMore) {
                                     return Center(
                                       child: Padding(
                                         padding: const EdgeInsets.all(8.0),
@@ -112,25 +123,25 @@ class _TableReservationsScreenState
                                     );
                                   }
 
-                                  final order =
+                                  final tableReservation =
                                       isLoading
-                                          ? _buildSkeletonOrder()
-                                          : orders[index];
+                                          ? _buildSkeletonTableReservation()
+                                          : tableReservations[index];
 
                                   return Padding(
                                     padding: const EdgeInsets.only(
                                       bottom: 16.0,
                                     ),
-                                    child: OrderTile(
-                                      order: order,
+                                    child: TableReservationTile(
+                                      tableReservation: tableReservation,
                                       // onTap:
                                       //     isLoading
                                       //         ? null
                                       //         : () {
-                                      //           if (index < orders.length) {
+                                      //           if (index < tableReservations.length) {
                                       //             context.router.push(
-                                      //               OrderDetailRoute(
-                                      //                 orderId: orders[index].id,
+                                      //               TableReservationDetailRoute(
+                                      //                 tableReservationId: tableReservations[index].id,
                                       //               ),
                                       //             );
                                       //           }
@@ -182,15 +193,16 @@ class _TableReservationsScreenState
     );
   }
 
-  OrderModel _buildSkeletonOrder() {
-    return OrderModel(
+  TableReservationModel _buildSkeletonTableReservation() {
+    return TableReservationModel(
       id: 'loading-id',
       userId: 'loading-user',
-      orderType: OrderType.takeAway,
-      totalAmount: 120000,
-      orderDate: DateTime.now(),
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
+      tableId: '',
+      orderId: '',
+      reservationTime: DateTime.now(),
+      status: ReservationStatus.reserved,
     );
   }
 }

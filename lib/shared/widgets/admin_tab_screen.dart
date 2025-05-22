@@ -2,7 +2,7 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:jamal/core/routes/app_router.dart';
 import 'package:jamal/shared/widgets/admin_app_bar.dart';
-import 'package:jamal/shared/widgets/admin_end_drawer.dart';
+import 'package:jamal/shared/widgets/my_end_drawer.dart';
 
 @RoutePage()
 class AdminTabScreen extends StatelessWidget {
@@ -14,7 +14,7 @@ class AdminTabScreen extends StatelessWidget {
       appBarBuilder: (context, tabsRouter) {
         return const AdminAppBar();
       },
-      endDrawer: const AdminEndDrawer(),
+      endDrawer: const MyEndDrawer(),
       routes: const [AdminHomeRoute(), AdminProfileRoute()],
       bottomNavigationBuilder: (_, tabsRouter) {
         return NavigationBar(

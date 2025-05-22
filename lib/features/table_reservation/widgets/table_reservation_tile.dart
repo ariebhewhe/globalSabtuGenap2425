@@ -1,23 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:jamal/core/utils/enums.dart';
-import 'package:jamal/data/models/order_model.dart';
+import 'package:jamal/data/models/table_reservation_model.dart';
 
 class TableReservationTile extends StatelessWidget {
-  final OrderModel order;
+  final TableReservationModel tableReservation;
   final VoidCallback? onTap;
 
-  const TableReservationTile({Key? key, required this.order, this.onTap})
-    : super(key: key);
+  const TableReservationTile({
+    Key? key,
+    required this.tableReservation,
+    this.onTap,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final currencyFormatter = NumberFormat.currency(
-      locale: 'id_ID',
-      symbol: 'Rp',
-      decimalDigits: 0,
-    );
 
     return Card(
       clipBehavior: Clip.antiAlias,
@@ -40,7 +38,7 @@ class TableReservationTile extends StatelessWidget {
                 children: [
                   Expanded(
                     child: Text(
-                      'Order #${order.id.substring(0, 8)}',
+                      'Reservation #${tableReservation.id.length >= 8 ? tableReservation.id.substring(0, 8) : tableReservation.id}',
                       style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
@@ -48,7 +46,9 @@ class TableReservationTile extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    DateFormat('dd MMM yyyy, HH:mm').format(order.orderDate),
+                    DateFormat(
+                      'dd MMM yyyy, HH:mm',
+                    ).format(tableReservation.reservationTime),
                     style: theme.textTheme.bodySmall,
                   ),
                 ],
@@ -58,9 +58,9 @@ class TableReservationTile extends StatelessWidget {
 
               Row(
                 children: [
-                  _buildOrderTypeChip(context, order.orderType),
+                  _buildTableInfoChip(context),
                   const SizedBox(width: 8),
-                  _buildStatusChip(context, order.status),
+                  _buildStatusChip(context, tableReservation.status),
                 ],
               ),
 
@@ -69,21 +69,25 @@ class TableReservationTile extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  _buildPaymentStatusChip(context, order.paymentStatus),
+                  if (tableReservation.table != null)
+                    _buildLocationChip(
+                      context,
+                      tableReservation.table!.location,
+                    ),
                   Text(
-                    currencyFormatter.format(order.totalAmount),
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
+                    'Order #${tableReservation.orderId.length >= 8 ? tableReservation.orderId.substring(0, 8) : tableReservation.orderId}',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
                 ],
               ),
 
-              if (order.orderItems != null && order.orderItems!.isNotEmpty)
+              if (tableReservation.table != null)
                 Padding(
                   padding: const EdgeInsets.only(top: 12.0),
                   child: Text(
-                    '${order.orderItems!.length} item(s)',
+                    'Table ${tableReservation.table!.tableNumber} • Capacity: ${tableReservation.table!.capacity}',
                     style: theme.textTheme.bodySmall,
                   ),
                 ),
@@ -94,29 +98,23 @@ class TableReservationTile extends StatelessWidget {
     );
   }
 
-  Widget _buildOrderTypeChip(BuildContext context, OrderType orderType) {
+  Widget _buildTableInfoChip(BuildContext context) {
     final theme = Theme.of(context);
-    IconData icon;
-    String label;
-
-    switch (orderType) {
-      case OrderType.dineIn:
-        icon = Icons.restaurant;
-        label = 'Dine In';
-        break;
-      case OrderType.takeAway:
-        icon = Icons.takeout_dining;
-        label = 'Takeaway';
-        break;
-    }
 
     return Chip(
       backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.1),
       labelPadding: const EdgeInsets.symmetric(horizontal: 4.0),
       visualDensity: VisualDensity.compact,
-      avatar: Icon(icon, size: 16, color: theme.colorScheme.primary),
+      avatar: Icon(
+        Icons.table_restaurant,
+        size: 16,
+        color: theme.colorScheme.primary,
+      ),
       label: Text(
-        label,
+        tableReservation.table?.tableNumber ??
+            (tableReservation.tableId.length >= 8
+                ? tableReservation.tableId.substring(0, 8)
+                : tableReservation.tableId),
         style: theme.textTheme.labelSmall?.copyWith(
           color: theme.colorScheme.primary,
         ),
@@ -124,39 +122,29 @@ class TableReservationTile extends StatelessWidget {
     );
   }
 
-  Widget _buildStatusChip(BuildContext context, OrderStatus status) {
+  Widget _buildStatusChip(BuildContext context, ReservationStatus status) {
     final theme = Theme.of(context);
     Color backgroundColor;
     Color textColor;
     String label;
 
     switch (status) {
-      case OrderStatus.pending:
-        backgroundColor = Colors.orange.withValues(alpha: 0.1);
-        textColor = Colors.orange.shade700;
-        label = 'Pending';
-        break;
-      case OrderStatus.confirmed:
+      case ReservationStatus.reserved:
         backgroundColor = theme.colorScheme.primary.withValues(alpha: 0.1);
         textColor = theme.colorScheme.primary;
-        label = 'Confirmed';
+        label = 'Reserved';
         break;
-      case OrderStatus.preparing:
-        backgroundColor = theme.colorScheme.secondary.withValues(alpha: 0.1);
-        textColor = theme.colorScheme.secondary;
-        label = 'Preparing';
-        break;
-      case OrderStatus.ready:
+      case ReservationStatus.occupied:
         backgroundColor = Colors.green.withValues(alpha: 0.1);
         textColor = Colors.green.shade700;
-        label = 'Ready';
+        label = 'Occupied';
         break;
-      case OrderStatus.completed:
+      case ReservationStatus.completed:
         backgroundColor = Colors.teal.withValues(alpha: 0.1);
         textColor = Colors.teal.shade700;
         label = 'Completed';
         break;
-      case OrderStatus.cancelled:
+      case ReservationStatus.cancelled:
         backgroundColor = theme.colorScheme.error.withValues(alpha: 0.1);
         textColor = theme.colorScheme.error;
         label = 'Cancelled';
@@ -174,36 +162,36 @@ class TableReservationTile extends StatelessWidget {
     );
   }
 
-  Widget _buildPaymentStatusChip(BuildContext context, PaymentStatus status) {
+  Widget _buildLocationChip(BuildContext context, Location location) {
     final theme = Theme.of(context);
-    Color backgroundColor;
-    Color textColor;
-    String label;
     IconData icon;
+    String label;
 
-    switch (status) {
-      case PaymentStatus.unpaid:
-        backgroundColor = theme.colorScheme.error.withValues(alpha: 0.1);
-        textColor = theme.colorScheme.error;
-        label = 'Unpaid';
-        icon = Icons.payment_outlined;
+    switch (location) {
+      case Location.indoor:
+        icon = Icons.home_outlined;
+        label = 'Indoor';
         break;
-      case PaymentStatus.paid:
-        backgroundColor = Colors.green.withValues(alpha: 0.1);
-        textColor = Colors.green.shade700;
-        label = 'Paid';
-        icon = Icons.check_circle_outline;
+      case Location.outdoor:
+        icon = Icons.deck_outlined;
+        label = 'Outdoor';
+        break;
+      case Location.vip:
+        icon = Icons.star_outline;
+        label = 'VIP';
         break;
     }
 
     return Chip(
-      backgroundColor: backgroundColor,
+      backgroundColor: theme.colorScheme.secondary.withValues(alpha: 0.1),
       labelPadding: const EdgeInsets.symmetric(horizontal: 4.0),
       visualDensity: VisualDensity.compact,
-      avatar: Icon(icon, size: 16, color: textColor),
+      avatar: Icon(icon, size: 16, color: theme.colorScheme.secondary),
       label: Text(
         label,
-        style: theme.textTheme.labelSmall?.copyWith(color: textColor),
+        style: theme.textTheme.labelSmall?.copyWith(
+          color: theme.colorScheme.secondary,
+        ),
       ),
     );
   }

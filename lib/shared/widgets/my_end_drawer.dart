@@ -7,8 +7,8 @@ import 'package:jamal/core/utils/enums.dart';
 import 'package:jamal/features/auth/auth_provider.dart';
 import 'package:jamal/shared/providers/theme_provider.dart';
 
-class UserEndDrawer extends StatelessWidget {
-  const UserEndDrawer({Key? key}) : super(key: key);
+class MyEndDrawer extends StatelessWidget {
+  const MyEndDrawer({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -40,7 +40,7 @@ class UserEndDrawer extends StatelessWidget {
       {
         'icon': Icons.category,
         'title': 'Categories',
-        'route': AdminCategoryUpsertRoute(),
+        'route': const AdminCategoriesRoute(),
       },
       {
         'icon': Icons.payment,

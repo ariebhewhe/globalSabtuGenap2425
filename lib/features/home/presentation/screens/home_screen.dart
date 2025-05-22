@@ -9,7 +9,7 @@ import 'package:jamal/features/menu_item/providers/menu_items_provider.dart';
 
 import 'package:jamal/shared/widgets/my_screen_container.dart';
 import 'package:jamal/shared/widgets/user_app_bar.dart';
-import 'package:jamal/shared/widgets/user_end_drawer.dart';
+import 'package:jamal/shared/widgets/my_end_drawer.dart';
 import 'package:jamal/features/home/presentation/widgets/home_carousel.dart';
 import 'package:jamal/features/home/presentation/widgets/category_card.dart';
 import 'package:jamal/features/home/presentation/widgets/popular_menu_item_card.dart';

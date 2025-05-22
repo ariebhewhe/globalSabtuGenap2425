@@ -2,7 +2,7 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:jamal/core/routes/app_router.dart';
 import 'package:jamal/shared/widgets/user_app_bar.dart';
-import 'package:jamal/shared/widgets/user_end_drawer.dart';
+import 'package:jamal/shared/widgets/my_end_drawer.dart';
 
 @RoutePage()
 class UserTabScreen extends StatelessWidget {
@@ -14,7 +14,7 @@ class UserTabScreen extends StatelessWidget {
       appBarBuilder: (context, tabsRouter) {
         return const UserAppBar();
       },
-      endDrawer: const UserEndDrawer(),
+      endDrawer: const MyEndDrawer(),
       routes: const [
         HomeRoute(),
         OrdersRoute(),

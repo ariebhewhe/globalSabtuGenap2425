@@ -88,14 +88,11 @@ class AdminMenuItemUpsertRoute
     extends PageRouteInfo<AdminMenuItemUpsertRouteArgs> {
   AdminMenuItemUpsertRoute({
     Key? key,
-    MenuItemModel? menuItemModel,
+    MenuItemModel? menuItem,
     List<PageRouteInfo>? children,
   }) : super(
          AdminMenuItemUpsertRoute.name,
-         args: AdminMenuItemUpsertRouteArgs(
-           key: key,
-           menuItemModel: menuItemModel,
-         ),
+         args: AdminMenuItemUpsertRouteArgs(key: key, menuItem: menuItem),
          initialChildren: children,
        );
 
@@ -107,24 +104,21 @@ class AdminMenuItemUpsertRoute
       final args = data.argsAs<AdminMenuItemUpsertRouteArgs>(
         orElse: () => const AdminMenuItemUpsertRouteArgs(),
       );
-      return AdminMenuItemUpsertScreen(
-        key: args.key,
-        menuItem: args.menuItemModel,
-      );
+      return AdminMenuItemUpsertScreen(key: args.key, menuItem: args.menuItem);
     },
   );
 }
 
 class AdminMenuItemUpsertRouteArgs {
-  const AdminMenuItemUpsertRouteArgs({this.key, this.menuItemModel});
+  const AdminMenuItemUpsertRouteArgs({this.key, this.menuItem});
 
   final Key? key;
 
-  final MenuItemModel? menuItemModel;
+  final MenuItemModel? menuItem;
 
   @override
   String toString() {
-    return 'AdminMenuItemUpsertRouteArgs{key: $key, menuItemModel: $menuItemModel}';
+    return 'AdminMenuItemUpsertRouteArgs{key: $key, menuItem: $menuItem}';
   }
 }
 
@@ -434,22 +428,6 @@ class ProfileRoute extends PageRouteInfo<void> {
 }
 
 /// generated route for
-/// [TableReservationsScreen]
-class TableReservationsRoute extends PageRouteInfo<void> {
-  const TableReservationsRoute({List<PageRouteInfo>? children})
-    : super(TableReservationsRoute.name, initialChildren: children);
-
-  static const String name = 'TableReservationsRoute';
-
-  static PageInfo page = PageInfo(
-    name,
-    builder: (data) {
-      return const TableReservationsScreen();
-    },
-  );
-}
-
-/// generated route for
 /// [SplashScreen]
 class SplashRoute extends PageRouteInfo<void> {
   const SplashRoute({List<PageRouteInfo>? children})
@@ -461,6 +439,22 @@ class SplashRoute extends PageRouteInfo<void> {
     name,
     builder: (data) {
       return const SplashScreen();
+    },
+  );
+}
+
+/// generated route for
+/// [TableReservationsScreen]
+class TableReservationsRoute extends PageRouteInfo<void> {
+  const TableReservationsRoute({List<PageRouteInfo>? children})
+    : super(TableReservationsRoute.name, initialChildren: children);
+
+  static const String name = 'TableReservationsRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      return const TableReservationsScreen();
     },
   );
 }

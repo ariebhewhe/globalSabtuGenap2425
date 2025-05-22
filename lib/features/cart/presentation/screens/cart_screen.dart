@@ -9,7 +9,7 @@ import 'package:jamal/features/cart/providers/cart_items_provider.dart';
 import 'package:jamal/features/cart/providers/selected_cart_items_provider.dart';
 import 'package:jamal/shared/widgets/my_screen_container.dart';
 import 'package:jamal/shared/widgets/user_app_bar.dart';
-import 'package:jamal/shared/widgets/user_end_drawer.dart';
+import 'package:jamal/shared/widgets/my_end_drawer.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
 @RoutePage()
@@ -117,7 +117,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
 
     return Scaffold(
       appBar: const UserAppBar(),
-      endDrawer: const UserEndDrawer(),
+      endDrawer: const MyEndDrawer(),
       bottomNavigationBar: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16),

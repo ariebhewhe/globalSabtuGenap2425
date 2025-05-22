@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:jamal/features/menu_item/providers/menu_items_provider.dart';
 import 'package:jamal/shared/widgets/admin_app_bar.dart';
-import 'package:jamal/shared/widgets/admin_end_drawer.dart';
+import 'package:jamal/shared/widgets/my_end_drawer.dart';
 
 @RoutePage()
 class AdminHomeScreen extends StatelessWidget {
