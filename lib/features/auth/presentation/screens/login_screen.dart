@@ -23,7 +23,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     _formKey.currentState?.reset();
   }
 
-  // Di file login_screen.dart, tambahkan kode navigasi setelah login berhasil
   void _submitForm() async {
     final isValid = _formKey.currentState?.saveAndValidate() ?? false;
 
@@ -85,83 +84,81 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text('Login')),
       body: MyScreenContainer(
-        child: SingleChildScrollView(
-          child: Consumer(
-            builder: (context, ref, child) {
-              final authState = ref.watch(authMutationProvider);
+        child: Consumer(
+          builder: (context, ref, child) {
+            final authState = ref.watch(authMutationProvider);
 
-              return FormBuilder(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    FormBuilderTextField(
-                      initialValue: "rizzthenotable@gmail.com",
-                      keyboardType: TextInputType.emailAddress,
-                      name: 'email',
-                      decoration: const InputDecoration(
-                        border: OutlineInputBorder(),
-                        hintText: 'Email',
-                        labelText: 'Email',
-                      ),
-                      validator: FormBuilderValidators.compose([
-                        FormBuilderValidators.required(),
-                        FormBuilderValidators.email(),
-                        FormBuilderValidators.minLength(3),
-                        FormBuilderValidators.maxLength(50),
-                      ]),
+            return FormBuilder(
+              key: _formKey,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  FormBuilderTextField(
+                    initialValue: "rizzthenotable@gmail.com",
+                    keyboardType: TextInputType.emailAddress,
+                    name: 'email',
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                      hintText: 'Email',
+                      labelText: 'Email',
                     ),
-                    const SizedBox(height: 16),
+                    validator: FormBuilderValidators.compose([
+                      FormBuilderValidators.required(),
+                      FormBuilderValidators.email(),
+                      FormBuilderValidators.minLength(3),
+                      FormBuilderValidators.maxLength(50),
+                    ]),
+                  ),
+                  const SizedBox(height: 16),
 
-                    FormBuilderTextField(
-                      name: 'password',
-                      initialValue: "177013",
-                      obscureText: true,
-                      decoration: const InputDecoration(
-                        border: OutlineInputBorder(),
-                        hintText: 'password',
-                        labelText: 'password',
-                      ),
-                      validator: FormBuilderValidators.compose([
-                        FormBuilderValidators.required(),
-                        FormBuilderValidators.minLength(3),
-                        FormBuilderValidators.maxLength(255),
-                      ]),
+                  FormBuilderTextField(
+                    name: 'password',
+                    initialValue: "177013",
+                    obscureText: true,
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                      hintText: 'password',
+                      labelText: 'password',
                     ),
-                    const SizedBox(height: 16),
+                    validator: FormBuilderValidators.compose([
+                      FormBuilderValidators.required(),
+                      FormBuilderValidators.minLength(3),
+                      FormBuilderValidators.maxLength(255),
+                    ]),
+                  ),
+                  const SizedBox(height: 16),
 
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: authState.isLoading ? null : _submitForm,
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          child:
-                              authState.isLoading
-                                  ? const CircularProgressIndicator()
-                                  : const Text('Login'),
-                        ),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: authState.isLoading ? null : _submitForm,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        child:
+                            authState.isLoading
+                                ? const CircularProgressIndicator()
+                                : const Text('Login'),
                       ),
                     ),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed:
-                            authState.isLoading ? null : _loginWithGoogle,
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          child:
-                              authState.isLoading
-                                  ? const CircularProgressIndicator()
-                                  : const Text('Login with google'),
-                        ),
+                  ),
+
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: authState.isLoading ? null : _loginWithGoogle,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        child:
+                            authState.isLoading
+                                ? const CircularProgressIndicator()
+                                : const Text('Login with google'),
                       ),
                     ),
-                  ],
-                ),
-              );
-            },
-          ),
+                  ),
+                ],
+              ),
+            );
+          },
         ),
       ),
     );

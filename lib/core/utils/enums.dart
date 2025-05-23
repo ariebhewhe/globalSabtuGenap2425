@@ -1,3 +1,4 @@
+// ! JANGAN UBAH-UBAH ENUM PAS UDAH ADA DATANYA NANTI ERROR DI FIRESTORE
 // * Role Enum
 import 'package:flutter/material.dart';
 import 'package:jamal/core/theme/app_theme.dart';

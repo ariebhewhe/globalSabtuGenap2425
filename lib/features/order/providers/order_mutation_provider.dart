@@ -1,9 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:jamal/data/models/order_model.dart';
 import 'package:jamal/data/repositories/order_repo.dart';
+import 'package:jamal/features/cart/providers/cart_items_provider.dart';
 import 'package:jamal/features/order/providers/order_mutation_state.dart';
 import 'package:jamal/features/order/providers/order_provider.dart';
 import 'package:jamal/features/order/providers/orders_provider.dart';
+import 'package:jamal/features/table_reservation/providers/user_table_reservations_provider.dart';
 
 class OrderMutationNotifier extends StateNotifier<OrderMutationState> {
   final OrderRepo _orderRepo;
@@ -28,6 +30,10 @@ class OrderMutationNotifier extends StateNotifier<OrderMutationState> {
 
         // * Refresh menu items list
         _ref.read(ordersProvider.notifier).refreshOrders();
+        _ref
+            .read(userTableReservationsProvider.notifier)
+            .refreshTableReservations();
+        _ref.read(cartItemsProvider.notifier).refreshCartItems();
       },
     );
   }

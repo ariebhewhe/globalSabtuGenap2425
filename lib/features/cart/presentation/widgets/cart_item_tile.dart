@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:jamal/core/utils/enums.dart';
 import 'package:jamal/data/models/cart_item_model.dart';
 
 class CartItemTile extends StatelessWidget {
@@ -22,10 +23,14 @@ class CartItemTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: isSelected ? Colors.blue.withOpacity(0.1) : null,
+        color:
+            isSelected ? context.colors.primary.withValues(alpha: 0.1) : null,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: isSelected ? Colors.blue : Colors.grey.withOpacity(0.2),
+          color:
+              isSelected
+                  ? context.colors.primary
+                  : context.colors.onSurface.withValues(alpha: 0.2),
           width: isSelected ? 2 : 1,
         ),
       ),
@@ -35,7 +40,9 @@ class CartItemTile extends StatelessWidget {
         onTap: onSelected,
         title: Text(
           cartItem.menuItem?.name ?? "Unknown Item",
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+          style: context.textStyles.titleMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
         ),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -44,7 +51,7 @@ class CartItemTile extends StatelessWidget {
             Text(
               'Rp ${(cartItem.menuItem?.price ?? 0) * cartItem.quantity}',
               style: TextStyle(
-                color: Theme.of(context).primaryColor,
+                color: context.colors.primary,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -60,13 +67,12 @@ class CartItemTile extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: Colors.grey.withOpacity(0.1),
+                color: context.colors.surface.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(4),
               ),
               child: Text(
                 '${cartItem.quantity}',
-                style: const TextStyle(
-                  fontSize: 16,
+                style: context.textStyles.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -91,12 +97,13 @@ class CartItemTile extends StatelessWidget {
                     const Center(child: CircularProgressIndicator()),
             errorWidget:
                 (context, url, error) => Container(
-                  color: Colors.grey.withOpacity(0.2),
-                  child: const Center(
+                  color: context.colors.onSurface.withValues(alpha: 0.1),
+                  child: Center(
                     child: Icon(
                       Icons.fastfood_outlined,
                       size: 30,
-                      color: Colors.grey,
+
+                      color: context.colors.onSurface.withValues(alpha: 0.4),
                     ),
                   ),
                 ),

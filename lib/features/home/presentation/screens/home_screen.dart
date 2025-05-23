@@ -9,11 +9,8 @@ import 'package:jamal/features/menu_item/presentation/widgets/menu_items_card.da
 import 'package:jamal/features/menu_item/providers/menu_items_provider.dart';
 
 import 'package:jamal/shared/widgets/my_screen_container.dart';
-import 'package:jamal/shared/widgets/user_app_bar.dart';
-import 'package:jamal/shared/widgets/my_end_drawer.dart';
 import 'package:jamal/features/home/presentation/widgets/home_carousel.dart';
 import 'package:jamal/features/home/presentation/widgets/category_card.dart';
-import 'package:jamal/features/home/presentation/widgets/popular_menu_item_card.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
 @RoutePage()
@@ -73,6 +70,7 @@ class HomeScreen extends ConsumerWidget {
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 12),
+
                 Skeletonizer(
                   enabled: isLoadingCategories,
                   child: GridView.builder(
@@ -117,15 +115,17 @@ class HomeScreen extends ConsumerWidget {
                   child: GridView.builder(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
-                    padding: const EdgeInsets.all(16.0),
                     gridDelegate:
                         const SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: 2,
-                          crossAxisSpacing: 16.0,
-                          mainAxisSpacing: 16.0,
+                          crossAxisSpacing: 8,
+                          mainAxisSpacing: 8,
                           childAspectRatio: 0.8,
                         ),
-                    itemCount: popularItems.length,
+                    itemCount:
+                        isLoadingPopular
+                            ? skeletonPopularItemCount
+                            : popularItems.length,
                     itemBuilder: (context, index) {
                       final menuItem =
                           isLoadingPopular
@@ -151,9 +151,7 @@ class HomeScreen extends ConsumerWidget {
                                 ? null
                                 : () {
                                   context.router.push(
-                                    AdminMenuItemUpsertRoute(
-                                      menuItem: menuItem,
-                                    ),
+                                    MenuItemDetailRoute(menuItem: menuItem),
                                   );
                                 },
                       );

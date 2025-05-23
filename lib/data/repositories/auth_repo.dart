@@ -10,6 +10,7 @@ import 'package:jamal/data/models/user_model.dart';
 import 'package:jamal/providers.dart';
 import 'package:jamal/shared/services/current_user_storage_service.dart';
 
+// Todo: Tambahin provider untuk UserModel biar tau login lewat apa
 final authRepoProvider = Provider<AuthRepo>((ref) {
   final firestore = ref.watch(firebaseFirestoreProvider);
   final auth = ref.watch(firebaseAuthProvider);

@@ -1,9 +1,9 @@
-import 'package:auto_route/annotations.dart';
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:jamal/core/routes/app_router.dart';
+import 'package:jamal/core/utils/enums.dart';
 import 'package:jamal/data/models/cart_item_model.dart';
 import 'package:jamal/data/models/menu_item_model.dart';
 import 'package:jamal/features/cart/providers/cart_item_mutation_provider.dart';
@@ -19,6 +19,12 @@ class MenuItemDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final Color availableColor = context.colors.primary;
+    final Color unavailableColor = context.colors.error;
+    final Color vegetarianColor = context.colors.secondary;
+    final Color nonVegetarianColor = context.colors.tertiary;
+    final Color spiceColor = context.colors.error;
+
     return Scaffold(
       appBar: const UserAppBar(),
       body: MyScreenContainer(
@@ -35,26 +41,53 @@ class MenuItemDetailScreen extends StatelessWidget {
                     height: 250,
                     fit: BoxFit.cover,
                     placeholder:
-                        (context, url) =>
-                            const Center(child: CircularProgressIndicator()),
+                        (context, url) => Center(
+                          child: CircularProgressIndicator(
+                            color: context.colors.primary,
+                          ),
+                        ),
                     errorWidget:
-                        (context, url, error) =>
-                            const Icon(Icons.error, size: 50),
+                        (context, url, error) => Container(
+                          width: double.infinity,
+                          height: 250,
+                          decoration: BoxDecoration(
+                            color: context.colors.surface.withValues(
+                              alpha: 0.1,
+                            ),
+                            borderRadius: BorderRadius.circular(8.0),
+                          ),
+                          child: Icon(
+                            Icons.broken_image_outlined,
+                            size: 50,
+                            color: context.colors.onSurface.withValues(
+                              alpha: 0.4,
+                            ),
+                          ),
+                        ),
                   ),
                 )
               else
                 Container(
                   width: double.infinity,
                   height: 250,
-                  color: Colors.grey[300],
-                  child: const Center(child: Text('No Image Available')),
+                  decoration: BoxDecoration(
+                    color: context.colors.surface.withValues(alpha: 0.5),
+                    borderRadius: BorderRadius.circular(8.0),
+                  ),
+                  child: Center(
+                    child: Text(
+                      'No Image Available',
+                      style: context.textStyles.bodyMedium?.copyWith(
+                        color: context.colors.onSurface.withValues(alpha: 0.7),
+                      ),
+                    ),
+                  ),
                 ),
-              const SizedBox(height: 16.0),
+              const SizedBox(height: 24.0),
 
               Text(
                 menuItem.name,
-                style: const TextStyle(
-                  fontSize: 24.0,
+                style: context.textStyles.headlineMedium?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -62,30 +95,33 @@ class MenuItemDetailScreen extends StatelessWidget {
 
               Text(
                 'Harga: Rp ${menuItem.price.toStringAsFixed(0)}',
-                style: TextStyle(
-                  fontSize: 20.0,
-                  color: Theme.of(context).primaryColor,
+                style: context.textStyles.titleLarge?.copyWith(
+                  color: context.colors.primary,
                   fontWeight: FontWeight.w600,
                 ),
               ),
               const SizedBox(height: 16.0),
 
-              const Text(
+              Text(
                 'Deskripsi:',
-                style: TextStyle(fontSize: 18.0, fontWeight: FontWeight.bold),
+                style: context.textStyles.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 4.0),
               Text(
-                menuItem.description,
-                style: const TextStyle(fontSize: 16.0),
+                menuItem.description.isEmpty
+                    ? 'Tidak ada deskripsi.'
+                    : menuItem.description,
+                style: context.textStyles.bodyLarge,
               ),
               const SizedBox(height: 16.0),
 
               Text(
                 'Kategori: ${menuItem.categoryId}',
-                style: const TextStyle(fontSize: 16.0),
+                style: context.textStyles.bodyMedium,
               ),
-              const SizedBox(height: 8.0),
+              const SizedBox(height: 12.0),
 
               Row(
                 children: [
@@ -93,15 +129,20 @@ class MenuItemDetailScreen extends StatelessWidget {
                     menuItem.isAvailable
                         ? Icons.check_circle_outline
                         : Icons.cancel_outlined,
-                    color: menuItem.isAvailable ? Colors.green : Colors.red,
+                    color:
+                        menuItem.isAvailable
+                            ? availableColor
+                            : unavailableColor,
                     size: 20,
                   ),
                   const SizedBox(width: 8.0),
                   Text(
                     menuItem.isAvailable ? 'Tersedia' : 'Tidak Tersedia',
-                    style: TextStyle(
-                      fontSize: 16.0,
-                      color: menuItem.isAvailable ? Colors.green : Colors.red,
+                    style: context.textStyles.bodyLarge?.copyWith(
+                      color:
+                          menuItem.isAvailable
+                              ? availableColor
+                              : unavailableColor,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -113,15 +154,23 @@ class MenuItemDetailScreen extends StatelessWidget {
                 children: [
                   Icon(
                     menuItem.isVegetarian
-                        ? Icons.local_florist
-                        : Icons.fastfood,
-                    color: menuItem.isVegetarian ? Colors.green : Colors.brown,
+                        ? Icons.eco_outlined
+                        : Icons.restaurant_menu_outlined,
+                    color:
+                        menuItem.isVegetarian
+                            ? vegetarianColor
+                            : nonVegetarianColor,
                     size: 20,
                   ),
                   const SizedBox(width: 8.0),
                   Text(
-                    menuItem.isVegetarian ? 'Vegetarian' : 'Mengandung Daging',
-                    style: const TextStyle(fontSize: 16.0),
+                    menuItem.isVegetarian ? 'Vegetarian' : 'Non-Vegetarian',
+                    style: context.textStyles.bodyLarge?.copyWith(
+                      color:
+                          menuItem.isVegetarian
+                              ? vegetarianColor
+                              : nonVegetarianColor,
+                    ),
                   ),
                 ],
               ),
@@ -130,63 +179,84 @@ class MenuItemDetailScreen extends StatelessWidget {
               if (menuItem.spiceLevel > 0)
                 Row(
                   children: [
-                    const Text(
+                    Text(
                       'Tingkat Pedas: ',
-                      style: TextStyle(fontSize: 16.0),
+                      style: context.textStyles.bodyLarge,
                     ),
                     Row(
                       children: List.generate(
                         menuItem.spiceLevel,
-                        (i) => const Icon(
+                        (i) => Icon(
                           Icons.local_fire_department,
                           size: 20,
-                          color: Colors.red,
+                          color: spiceColor,
                         ),
                       ),
                     ),
                     Text(
                       ' (${menuItem.spiceLevel}/5)',
-                      style: const TextStyle(fontSize: 16.0),
+                      style: context.textStyles.bodyLarge?.copyWith(
+                        color: spiceColor,
+                      ),
                     ),
                   ],
                 ),
+              const SizedBox(height: 24.0),
 
-              const SizedBox(height: 16.0),
               Text(
                 'Ditambahkan: ${menuItem.createdAt.toLocal().toString().split('.')[0]}',
-                style: const TextStyle(fontSize: 12.0, color: Colors.grey),
+                style: context.textStyles.labelSmall?.copyWith(
+                  color: context.textStyles.labelSmall?.color?.withValues(
+                    alpha: 0.7,
+                  ),
+                ),
               ),
+              const SizedBox(height: 4.0),
               Text(
                 'Diperbarui: ${menuItem.updatedAt.toLocal().toString().split('.')[0]}',
-                style: const TextStyle(fontSize: 12.0, color: Colors.grey),
+                style: context.textStyles.labelSmall?.copyWith(
+                  color: context.textStyles.labelSmall?.color?.withValues(
+                    alpha: 0.7,
+                  ),
+                ),
               ),
-
               const SizedBox(height: 80),
             ],
           ),
         ),
       ),
-
       bottomNavigationBar: Container(
         padding: const EdgeInsets.all(16.0),
-
+        decoration: BoxDecoration(
+          color:
+              context.theme.bottomAppBarTheme.color ??
+              context.theme.scaffoldBackgroundColor,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.1),
+              blurRadius: 4,
+              offset: const Offset(0, -2),
+            ),
+          ],
+        ),
         child: SafeArea(
           child: Consumer(
             builder: (context, ref, child) {
               return Row(
-                spacing: 8,
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Expanded(
                     flex: 2,
                     child: ElevatedButton(
                       onPressed: () => context.pushRoute(const OrdersRoute()),
-                      child: const Text('Order', style: TextStyle()),
+
+                      child: const Text('Pesan Langsung'),
                     ),
                   ),
-
+                  const SizedBox(width: 12),
                   Expanded(
-                    child: ElevatedButton(
+                    child: ElevatedButton.icon(
+                      icon: const Icon(Icons.shopping_cart_checkout),
                       onPressed: () {
                         ref
                             .read(cartItemMutationProvider.notifier)
@@ -202,8 +272,23 @@ class MenuItemDetailScreen extends StatelessWidget {
                                 ),
                               ),
                             );
+
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              '${menuItem.name} ditambahkan ke keranjang!',
+                            ),
+                            backgroundColor: context.colors.primary,
+                            duration: const Duration(seconds: 2),
+                          ),
+                        );
                       },
-                      child: const Text('Keranjang'),
+                      label: const Text('Keranjang'),
+
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: context.colors.secondary,
+                        foregroundColor: context.colors.onSecondary,
+                      ),
                     ),
                   ),
                 ],

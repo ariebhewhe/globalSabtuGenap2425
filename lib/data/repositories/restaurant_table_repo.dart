@@ -121,6 +121,7 @@ class RestaurantTableRepo {
           querySnapshot.docs.isNotEmpty ? querySnapshot.docs.last : null;
 
       // * Kembalikan hasil dengan metadata pagination
+      print(restaurantTables);
       return Right(
         SuccessResponse(
           data: PaginatedResult(

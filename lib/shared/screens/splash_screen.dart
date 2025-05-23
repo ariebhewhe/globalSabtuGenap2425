@@ -149,23 +149,10 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Center(
-        child: CachedNetworkImage(
+        child: Image(
+          image: AssetImage("assets/images/splash.png"),
           width: 120,
           height: 120,
-          imageUrl:
-              "https://i.pinimg.com/736x/a6/00/ba/a600ba336702ab75cce59e6d74161ccf.jpg",
-          fit: BoxFit.cover,
-          placeholder:
-              (context, url) =>
-                  const Center(child: CircularProgressIndicator()),
-          errorWidget:
-              (context, url, error) => const Center(
-                child: Icon(
-                  Icons.fastfood_outlined,
-                  size: 40,
-                  color: Colors.grey,
-                ),
-              ),
         ),
       ),
     );

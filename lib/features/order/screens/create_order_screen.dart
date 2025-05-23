@@ -4,9 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:jamal/core/routes/app_router.dart';
 import 'package:jamal/core/utils/enums.dart';
 import 'package:jamal/data/models/order_item_model.dart';
 import 'package:jamal/data/models/order_model.dart';
+import 'package:jamal/data/models/restaurant_table_model.dart';
 import 'package:jamal/data/models/table_reservation_model.dart';
 import 'package:jamal/features/cart/providers/selected_cart_items_provider.dart';
 import 'package:jamal/features/order/providers/order_mutation_provider.dart';
@@ -65,30 +67,33 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
     });
   }
 
+  // ... (kode lainnya tetap sama)
+
   void _submitForm() async {
     final isValid = _formKey.currentState?.saveAndValidate() ?? false;
 
     if (isValid) {
       final formValues = _formKey.currentState!.value;
 
-      // * Membuat objek CreateTableReservationDto jika tipe pesanan adalah dineIn
       CreateTableReservationDto? tableReservation;
-      if (_selectedOrderType == OrderType.dineIn &&
-          formValues['tableId'] != null) {
-        // * Mendapatkan objek table dari list available tables
-        final selectedTableId = formValues['tableId'] as String;
-        final restaurantTablesState = ref.read(restaurantTablesProvider);
-        final selectedTable = restaurantTablesState.restaurantTables.firstWhere(
-          (table) => table.id == selectedTableId,
-        );
 
-        // * Membuat objek reservasi meja
-        tableReservation = CreateTableReservationDto(
-          tableId: selectedTableId,
-          reservationTime:
-              formValues['estimatedReadyTime'] as DateTime? ?? DateTime.now(),
-          table: selectedTable,
-        );
+      if (_selectedOrderType == OrderType.dineIn) {
+        final selectedTable =
+            formValues['selectedRestaurantTable'] as RestaurantTableModel?;
+
+        if (selectedTable != null) {
+          tableReservation = CreateTableReservationDto(
+            tableId: selectedTable.id,
+            reservationTime:
+                formValues['estimatedReadyTime'] as DateTime? ?? DateTime.now(),
+            table: selectedTable,
+          );
+        } else {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('Meja belum dipilih!')));
+          return;
+        }
       }
 
       final newOrder = CreateOrderDto(
@@ -96,8 +101,7 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
         orderType: _selectedOrderType,
         estimatedReadyTime: formValues['estimatedReadyTime'] as DateTime?,
         specialInstructions: formValues['specialInstructions'] as String?,
-        tableReservation:
-            tableReservation, // * Menggunakan tableReservation yang sudah dibuat
+        tableReservation: tableReservation,
         orderItems: _orderItems,
       );
 
@@ -109,15 +113,124 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
         context,
       ).showSnackBar(const SnackBar(content: Text('Pesanan berhasil dibuat!')));
 
-      context.router.pop();
+      if (mounted) {
+        context.replaceRoute(const OrdersRoute());
+      }
     }
+  }
+
+  Widget _buildRestaurantTableDropdown(
+    List<RestaurantTableModel> availableTables,
+  ) {
+    final restaurantTablesState = ref.watch(restaurantTablesProvider);
+
+    if (restaurantTablesState.isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (restaurantTablesState.errorMessage != null) {
+      return Center(
+        child: Text(
+          'Error loading tables: ${restaurantTablesState.errorMessage}',
+          style: TextStyle(color: context.colors.error),
+        ),
+      );
+    }
+
+    return FormBuilderDropdown<RestaurantTableModel>(
+      name: 'selectedRestaurantTable',
+      decoration: const InputDecoration(
+        labelText: 'Pilih Meja',
+        border: OutlineInputBorder(),
+        hintText: 'Pilih meja yang tersedia',
+      ),
+      items:
+          availableTables
+              .map(
+                (table) => DropdownMenuItem<RestaurantTableModel>(
+                  value: table,
+                  child: Text(
+                    'Meja ${table.tableNumber} (Kapasitas: ${table.capacity}) - ${table.location.name}',
+                  ),
+                ),
+              )
+              .toList(),
+      validator: FormBuilderValidators.required(
+        errorText: 'Silakan pilih meja untuk makan di tempat',
+      ),
+    );
+  }
+
+  Widget _buildPaymentMethodDropdown() {
+    final paymentMethodsState = ref.watch(paymentMethodsProvider);
+
+    if (paymentMethodsState.isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (paymentMethodsState.errorMessage != null) {
+      return Center(
+        child: Text(
+          'Error loading payment methods: ${paymentMethodsState.errorMessage}',
+          style: TextStyle(color: context.colors.error),
+        ),
+      );
+    }
+
+    return FormBuilderDropdown<String>(
+      name: 'paymentMethodId',
+      decoration: const InputDecoration(
+        labelText: 'Metode Pembayaran',
+        border: OutlineInputBorder(),
+        hintText: 'Pilih metode pembayaran',
+      ),
+      items:
+          paymentMethodsState.paymentMethods
+              .map(
+                (method) => DropdownMenuItem(
+                  value: method.id,
+                  child: Row(
+                    children: [
+                      if (method.logo != null) ...[
+                        CachedNetworkImage(
+                          width: 24,
+                          height: 24,
+                          imageUrl: method.logo!,
+                          fit: BoxFit.cover,
+                          placeholder:
+                              (context, url) => Center(
+                                child: CircularProgressIndicator(
+                                  color: context.colors.primary,
+                                ),
+                              ),
+                          errorWidget:
+                              (context, url, error) => Center(
+                                child: Icon(
+                                  Icons.fastfood_outlined,
+                                  size: 40,
+                                  color: context.colors.onSurface.withOpacity(
+                                    0.5,
+                                  ),
+                                ),
+                              ),
+                        ),
+                        const SizedBox(width: 8),
+                      ],
+                      Text(method.name),
+                    ],
+                  ),
+                ),
+              )
+              .toList(),
+      validator: FormBuilderValidators.required(
+        errorText: 'Silakan pilih metode pembayaran',
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final orderMutationState = ref.watch(orderMutationProvider);
-
-    final paymentMethodsState = ref.watch(paymentMethodsProvider);
     final restaurantTablesState = ref.watch(restaurantTablesProvider);
 
     final availableTables =
@@ -135,10 +248,7 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Informasi Pesanan',
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
+                Text('Informasi Pesanan', style: context.textStyles.titleLarge),
                 const SizedBox(height: 16),
 
                 FormBuilderDropdown<OrderType>(
@@ -167,41 +277,8 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
                 const SizedBox(height: 16),
 
                 if (_selectedOrderType == OrderType.dineIn) ...[
-                  // * Tampilkan pemilihan meja dan jadwal reservasi
-                  restaurantTablesState.isLoading
-                      ? const Center(child: CircularProgressIndicator())
-                      : restaurantTablesState.errorMessage != null
-                      ? Center(
-                        child: Text(
-                          'Error loading tables: ${restaurantTablesState.errorMessage}',
-                          style: const TextStyle(color: Colors.red),
-                        ),
-                      )
-                      : FormBuilderDropdown<String>(
-                        name: 'tableId',
-                        decoration: const InputDecoration(
-                          labelText: 'Pilih Meja',
-                          border: OutlineInputBorder(),
-                          hintText: 'Pilih meja yang tersedia',
-                        ),
-                        items:
-                            availableTables
-                                .map(
-                                  (table) => DropdownMenuItem(
-                                    value: table.id,
-                                    child: Text(
-                                      'Meja ${table.tableNumber} (Kapasitas: ${table.capacity}) - ${table.location.name}',
-                                    ),
-                                  ),
-                                )
-                                .toList(),
-                        validator: FormBuilderValidators.required(
-                          errorText: 'Silakan pilih meja untuk makan di tempat',
-                        ),
-                      ),
+                  _buildRestaurantTableDropdown(availableTables),
                   const SizedBox(height: 16),
-
-                  // * Jadwal reservasi untuk meja
                   FormBuilderDateTimePicker(
                     name: 'estimatedReadyTime',
                     decoration: const InputDecoration(
@@ -221,7 +298,6 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
                             : null,
                   ),
                 ] else ...[
-                  // * Untuk takeAway, estimasi waktu saat pesanan siap
                   FormBuilderDateTimePicker(
                     name: 'estimatedReadyTime',
                     decoration: const InputDecoration(
@@ -237,70 +313,7 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
                 ],
                 const SizedBox(height: 16),
 
-                paymentMethodsState.isLoading
-                    ? const Center(child: CircularProgressIndicator())
-                    : paymentMethodsState.errorMessage != null
-                    ? Center(
-                      child: Text(
-                        'Error loading payment methods: ${paymentMethodsState.errorMessage}',
-                        style: const TextStyle(color: Colors.red),
-                      ),
-                    )
-                    : FormBuilderDropdown<String>(
-                      name: 'paymentMethodId',
-                      decoration: const InputDecoration(
-                        labelText: 'Metode Pembayaran',
-                        border: OutlineInputBorder(),
-                        hintText: 'Pilih metode pembayaran',
-                      ),
-                      items:
-                          paymentMethodsState.paymentMethods
-                              .map(
-                                (method) => DropdownMenuItem(
-                                  value: method.id,
-                                  child: Row(
-                                    children: [
-                                      if (method.logo != null) ...[
-                                        Image.network(
-                                          method.logo!,
-                                          width: 24,
-                                          height: 24,
-                                          errorBuilder:
-                                              (context, error, stackTrace) =>
-                                                  const Icon(
-                                                    Icons.payment,
-                                                    size: 24,
-                                                  ),
-                                        ),
-                                      ],
-                                      const SizedBox(width: 8),
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Text(method.name),
-                                            if (method.description != null)
-                                              Text(
-                                                method.description!,
-                                                style:
-                                                    Theme.of(
-                                                      context,
-                                                    ).textTheme.bodySmall,
-                                              ),
-                                          ],
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              )
-                              .toList(),
-                      validator: FormBuilderValidators.required(
-                        errorText: 'Silakan pilih metode pembayaran',
-                      ),
-                    ),
+                _buildPaymentMethodDropdown(),
                 const SizedBox(height: 16),
 
                 FormBuilderTextField(
@@ -314,10 +327,7 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
                 ),
                 const SizedBox(height: 24),
 
-                Text(
-                  'Item Pesanan',
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
+                Text('Item Pesanan', style: context.textStyles.titleLarge),
                 const SizedBox(height: 16),
 
                 ListView.separated(
@@ -327,7 +337,6 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
                   separatorBuilder: (context, index) => const Divider(),
                   itemBuilder: (context, index) {
                     final item = _orderItems[index];
-                    // print(item.menuItem!.imageUrl!);
                     return ListTile(
                       leading:
                           item.menuItem?.imageUrl != null
@@ -338,7 +347,7 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
                                   height: 60,
                                   imageUrl:
                                       item.menuItem?.imageUrl ??
-                                      "https://i.pinimg.com/736x/4f/6d/7e/4f6d7e577a4f3ae5045fd151fa16c2c7.jpg",
+                                      "https://i.pinimg.com/736x/4f/6d/7e/4f6d7e577a4f3ae5045fd151fa16c2c7.jpg", // Fallback URL
                                   fit: BoxFit.cover,
                                   placeholder:
                                       (context, url) => const Center(
@@ -346,12 +355,19 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
                                       ),
                                   errorWidget:
                                       (context, url, error) => Container(
-                                        color: Colors.grey.withOpacity(0.2),
-                                        child: const Center(
+                                        width: 60,
+                                        height: 60,
+                                        decoration: BoxDecoration(
+                                          color: Colors.grey.withOpacity(0.2),
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
+                                        ),
+                                        child: Center(
                                           child: Icon(
                                             Icons.fastfood_outlined,
                                             size: 30,
-                                            color: Colors.grey,
+                                            color: Colors.grey[400],
                                           ),
                                         ),
                                       ),
@@ -360,8 +376,11 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
                               : Container(
                                 width: 60,
                                 height: 60,
-                                color: Colors.grey[300],
-                                child: const Icon(Icons.restaurant),
+                                decoration: BoxDecoration(
+                                  color: Colors.grey[300],
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: const Icon(Icons.restaurant, size: 30),
                               ),
                       title: Text(item.menuItem?.name ?? 'Item Menu'),
                       subtitle: Text(
@@ -379,24 +398,25 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Colors.grey[100],
+                    color:
+                        context.isDarkMode
+                            ? context.colors.surfaceVariant
+                            : Colors.grey[100],
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
+                      Text(
                         'Total',
-                        style: TextStyle(
+                        style: context.textStyles.titleMedium?.copyWith(
                           fontWeight: FontWeight.bold,
-                          fontSize: 18,
                         ),
                       ),
                       Text(
                         'Rp ${_calculateTotal().toStringAsFixed(0)}',
-                        style: const TextStyle(
+                        style: context.textStyles.titleMedium?.copyWith(
                           fontWeight: FontWeight.bold,
-                          fontSize: 18,
                         ),
                       ),
                     ],
@@ -424,15 +444,17 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
                                   width: 20,
                                   child: CircularProgressIndicator(
                                     valueColor: AlwaysStoppedAnimation<Color>(
-                                      Theme.of(context).colorScheme.onPrimary,
+                                      context.colors.onPrimary,
                                     ),
+                                    strokeWidth: 2.0,
                                   ),
                                 )
                                 : const Text('Order'),
-
                         onPressed:
                             orderMutationState.isLoading ||
-                                    paymentMethodsState.isLoading ||
+                                    ref
+                                        .watch(paymentMethodsProvider)
+                                        .isLoading ||
                                     restaurantTablesState.isLoading
                                 ? null
                                 : _submitForm,

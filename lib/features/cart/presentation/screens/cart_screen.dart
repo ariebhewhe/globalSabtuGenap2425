@@ -2,6 +2,7 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:jamal/core/routes/app_router.dart';
+import 'package:jamal/core/utils/enums.dart';
 import 'package:jamal/data/models/cart_item_model.dart';
 import 'package:jamal/features/cart/presentation/widgets/cart_item_tile.dart';
 import 'package:jamal/features/cart/providers/cart_item_mutation_provider.dart';
@@ -39,11 +40,8 @@ class _CartScreenState extends ConsumerState<CartScreen> {
   void _scrollListener() {
     if (_scrollController.position.pixels >
         _scrollController.position.maxScrollExtent - 200) {
-      // * Ketika pengguna scroll mendekati bawah, muat lebih banyak data
       WidgetsBinding.instance.addPostFrameCallback((_) {
         final cartItemsState = ref.watch(cartItemsProvider);
-
-        // * Periksa apakah sedang loading more dan masih ada data untuk dimuat
         if (!cartItemsState.isLoadingMore && cartItemsState.hasMore) {
           ref.read(cartItemsProvider.notifier).loadMoreCartItems();
         }
@@ -58,7 +56,6 @@ class _CartScreenState extends ConsumerState<CartScreen> {
   void _handleIncrementQuantity(CartItemModel cartItem) {
     final newQty = cartItem.quantity + 1;
     final updateDto = UpdateCartItemDto(quantity: newQty);
-
     ref
         .read(cartItemMutationProvider.notifier)
         .updateCartItem(cartItem.id, updateDto);
@@ -68,7 +65,6 @@ class _CartScreenState extends ConsumerState<CartScreen> {
     if (cartItem.quantity > 1) {
       final newQty = cartItem.quantity - 1;
       final updateDto = UpdateCartItemDto(quantity: newQty);
-
       ref
           .read(cartItemMutationProvider.notifier)
           .updateCartItem(cartItem.id, updateDto);
@@ -92,8 +88,6 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                     ref
                         .read(cartItemMutationProvider.notifier)
                         .deleteCartItem(cartItem.id);
-
-                    // Jika item dipilih, hapus dari item terpilih
                     final isSelected = ref
                         .read(selectedCartItemsProvider.notifier)
                         .isSelected(cartItem);
@@ -103,7 +97,11 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                           .deleteCartItem(cartItem);
                     }
                   },
-                  child: const Text('Ya'),
+
+                  child: Text(
+                    'Ya',
+                    style: TextStyle(color: context.colors.error),
+                  ),
                 ),
               ],
             ),
@@ -118,15 +116,21 @@ class _CartScreenState extends ConsumerState<CartScreen> {
     return Scaffold(
       appBar: const UserAppBar(),
       endDrawer: const MyEndDrawer(),
-      bottomNavigationBar: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: ElevatedButton(
-            onPressed: () => context.pushRoute(const CreateOrderRoute()),
-            child: const Text('Checkout'),
-          ),
-        ),
-      ),
+      bottomNavigationBar:
+          selectedCartItems.isEmpty && ref.watch(cartItemsProvider).isLoading
+              ? null
+              : SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: ElevatedButton(
+                    onPressed:
+                        selectedCartItems.isEmpty
+                            ? null
+                            : () => context.pushRoute(const CreateOrderRoute()),
+                    child: const Text('Checkout'),
+                  ),
+                ),
+              ),
       body: MyScreenContainer(
         child: Consumer(
           builder: (context, ref, child) {
@@ -143,11 +147,13 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                   if (cartItemsState.errorMessage != null)
                     Container(
                       padding: const EdgeInsets.all(8.0),
-                      color: Colors.red.shade100,
+
+                      color: context.colors.error.withOpacity(0.1),
                       width: double.infinity,
                       child: Text(
                         cartItemsState.errorMessage!,
-                        style: TextStyle(color: Colors.red.shade800),
+
+                        style: TextStyle(color: context.colors.error),
                       ),
                     ),
                   Expanded(
@@ -166,7 +172,6 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                                     (cartItemsState.isLoadingMore ? 1 : 0),
                         separatorBuilder: (_, __) => const SizedBox(height: 16),
                         itemBuilder: (context, index) {
-                          // Loading more indicator di akhir
                           if (!isLoading &&
                               index == cartItems.length &&
                               cartItemsState.isLoadingMore) {
@@ -181,7 +186,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                           final cartItem =
                               isLoading
                                   ? CartItemModel(
-                                    id: '',
+                                    id: '$index',
                                     userId: '',
                                     menuItemId: '',
                                     quantity: 0,
@@ -189,8 +194,6 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                                     updatedAt: DateTime.now(),
                                   )
                                   : cartItems[index];
-
-                          // Cek apakah item ini dipilih
                           final isSelected = selectedCartItems.any(
                             (item) => item.id == cartItem.id,
                           );
@@ -210,16 +213,17 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                       ),
                     ),
                   ),
-                  // Tambahkan panel aksi di bawah jika ada item yang dipilih
                   if (selectedCartItems.isNotEmpty && !isLoading)
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: Theme.of(context).cardColor,
+                        color:
+                            context.cardTheme.color ?? context.theme.cardColor,
                         boxShadow: [
                           BoxShadow(
                             offset: const Offset(0, -2),
                             blurRadius: 6,
+
                             color: Colors.black.withOpacity(0.1),
                           ),
                         ],
@@ -229,12 +233,16 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                         children: [
                           Text(
                             '${selectedCartItems.length} item terpilih',
-                            style: const TextStyle(fontWeight: FontWeight.bold),
+
+                            style: context.textStyles.bodyLarge?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                           ElevatedButton(
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.red,
-                              foregroundColor: Colors.white,
+                              backgroundColor: context.colors.error,
+
+                              foregroundColor: context.colors.onError,
                             ),
                             onPressed: () {
                               showDialog(
@@ -263,7 +271,6 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                                                   )
                                                   .deleteCartItem(item.id);
                                             }
-                                            // Reset pilihan
                                             ref
                                                 .read(
                                                   selectedCartItemsProvider
@@ -271,7 +278,13 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                                                 )
                                                 .clearSelectedItems();
                                           },
-                                          child: const Text('Hapus'),
+
+                                          child: Text(
+                                            'Hapus',
+                                            style: TextStyle(
+                                              color: context.colors.error,
+                                            ),
+                                          ),
                                         ),
                                       ],
                                     ),
