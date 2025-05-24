@@ -48,7 +48,7 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
             menuItemId: cartItem.menuItemId,
             quantity: cartItem.quantity,
             price: cartItem.menuItem?.price ?? 0,
-            subtotal: (cartItem.menuItem?.price ?? 0) * cartItem.quantity,
+            total: (cartItem.menuItem?.price ?? 0) * cartItem.quantity,
             menuItem: cartItem.menuItem,
             createdAt: DateTime.now(),
             updatedAt: DateTime.now(),
@@ -57,7 +57,7 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
   }
 
   double _calculateTotal() {
-    return _orderItems.fold(0, (total, item) => total + item.subtotal);
+    return _orderItems.fold(0, (total, item) => total + item.total);
   }
 
   void _resetForm() {
@@ -387,7 +387,7 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
                         'Rp ${item.price.toStringAsFixed(0)} x ${item.quantity}',
                       ),
                       trailing: Text(
-                        'Rp ${item.subtotal.toStringAsFixed(0)}',
+                        'Rp ${item.total.toStringAsFixed(0)}',
                         style: const TextStyle(fontWeight: FontWeight.bold),
                       ),
                     );

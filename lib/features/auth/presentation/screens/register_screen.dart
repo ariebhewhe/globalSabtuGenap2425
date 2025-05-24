@@ -9,14 +9,14 @@ import 'package:jamal/features/auth/auth_provider.dart';
 import 'package:jamal/shared/widgets/my_screen_container.dart';
 
 @RoutePage()
-class LoginScreen extends ConsumerStatefulWidget {
-  const LoginScreen({super.key});
+class RegisterScreen extends ConsumerStatefulWidget {
+  const RegisterScreen({super.key});
 
   @override
-  ConsumerState<LoginScreen> createState() => _LoginScreenState();
+  ConsumerState<RegisterScreen> createState() => _RegisterScreenState();
 }
 
-class _LoginScreenState extends ConsumerState<LoginScreen> {
+class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _formKey = GlobalKey<FormBuilderState>();
 
   void _resetForm() {
@@ -28,12 +28,32 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     if (isValid) {
       final formValues = _formKey.currentState!.value;
+      final String password = formValues['password'] as String;
+      final String confirmPassword = formValues['confirmPassword'] as String;
+
+      if (password != confirmPassword) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text(
+              "Password dan konfirmasi password tidak cocok.",
+            ),
+            backgroundColor: context.colors.error,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
+        );
+        return;
+      }
 
       await ref
           .read(authMutationProvider.notifier)
-          .loginWithEmail(
+          .register(
+            username: formValues['username'] as String,
             email: formValues['email'] as String,
-            password: formValues['password'] as String,
+            password: password,
           );
 
       if (!mounted) return;
@@ -41,11 +61,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
       if (authState.userModel != null) {
         _resetForm();
-        if (authState.userModel!.role == Role.admin) {
-          context.replaceRoute(const AdminTabRoute());
-        } else {
-          context.replaceRoute(const UserTabRoute());
-        }
+
+        context.replaceRoute(const LoginRoute());
       } else if (authState.errorMessage != null) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -62,38 +79,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     }
   }
 
-  void _loginWithGoogle() async {
-    await ref.read(authMutationProvider.notifier).loginWithGoogle();
-
-    if (!mounted) return;
-    final authState = ref.read(authMutationProvider);
-
-    if (authState.userModel != null) {
-      if (authState.userModel!.role == Role.admin) {
-        context.replaceRoute(const AdminTabRoute());
-      } else {
-        context.replaceRoute(const UserTabRoute());
-      }
-    } else if (authState.errorMessage != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(authState.errorMessage!),
-          backgroundColor: context.colors.error,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        ),
-      );
-      ref.read(authMutationProvider.notifier).resetErrorMessage();
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: context.theme.scaffoldBackgroundColor,
       appBar: AppBar(
         title: Text(
-          'Login Akun',
+          'Buat Akun Baru',
           style: context.textStyles.titleLarge?.copyWith(
             color: context.theme.appBarTheme.foregroundColor,
           ),
@@ -134,9 +126,42 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           const SizedBox(height: 32),
 
                           FormBuilderTextField(
-                            initialValue: "user@gmail.com",
-                            keyboardType: TextInputType.emailAddress,
+                            name: 'username',
+                            style: context.textStyles.bodyLarge?.copyWith(
+                              color: context.colors.onSurface,
+                            ),
+                            decoration: InputDecoration(
+                              hintText: 'Masukkan username',
+                              labelText: 'Username',
+                              labelStyle: context.textStyles.bodyMedium
+                                  ?.copyWith(
+                                    color: context.colors.onSurfaceVariant,
+                                  ),
+                              hintStyle: context.textStyles.bodyMedium
+                                  ?.copyWith(
+                                    color: context.colors.onSurfaceVariant
+                                        .withOpacity(0.7),
+                                  ),
+                              prefixIcon: Icon(
+                                Icons.person_outline,
+                                color: context.colors.secondary,
+                              ),
+                            ),
+                            validator: FormBuilderValidators.compose([
+                              FormBuilderValidators.required(
+                                errorText: "Username tidak boleh kosong",
+                              ),
+                              FormBuilderValidators.minLength(
+                                3,
+                                errorText: "Username minimal 3 karakter",
+                              ),
+                            ]),
+                          ),
+                          const SizedBox(height: 20),
+
+                          FormBuilderTextField(
                             name: 'email',
+                            keyboardType: TextInputType.emailAddress,
                             style: context.textStyles.bodyLarge?.copyWith(
                               color: context.colors.onSurface,
                             ),
@@ -170,7 +195,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
                           FormBuilderTextField(
                             name: 'password',
-                            initialValue: "user12345",
                             obscureText: true,
                             style: context.textStyles.bodyLarge?.copyWith(
                               color: context.colors.onSurface,
@@ -202,6 +226,48 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               ),
                             ]),
                           ),
+                          const SizedBox(height: 20),
+
+                          FormBuilderTextField(
+                            name: 'confirmPassword',
+                            obscureText: true,
+                            style: context.textStyles.bodyLarge?.copyWith(
+                              color: context.colors.onSurface,
+                            ),
+                            decoration: InputDecoration(
+                              hintText: 'Ulangi password',
+                              labelText: 'Konfirmasi Password',
+                              labelStyle: context.textStyles.bodyMedium
+                                  ?.copyWith(
+                                    color: context.colors.onSurfaceVariant,
+                                  ),
+                              hintStyle: context.textStyles.bodyMedium
+                                  ?.copyWith(
+                                    color: context.colors.onSurfaceVariant
+                                        .withOpacity(0.7),
+                                  ),
+                              prefixIcon: Icon(
+                                Icons.lock_reset_outlined,
+                                color: context.colors.secondary,
+                              ),
+                            ),
+                            validator: FormBuilderValidators.compose([
+                              FormBuilderValidators.required(
+                                errorText:
+                                    "Konfirmasi password tidak boleh kosong",
+                              ),
+                              (val) {
+                                if (val !=
+                                    _formKey
+                                        .currentState
+                                        ?.fields['password']
+                                        ?.value) {
+                                  return 'Password tidak cocok';
+                                }
+                                return null;
+                              },
+                            ]),
+                          ),
                           const SizedBox(height: 28),
 
                           SizedBox(
@@ -229,7 +295,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                         ),
                                       )
                                       : Text(
-                                        'Login',
+                                        'Daftar',
                                         style: context.textStyles.labelLarge
                                             ?.copyWith(
                                               fontSize: 16,
@@ -238,59 +304,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                       ),
                             ),
                           ),
-                          const SizedBox(height: 16),
-
-                          SizedBox(
-                            width: double.infinity,
-                            child: ElevatedButton.icon(
-                              icon: Image.asset(
-                                'assets/images/google_logo.png',
-                                height: 22,
-                                width: 22,
-                                errorBuilder:
-                                    (context, error, stackTrace) => Icon(
-                                      Icons.g_mobiledata_rounded,
-                                      color: context.colors.primary,
-                                    ),
-                              ),
-                              label: Text(
-                                'Login dengan Google',
-                                style: context.textStyles.labelLarge?.copyWith(
-                                  fontSize: 16,
-                                  color: context.colors.primary,
-                                ),
-                              ),
-                              onPressed:
-                                  authState.isLoading ? null : _loginWithGoogle,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: context.colors.surface,
-                                foregroundColor: context.colors.primary,
-                                side: BorderSide(
-                                  color: context.colors.outline.withOpacity(
-                                    0.5,
-                                  ),
-                                ),
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 12,
-                                ),
-                                shape: context.elevatedButtonTheme.style?.shape
-                                    ?.resolve({}),
-                              ),
-                            ),
-                          ),
                           const SizedBox(height: 24),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Text(
-                                "Belum punya akun? ",
+                                "Sudah punya akun? ",
                                 style: context.textStyles.bodyMedium,
                               ),
                               TextButton(
-                                onPressed:
-                                    () => context.pushRoute(
-                                      const RegisterRoute(),
-                                    ),
+                                onPressed: () {
+                                  context.replaceRoute(const LoginRoute());
+                                },
                                 style: TextButton.styleFrom(
                                   padding: EdgeInsets.zero,
                                   minimumSize: Size.zero,
@@ -299,7 +324,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                   foregroundColor: context.colors.primary,
                                 ),
                                 child: Text(
-                                  'Daftar di sini',
+                                  'Login di sini',
                                   style: context.textStyles.labelLarge
                                       ?.copyWith(
                                         color: context.colors.primary,

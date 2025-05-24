@@ -121,18 +121,18 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
                                     ),
                                     child: OrderTile(
                                       order: order,
-                                      // onTap:
-                                      //     isLoading
-                                      //         ? null
-                                      //         : () {
-                                      //           if (index < orders.length) {
-                                      //             context.router.push(
-                                      //               OrderDetailRoute(
-                                      //                 orderId: orders[index].id,
-                                      //               ),
-                                      //             );
-                                      //           }
-                                      //         },
+                                      onTap:
+                                          isLoading
+                                              ? null
+                                              : () {
+                                                if (index < orders.length) {
+                                                  context.router.push(
+                                                    OrderDetailRoute(
+                                                      order: order,
+                                                    ),
+                                                  );
+                                                }
+                                              },
                                     ),
                                   );
                                 },

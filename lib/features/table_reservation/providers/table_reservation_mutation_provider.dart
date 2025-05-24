@@ -3,6 +3,7 @@ import 'package:jamal/data/models/table_reservation_model.dart';
 import 'package:jamal/data/repositories/table_reservation_repo.dart';
 import 'package:jamal/features/table_reservation/providers/table_reservation_mutation_state.dart';
 import 'package:jamal/features/table_reservation/providers/table_reservation_provider.dart';
+import 'package:jamal/features/table_reservation/providers/table_reservations_provider.dart';
 import 'package:jamal/features/table_reservation/providers/user_table_reservations_provider.dart';
 
 class TableReservationMutationNotifier
@@ -33,7 +34,9 @@ class TableReservationMutationNotifier
           successMessage: success.message,
         );
 
-        // * Refresh menu items dan menu items
+        _ref
+            .read(tableReservationsProvider.notifier)
+            .refreshTableReservations();
         _ref
             .read(userTableReservationsProvider.notifier)
             .refreshTableReservations();

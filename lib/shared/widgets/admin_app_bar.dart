@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:auto_route/auto_route.dart';
-import 'package:jamal/core/routes/app_router.dart';
 
 class AdminAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String? customTitle;
@@ -95,10 +94,6 @@ class AdminAppBar extends StatelessWidget implements PreferredSizeWidget {
     return AppBar(
       title: Text(_getAppBarTitle(context)),
       actions: [
-        IconButton(
-          onPressed: () => context.pushRoute(const CartRoute()),
-          icon: const Icon(Icons.shopping_cart),
-        ),
         Builder(
           builder:
               (innerContext) => IconButton(

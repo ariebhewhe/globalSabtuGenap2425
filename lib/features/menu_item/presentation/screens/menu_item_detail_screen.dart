@@ -242,56 +242,40 @@ class MenuItemDetailScreen extends StatelessWidget {
         child: SafeArea(
           child: Consumer(
             builder: (context, ref, child) {
-              return Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    flex: 2,
-                    child: ElevatedButton(
-                      onPressed: () => context.pushRoute(const OrdersRoute()),
-
-                      child: const Text('Pesan Langsung'),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      icon: const Icon(Icons.shopping_cart_checkout),
-                      onPressed: () {
-                        ref
-                            .read(cartItemMutationProvider.notifier)
-                            .addCartItem(
-                              CreateCartItemDto(
-                                menuItemId: menuItem.id,
-                                quantity: 1,
-                                menuItem: DenormalizedMenuItemModel(
-                                  id: menuItem.id,
-                                  name: menuItem.name,
-                                  price: menuItem.price,
-                                  imageUrl: menuItem.imageUrl,
-                                ),
-                              ),
-                            );
-
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              '${menuItem.name} ditambahkan ke keranjang!',
-                            ),
-                            backgroundColor: context.colors.primary,
-                            duration: const Duration(seconds: 2),
+              return ElevatedButton.icon(
+                icon: const Icon(Icons.shopping_cart_checkout),
+                onPressed: () {
+                  ref
+                      .read(cartItemMutationProvider.notifier)
+                      .addCartItem(
+                        CreateCartItemDto(
+                          menuItemId: menuItem.id,
+                          quantity: 1,
+                          menuItem: DenormalizedMenuItemModel(
+                            id: menuItem.id,
+                            name: menuItem.name,
+                            price: menuItem.price,
+                            imageUrl: menuItem.imageUrl,
                           ),
-                        );
-                      },
-                      label: const Text('Keranjang'),
+                        ),
+                      );
 
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: context.colors.secondary,
-                        foregroundColor: context.colors.onSecondary,
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        '${menuItem.name} ditambahkan ke keranjang!',
                       ),
+                      backgroundColor: context.colors.primary,
+                      duration: const Duration(seconds: 2),
                     ),
-                  ),
-                ],
+                  );
+                },
+                label: const Text('Keranjang'),
+
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: context.colors.secondary,
+                  foregroundColor: context.colors.onSecondary,
+                ),
               );
             },
           ),

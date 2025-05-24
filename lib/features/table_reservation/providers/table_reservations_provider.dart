@@ -2,12 +2,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:jamal/data/repositories/table_reservation_repo.dart';
 import 'package:jamal/features/table_reservation/providers/table_reservations_state.dart';
 
-class UserTableReservationsNotifier
-    extends StateNotifier<TableReservationsState> {
+class TableReservationsNotifier extends StateNotifier<TableReservationsState> {
   final TableReservationRepo _tableReservationRepo;
   static const int _defaultLimit = 10;
 
-  UserTableReservationsNotifier(this._tableReservationRepo)
+  TableReservationsNotifier(this._tableReservationRepo)
     : super(TableReservationsState()) {
     loadTableReservations();
   }
@@ -15,8 +14,9 @@ class UserTableReservationsNotifier
   Future<void> loadTableReservations({int limit = _defaultLimit}) async {
     state = state.copyWith(isLoading: true);
 
-    final result = await _tableReservationRepo
-        .getPaginatedUserTableReservations(limit: limit);
+    final result = await _tableReservationRepo.getPaginatedTableReservations(
+      limit: limit,
+    );
 
     result.match(
       (error) =>
@@ -37,11 +37,10 @@ class UserTableReservationsNotifier
 
     state = state.copyWith(isLoadingMore: true, errorMessage: null);
 
-    final result = await _tableReservationRepo
-        .getPaginatedUserTableReservations(
-          limit: limit,
-          startAfter: state.lastDocument,
-        );
+    final result = await _tableReservationRepo.getPaginatedTableReservations(
+      limit: limit,
+      startAfter: state.lastDocument,
+    );
 
     result.match(
       (error) =>
@@ -68,12 +67,12 @@ class UserTableReservationsNotifier
   }
 }
 
-final userTableReservationsProvider = StateNotifierProvider<
-  UserTableReservationsNotifier,
-  TableReservationsState
->((ref) {
-  final TableReservationRepo tableReservationRepo = ref.watch(
-    tableReservationRepoProvider,
-  );
-  return UserTableReservationsNotifier(tableReservationRepo);
-});
+final tableReservationsProvider =
+    StateNotifierProvider<TableReservationsNotifier, TableReservationsState>((
+      ref,
+    ) {
+      final TableReservationRepo tableReservationRepo = ref.watch(
+        tableReservationRepoProvider,
+      );
+      return TableReservationsNotifier(tableReservationRepo);
+    });

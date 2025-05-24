@@ -8,7 +8,7 @@ class OrderItemModel extends BaseModel {
   final String menuItemId;
   final int quantity;
   final double price;
-  final double subtotal;
+  final double total;
   final String? specialRequests;
   final DenormalizedMenuItemModel? menuItem;
 
@@ -18,7 +18,7 @@ class OrderItemModel extends BaseModel {
     required this.menuItemId,
     required this.quantity,
     required this.price,
-    required this.subtotal,
+    required this.total,
     this.specialRequests,
     this.menuItem,
     required DateTime createdAt,
@@ -31,7 +31,7 @@ class OrderItemModel extends BaseModel {
     String? menuItemId,
     int? quantity,
     double? price,
-    double? subtotal,
+    double? total,
     String? specialRequests,
     DenormalizedMenuItemModel? menuItem,
     DateTime? createdAt,
@@ -43,7 +43,7 @@ class OrderItemModel extends BaseModel {
       menuItemId: menuItemId ?? this.menuItemId,
       quantity: quantity ?? this.quantity,
       price: price ?? this.price,
-      subtotal: subtotal ?? this.subtotal,
+      total: total ?? this.total,
       specialRequests: specialRequests ?? this.specialRequests,
       menuItem: menuItem ?? this.menuItem,
       createdAt: createdAt ?? this.createdAt,
@@ -59,7 +59,7 @@ class OrderItemModel extends BaseModel {
       'menuItemId': menuItemId,
       'quantity': quantity,
       'price': price,
-      'subtotal': subtotal,
+      'total': total,
       'specialRequests': specialRequests,
       'menuItem': menuItem?.toMap(),
       'createdAt': createdAt.millisecondsSinceEpoch,
@@ -75,7 +75,7 @@ class OrderItemModel extends BaseModel {
       menuItemId: map['menuItemId'] as String,
       quantity: map['quantity'] as int,
       price: map['price'] as double,
-      subtotal: map['subtotal'] as double,
+      total: map['total'] as double,
       specialRequests:
           map['specialRequests'] != null
               ? map['specialRequests'] as String
@@ -100,7 +100,7 @@ class OrderItemModel extends BaseModel {
 
   @override
   String toString() {
-    return 'OrderItemModel(id: $id, orderId: $orderId, menuItemId: $menuItemId, quantity: $quantity, price: $price, subtotal: $subtotal, specialRequests: $specialRequests, menuItem: $menuItem, createdAt: $createdAt, updatedAt: $updatedAt)';
+    return 'OrderItemModel(id: $id, orderId: $orderId, menuItemId: $menuItemId, quantity: $quantity, price: $price, total: $total, specialRequests: $specialRequests, menuItem: $menuItem, createdAt: $createdAt, updatedAt: $updatedAt)';
   }
 
   @override
@@ -112,7 +112,7 @@ class OrderItemModel extends BaseModel {
         other.menuItemId == menuItemId &&
         other.quantity == quantity &&
         other.price == price &&
-        other.subtotal == subtotal &&
+        other.total == total &&
         other.specialRequests == specialRequests &&
         other.menuItem == menuItem &&
         other.createdAt == createdAt &&
@@ -126,7 +126,7 @@ class OrderItemModel extends BaseModel {
         menuItemId.hashCode ^
         quantity.hashCode ^
         price.hashCode ^
-        subtotal.hashCode ^
+        total.hashCode ^
         specialRequests.hashCode ^
         menuItem.hashCode ^
         createdAt.hashCode ^

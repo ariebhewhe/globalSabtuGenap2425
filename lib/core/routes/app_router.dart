@@ -5,9 +5,12 @@ import 'package:jamal/core/routes/auth_guard.dart';
 import 'package:jamal/core/routes/duplicate_guard.dart';
 import 'package:jamal/data/models/category_model.dart';
 import 'package:jamal/data/models/menu_item_model.dart';
+import 'package:jamal/data/models/order_model.dart';
 import 'package:jamal/data/models/payment_method_model.dart';
 import 'package:jamal/data/models/restaurant_table_model.dart';
+import 'package:jamal/data/models/table_reservation_model.dart';
 import 'package:jamal/features/auth/presentation/screens/login_screen.dart';
+import 'package:jamal/features/auth/presentation/screens/register_screen.dart';
 import 'package:jamal/features/cart/presentation/screens/cart_screen.dart';
 import 'package:jamal/features/category/screens/admin_categories_screen.dart';
 import 'package:jamal/features/category/screens/admin_category_upsert_screen.dart';
@@ -16,13 +19,18 @@ import 'package:jamal/features/home/presentation/screens/home_screen.dart';
 import 'package:jamal/features/menu_item/presentation/screens/admin_menu_item_upsert_screen.dart';
 import 'package:jamal/features/menu_item/presentation/screens/admin_menu_items_screen.dart';
 import 'package:jamal/features/order/screens/admin_orders_screen.dart';
+import 'package:jamal/features/order/screens/admin_update_order_screen.dart';
 import 'package:jamal/features/order/screens/create_order_screen.dart';
+import 'package:jamal/features/order/screens/order_detail_screen.dart';
 import 'package:jamal/features/order/screens/orders_screen.dart';
 import 'package:jamal/features/payment_method/screens/admin_payment_method_upsert_screen.dart';
 import 'package:jamal/features/profile/presentation/screens/admin_profile_screen.dart';
 import 'package:jamal/features/profile/presentation/screens/profile_screen.dart';
 import 'package:jamal/features/menu_item/presentation/screens/menu_items_screen.dart';
 import 'package:jamal/features/menu_item/presentation/screens/menu_item_detail_screen.dart';
+import 'package:jamal/features/table_reservation/screens/admin_table_reservations_screen.dart';
+import 'package:jamal/features/table_reservation/screens/admin_update_table_reservation_screen.dart';
+import 'package:jamal/features/table_reservation/screens/table_reservation_detail_screen.dart';
 import 'package:jamal/features/table_reservation/screens/table_reservations_screen.dart';
 import 'package:jamal/features/restaurant_table/presentation/screens/admin_restaurant_table_upsert_screen.dart';
 import 'package:jamal/shared/screens/splash_screen.dart';
@@ -49,6 +57,7 @@ class AppRouter extends RootStackRouter {
   List<AutoRoute> get routes => [
     AutoRoute(page: SplashRoute.page, initial: true),
     AutoRoute(page: LoginRoute.page),
+    AutoRoute(page: RegisterRoute.page),
 
     // * User
     CustomRoute(
@@ -62,12 +71,25 @@ class AppRouter extends RootStackRouter {
         AutoRoute(page: ProfileRoute.page),
       ],
     ),
+
     AutoRoute(page: MenuItemsRoute.page),
+
     AutoRoute(page: MenuItemDetailRoute.page),
+
     AutoRoute(
       page: CreateOrderRoute.page,
       guards: [_authGuard, _duplicateGuard],
     ),
+    AutoRoute(
+      page: OrderDetailRoute.page,
+      guards: [_authGuard, _duplicateGuard],
+    ),
+
+    AutoRoute(
+      page: TableReservationDetailRoute.page,
+      guards: [_authGuard, _duplicateGuard],
+    ),
+
     AutoRoute(page: CartRoute.page, guards: [_authGuard, _duplicateGuard]),
 
     // * Admin
@@ -85,7 +107,6 @@ class AppRouter extends RootStackRouter {
       page: AdminMenuItemsRoute.page,
       guards: [_authGuard, _duplicateGuard],
     ),
-
     AutoRoute(
       page: AdminMenuItemUpsertRoute.page,
       guards: [_authGuard, _duplicateGuard],
@@ -107,6 +128,24 @@ class AppRouter extends RootStackRouter {
 
     AutoRoute(
       page: AdminRestaurantTableUpsertRoute.page,
+      guards: [_authGuard, _duplicateGuard],
+    ),
+
+    AutoRoute(
+      page: AdminOrdersRoute.page,
+      guards: [_authGuard, _duplicateGuard],
+    ),
+    AutoRoute(
+      page: AdminUpdateOrderRoute.page,
+      guards: [_authGuard, _duplicateGuard],
+    ),
+
+    AutoRoute(
+      page: AdminTableReservationsRoute.page,
+      guards: [_authGuard, _duplicateGuard],
+    ),
+    AutoRoute(
+      page: AdminUpdateTableReservationRoute.page,
       guards: [_authGuard, _duplicateGuard],
     ),
   ];

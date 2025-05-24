@@ -201,13 +201,13 @@ class TableReservationRepo {
       final currentTableReservation =
           tableReservationResult.getRight().toNullable()!.data;
 
-      if (currentTableReservation.userId != userId) {
-        return Left(
-          ErrorResponse(
-            message: 'Unauthorized to update this tableReservation',
-          ),
-        );
-      }
+      // if (currentTableReservation.userId != userId) {
+      //   return Left(
+      //     ErrorResponse(
+      //       message: 'Unauthorized to update this tableReservation',
+      //     ),
+      //   );
+      // }
 
       final updateData = dto.toMap();
 

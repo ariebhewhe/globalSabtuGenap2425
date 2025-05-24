@@ -279,6 +279,107 @@ class AdminTabRoute extends PageRouteInfo<void> {
 }
 
 /// generated route for
+/// [AdminTableReservationsScreen]
+class AdminTableReservationsRoute extends PageRouteInfo<void> {
+  const AdminTableReservationsRoute({List<PageRouteInfo>? children})
+    : super(AdminTableReservationsRoute.name, initialChildren: children);
+
+  static const String name = 'AdminTableReservationsRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      return const AdminTableReservationsScreen();
+    },
+  );
+}
+
+/// generated route for
+/// [AdminUpdateOrderScreen]
+class AdminUpdateOrderRoute extends PageRouteInfo<AdminUpdateOrderRouteArgs> {
+  AdminUpdateOrderRoute({
+    Key? key,
+    OrderModel? order,
+    List<PageRouteInfo>? children,
+  }) : super(
+         AdminUpdateOrderRoute.name,
+         args: AdminUpdateOrderRouteArgs(key: key, order: order),
+         initialChildren: children,
+       );
+
+  static const String name = 'AdminUpdateOrderRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      final args = data.argsAs<AdminUpdateOrderRouteArgs>(
+        orElse: () => const AdminUpdateOrderRouteArgs(),
+      );
+      return AdminUpdateOrderScreen(key: args.key, order: args.order);
+    },
+  );
+}
+
+class AdminUpdateOrderRouteArgs {
+  const AdminUpdateOrderRouteArgs({this.key, this.order});
+
+  final Key? key;
+
+  final OrderModel? order;
+
+  @override
+  String toString() {
+    return 'AdminUpdateOrderRouteArgs{key: $key, order: $order}';
+  }
+}
+
+/// generated route for
+/// [AdminUpdateTableReservationScreen]
+class AdminUpdateTableReservationRoute
+    extends PageRouteInfo<AdminUpdateTableReservationRouteArgs> {
+  AdminUpdateTableReservationRoute({
+    Key? key,
+    TableReservationModel? tableReservation,
+    List<PageRouteInfo>? children,
+  }) : super(
+         AdminUpdateTableReservationRoute.name,
+         args: AdminUpdateTableReservationRouteArgs(
+           key: key,
+           tableReservation: tableReservation,
+         ),
+         initialChildren: children,
+       );
+
+  static const String name = 'AdminUpdateTableReservationRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      final args = data.argsAs<AdminUpdateTableReservationRouteArgs>(
+        orElse: () => const AdminUpdateTableReservationRouteArgs(),
+      );
+      return AdminUpdateTableReservationScreen(
+        key: args.key,
+        tableReservation: args.tableReservation,
+      );
+    },
+  );
+}
+
+class AdminUpdateTableReservationRouteArgs {
+  const AdminUpdateTableReservationRouteArgs({this.key, this.tableReservation});
+
+  final Key? key;
+
+  final TableReservationModel? tableReservation;
+
+  @override
+  String toString() {
+    return 'AdminUpdateTableReservationRouteArgs{key: $key, tableReservation: $tableReservation}';
+  }
+}
+
+/// generated route for
 /// [CartScreen]
 class CartRoute extends PageRouteInfo<void> {
   const CartRoute({List<PageRouteInfo>? children})
@@ -396,6 +497,43 @@ class MenuItemsRoute extends PageRouteInfo<void> {
 }
 
 /// generated route for
+/// [OrderDetailScreen]
+class OrderDetailRoute extends PageRouteInfo<OrderDetailRouteArgs> {
+  OrderDetailRoute({
+    Key? key,
+    required OrderModel order,
+    List<PageRouteInfo>? children,
+  }) : super(
+         OrderDetailRoute.name,
+         args: OrderDetailRouteArgs(key: key, order: order),
+         initialChildren: children,
+       );
+
+  static const String name = 'OrderDetailRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      final args = data.argsAs<OrderDetailRouteArgs>();
+      return OrderDetailScreen(key: args.key, order: args.order);
+    },
+  );
+}
+
+class OrderDetailRouteArgs {
+  const OrderDetailRouteArgs({this.key, required this.order});
+
+  final Key? key;
+
+  final OrderModel order;
+
+  @override
+  String toString() {
+    return 'OrderDetailRouteArgs{key: $key, order: $order}';
+  }
+}
+
+/// generated route for
 /// [OrdersScreen]
 class OrdersRoute extends PageRouteInfo<void> {
   const OrdersRoute({List<PageRouteInfo>? children})
@@ -428,6 +566,22 @@ class ProfileRoute extends PageRouteInfo<void> {
 }
 
 /// generated route for
+/// [RegisterScreen]
+class RegisterRoute extends PageRouteInfo<void> {
+  const RegisterRoute({List<PageRouteInfo>? children})
+    : super(RegisterRoute.name, initialChildren: children);
+
+  static const String name = 'RegisterRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      return const RegisterScreen();
+    },
+  );
+}
+
+/// generated route for
 /// [SplashScreen]
 class SplashRoute extends PageRouteInfo<void> {
   const SplashRoute({List<PageRouteInfo>? children})
@@ -441,6 +595,50 @@ class SplashRoute extends PageRouteInfo<void> {
       return const SplashScreen();
     },
   );
+}
+
+/// generated route for
+/// [TableReservationDetailScreen]
+class TableReservationDetailRoute
+    extends PageRouteInfo<TableReservationDetailRouteArgs> {
+  TableReservationDetailRoute({
+    Key? key,
+    required TableReservationModel reservation,
+    List<PageRouteInfo>? children,
+  }) : super(
+         TableReservationDetailRoute.name,
+         args: TableReservationDetailRouteArgs(
+           key: key,
+           reservation: reservation,
+         ),
+         initialChildren: children,
+       );
+
+  static const String name = 'TableReservationDetailRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      final args = data.argsAs<TableReservationDetailRouteArgs>();
+      return TableReservationDetailScreen(
+        key: args.key,
+        reservation: args.reservation,
+      );
+    },
+  );
+}
+
+class TableReservationDetailRouteArgs {
+  const TableReservationDetailRouteArgs({this.key, required this.reservation});
+
+  final Key? key;
+
+  final TableReservationModel reservation;
+
+  @override
+  String toString() {
+    return 'TableReservationDetailRouteArgs{key: $key, reservation: $reservation}';
+  }
 }
 
 /// generated route for

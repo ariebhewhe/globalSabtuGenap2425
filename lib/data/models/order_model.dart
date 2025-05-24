@@ -197,14 +197,12 @@ class CreateOrderDto {
 }
 
 class UpdateOrderDto {
-  final String? paymentMethodId;
   final OrderType? orderType;
   final OrderStatus? status;
   final PaymentStatus? paymentStatus;
   final DateTime? estimatedReadyTime;
 
   UpdateOrderDto({
-    this.paymentMethodId,
     this.orderType,
     this.status,
     this.paymentStatus,
@@ -214,9 +212,6 @@ class UpdateOrderDto {
   Map<String, dynamic> toMap() {
     final map = <String, dynamic>{};
 
-    if (paymentMethodId != null) {
-      map['paymentMethodId'] = paymentMethodId;
-    }
     if (orderType != null) {
       map['orderType'] = orderType!.toMap();
     }

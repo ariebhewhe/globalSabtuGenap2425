@@ -4,22 +4,23 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:jamal/core/routes/app_router.dart';
 import 'package:jamal/core/utils/enums.dart';
 import 'package:jamal/data/models/table_reservation_model.dart';
-import 'package:jamal/features/table_reservation/providers/user_table_reservations_provider.dart';
+import 'package:jamal/features/table_reservation/providers/table_reservations_provider.dart';
 import 'package:jamal/features/table_reservation/widgets/table_reservation_tile.dart';
+import 'package:jamal/shared/widgets/admin_app_bar.dart';
 import 'package:jamal/shared/widgets/my_screen_container.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
 @RoutePage()
-class TableReservationsScreen extends ConsumerStatefulWidget {
-  const TableReservationsScreen({Key? key}) : super(key: key);
+class AdminTableReservationsScreen extends ConsumerStatefulWidget {
+  const AdminTableReservationsScreen({Key? key}) : super(key: key);
 
   @override
-  ConsumerState<TableReservationsScreen> createState() =>
-      _TableReservationsScreenState();
+  ConsumerState<AdminTableReservationsScreen> createState() =>
+      _AdminTableReservationsScreenState();
 }
 
-class _TableReservationsScreenState
-    extends ConsumerState<TableReservationsScreen> {
+class _AdminTableReservationsScreenState
+    extends ConsumerState<AdminTableReservationsScreen> {
   final ScrollController _scrollController = ScrollController();
 
   @override
@@ -40,13 +41,13 @@ class _TableReservationsScreenState
         _scrollController.position.maxScrollExtent - 200) {
       // * When user scrolls near the bottom, load more data
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        final tableReservationsState = ref.watch(userTableReservationsProvider);
+        final tableReservationsState = ref.watch(tableReservationsProvider);
 
         // * Check if currently loading more and there's more data to load
         if (!tableReservationsState.isLoadingMore &&
             tableReservationsState.hasMore) {
           ref
-              .read(userTableReservationsProvider.notifier)
+              .read(tableReservationsProvider.notifier)
               .loadMoreTableReservations();
         }
       });
@@ -56,12 +57,11 @@ class _TableReservationsScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: const AdminAppBar(),
       body: MyScreenContainer(
         child: Consumer(
           builder: (context, ref, child) {
-            final tableReservationsState = ref.watch(
-              userTableReservationsProvider,
-            );
+            final tableReservationsState = ref.watch(tableReservationsProvider);
             final tableReservations = tableReservationsState.tableReservations;
             final isLoading = tableReservationsState.isLoading;
             const int skeletonItemCount = 8;
@@ -70,7 +70,7 @@ class _TableReservationsScreenState
               onRefresh:
                   () =>
                       ref
-                          .read(userTableReservationsProvider.notifier)
+                          .read(tableReservationsProvider.notifier)
                           .refreshTableReservations(),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -137,17 +137,12 @@ class _TableReservationsScreenState
                                       onTap:
                                           isLoading
                                               ? null
-                                              : () {
-                                                if (index <
-                                                    tableReservations.length) {
-                                                  context.router.push(
-                                                    TableReservationDetailRoute(
-                                                      reservation:
-                                                          tableReservation,
-                                                    ),
-                                                  );
-                                                }
-                                              },
+                                              : () => context.pushRoute(
+                                                AdminUpdateTableReservationRoute(
+                                                  tableReservation:
+                                                      tableReservation,
+                                                ),
+                                              ),
                                     ),
                                   );
                                 },

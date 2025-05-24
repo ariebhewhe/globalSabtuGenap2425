@@ -275,11 +275,11 @@ class OrderRepo {
 
       final currentOrder = orderResult.getRight().toNullable()!.data;
 
-      if (currentOrder.userId != userId) {
-        return Left(
-          ErrorResponse(message: 'Unauthorized to update this order'),
-        );
-      }
+      // if (currentOrder.userId != userId) {
+      //   return Left(
+      //     ErrorResponse(message: 'Unauthorized to update this order'),
+      //   );
+      // }
 
       final updateData = dto.toMap();
 

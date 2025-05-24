@@ -27,11 +27,11 @@ class MyEndDrawer extends StatelessWidget {
     ];
 
     final List<Map<String, dynamic>> adminDrawerItems = [
-      // {
-      //   'icon': Icons.dashboard,
-      //   'title': 'Dashboard',
-      //   'route': const AdminDashboardRoute(),
-      // },
+      {
+        'icon': Icons.dashboard,
+        'title': 'Dashboard',
+        'route': const AdminHomeRoute(),
+      },
       {
         'icon': Icons.food_bank,
         'title': 'Menu',
@@ -56,6 +56,11 @@ class MyEndDrawer extends StatelessWidget {
         'icon': Icons.receipt_long,
         'title': 'All Orders',
         'route': const AdminOrdersRoute(),
+      },
+      {
+        'icon': Icons.receipt,
+        'title': 'All Table Reservations',
+        'route': const AdminTableReservationsRoute(),
       },
     ];
 

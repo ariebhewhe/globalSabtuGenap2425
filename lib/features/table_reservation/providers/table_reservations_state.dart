@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:jamal/data/models/table_reservation_model.dart';
 
-class UserTableReservationsState {
+class TableReservationsState {
   final List<TableReservationModel> tableReservations;
   final bool isLoading;
   final bool hasMore;
@@ -9,7 +9,7 @@ class UserTableReservationsState {
   final bool isLoadingMore;
   final DocumentSnapshot? lastDocument;
 
-  UserTableReservationsState({
+  TableReservationsState({
     this.tableReservations = const [],
     this.isLoading = false,
     this.hasMore = true,
@@ -18,7 +18,7 @@ class UserTableReservationsState {
     this.lastDocument,
   });
 
-  UserTableReservationsState copyWith({
+  TableReservationsState copyWith({
     List<TableReservationModel>? tableReservations,
     bool? isLoading,
     bool? hasMore,
@@ -26,7 +26,7 @@ class UserTableReservationsState {
     bool? isLoadingMore,
     DocumentSnapshot? lastDocument,
   }) {
-    return UserTableReservationsState(
+    return TableReservationsState(
       tableReservations: tableReservations ?? this.tableReservations,
       isLoading: isLoading ?? this.isLoading,
       hasMore: hasMore ?? this.hasMore,

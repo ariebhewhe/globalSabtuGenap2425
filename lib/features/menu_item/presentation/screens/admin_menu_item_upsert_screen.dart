@@ -265,7 +265,7 @@ class _AdminMenuItemUpsertScreenState
                         : FormBuilderDropdown<String>(
                           name: 'categoryId',
                           decoration: const InputDecoration(
-                            labelText: 'Metode Pembayaran',
+                            labelText: 'Category',
                             border: OutlineInputBorder(),
                             hintText: 'Pilih kategori',
                           ),
