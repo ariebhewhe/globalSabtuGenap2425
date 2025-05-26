@@ -2,6 +2,7 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:jamal/core/routes/app_router.dart';
+import 'package:jamal/core/utils/enums.dart';
 import 'package:jamal/data/models/menu_item_model.dart';
 import 'package:jamal/data/models/category_model.dart';
 import 'package:jamal/features/category/providers/categories_provider.dart';
@@ -54,7 +55,7 @@ class HomeScreen extends ConsumerWidget {
                     child: Text(
                       categoriesState.errorMessage ??
                           popularItemsState.errorMessage!,
-                      style: TextStyle(color: Colors.red.shade800),
+                      style: TextStyle(color: context.colors.error),
                     ),
                   ),
                 if (categoriesState.errorMessage != null ||

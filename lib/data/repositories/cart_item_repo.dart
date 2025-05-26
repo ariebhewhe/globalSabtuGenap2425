@@ -277,6 +277,70 @@ class CartItemRepo {
     }
   }
 
+  // * Agregasi
+  Future<Either<ErrorResponse, SuccessResponse<int>>>
+  getTotalCartQuantity() async {
+    try {
+      final userId = await _getCurrentUserId();
+      final query = _firebaseFirestore
+          .collection(_collectionPath)
+          .where('userId', isEqualTo: userId);
+
+      // * Menggunakan AggregateQuery untuk sum
+      final aggregateQuery = query.aggregate(sum('quantity'));
+      final aggregateSnapshot = await aggregateQuery.get();
+
+      final totalQuantity =
+          aggregateSnapshot.getSum('quantity')?.toInt() ??
+          0; // * Ambil hasil sum
+
+      return Right(
+        SuccessResponse(
+          data: totalQuantity,
+          message: 'Total cart quantity retrieved successfully',
+        ),
+      );
+    } catch (e) {
+      logger.e(e.toString());
+      return Left(
+        ErrorResponse(
+          message: 'Failed to get total cart quantity: ${e.toString()}',
+        ),
+      );
+    }
+  }
+
+  Future<Either<ErrorResponse, SuccessResponse<int>>>
+  getDistinctItemCountInCart() async {
+    try {
+      final userId = await _getCurrentUserId();
+      final query = _firebaseFirestore
+          .collection(_collectionPath)
+          .where('userId', isEqualTo: userId);
+
+      // * Menggunakan AggregateQuery untuk count
+      final aggregateQuery = query.count(); // * Langsung count() pada query
+      final aggregateSnapshot = await aggregateQuery.get();
+
+      final distinctItemCount =
+          aggregateSnapshot.count ?? 0; // * Ambil hasil count
+
+      return Right(
+        SuccessResponse(
+          data: distinctItemCount,
+          message: 'Distinct item count retrieved successfully',
+        ),
+      );
+    } catch (e) {
+      logger.e(e.toString());
+      return Left(
+        ErrorResponse(
+          message: 'Failed to get distinct item count: ${e.toString()}',
+        ),
+      );
+    }
+  }
+
   Future<String> _getCurrentUserId() async {
     final user = await _currentUserStorageService.getCurrentUser();
 

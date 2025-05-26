@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:jamal/data/models/cart_item_model.dart';
 import 'package:jamal/data/repositories/cart_item_repo.dart';
+import 'package:jamal/features/cart/providers/cart_item_aggregate_provider.dart';
 import 'package:jamal/features/cart/providers/cart_item_mutation_state.dart';
 import 'package:jamal/features/cart/providers/cart_item_provider.dart';
 import 'package:jamal/features/cart/providers/cart_items_provider.dart';
@@ -28,6 +29,8 @@ class CartItemMutationNotifier extends StateNotifier<CartItemMutationState> {
 
         // * Refresh menu items list
         _ref.read(cartItemsProvider.notifier).refreshCartItems();
+        _ref.invalidate(totalCartQuantityProvider);
+        _ref.invalidate(distinctCartItemCountProvider);
       },
     );
   }

@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:auto_route/auto_route.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:jamal/core/routes/app_router.dart';
+import 'package:jamal/core/utils/enums.dart';
+import 'package:jamal/features/cart/providers/cart_item_aggregate_provider.dart';
 
 class UserAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String? customTitle;
@@ -95,9 +98,38 @@ class UserAppBar extends StatelessWidget implements PreferredSizeWidget {
     return AppBar(
       title: Text(_getAppBarTitle(context)),
       actions: [
-        IconButton(
-          onPressed: () => context.pushRoute(const CartRoute()),
-          icon: const Icon(Icons.shopping_cart),
+        Consumer(
+          builder: (context, ref, child) {
+            final distinctTotalMenuItemsInCart = ref.watch(
+              distinctCartItemCountProvider,
+            );
+
+            return Stack(
+              alignment: Alignment.topRight,
+              children: [
+                IconButton(
+                  onPressed: () => context.pushRoute(const CartRoute()),
+                  icon: const Icon(Icons.shopping_cart),
+                ),
+                distinctTotalMenuItemsInCart.when(
+                  data: (data) {
+                    return Positioned(
+                      top: 4,
+                      right: 4,
+                      child: Container(
+                        child: Text(
+                          data.toString(),
+                          style: TextStyle(color: context.colors.tertiary),
+                        ),
+                      ),
+                    );
+                  },
+                  error: (err, stack) => const SizedBox.shrink(),
+                  loading: () => const SizedBox.shrink(),
+                ),
+              ],
+            );
+          },
         ),
         Builder(
           builder:
