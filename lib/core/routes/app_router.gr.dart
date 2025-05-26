@@ -201,6 +201,22 @@ class AdminPaymentMethodUpsertRouteArgs {
 }
 
 /// generated route for
+/// [AdminPaymentMethodsScreen]
+class AdminPaymentMethodsRoute extends PageRouteInfo<void> {
+  const AdminPaymentMethodsRoute({List<PageRouteInfo>? children})
+    : super(AdminPaymentMethodsRoute.name, initialChildren: children);
+
+  static const String name = 'AdminPaymentMethodsRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      return const AdminPaymentMethodsScreen();
+    },
+  );
+}
+
+/// generated route for
 /// [AdminProfileScreen]
 class AdminProfileRoute extends PageRouteInfo<void> {
   const AdminProfileRoute({List<PageRouteInfo>? children})
@@ -260,6 +276,22 @@ class AdminRestaurantTableUpsertRouteArgs {
   String toString() {
     return 'AdminRestaurantTableUpsertRouteArgs{key: $key, restaurantTable: $restaurantTable}';
   }
+}
+
+/// generated route for
+/// [AdminRestaurantTablesScreen]
+class AdminRestaurantTablesRoute extends PageRouteInfo<void> {
+  const AdminRestaurantTablesRoute({List<PageRouteInfo>? children})
+    : super(AdminRestaurantTablesRoute.name, initialChildren: children);
+
+  static const String name = 'AdminRestaurantTablesRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      return const AdminRestaurantTablesScreen();
+    },
+  );
 }
 
 /// generated route for

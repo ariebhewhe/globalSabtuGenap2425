@@ -7,6 +7,7 @@ import 'package:jamal/data/models/table_reservation_model.dart';
 import 'package:jamal/features/table_reservation/providers/table_reservations_provider.dart';
 import 'package:jamal/features/table_reservation/widgets/table_reservation_tile.dart';
 import 'package:jamal/shared/widgets/admin_app_bar.dart';
+import 'package:jamal/shared/widgets/my_end_drawer.dart';
 import 'package:jamal/shared/widgets/my_screen_container.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
@@ -58,6 +59,7 @@ class _AdminTableReservationsScreenState
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: const AdminAppBar(),
+      endDrawer: const MyEndDrawer(),
       body: MyScreenContainer(
         child: Consumer(
           builder: (context, ref, child) {

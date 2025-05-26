@@ -167,6 +167,80 @@ class PaymentMethodRepo {
     }
   }
 
+  Future<
+    Either<ErrorResponse, SuccessResponse<PaginatedResult<PaymentMethodModel>>>
+  >
+  searchPaymentMethods({
+    String searchBy = "name",
+    String? searchQuery,
+    Object? isEqualTo,
+    int limit = 10,
+    DocumentSnapshot? startAfter,
+    String orderBy = 'createdAt',
+    bool descending = true,
+  }) async {
+    try {
+      Query query = _firebaseFirestore.collection(_collectionPath);
+
+      if (isEqualTo != null) {
+        query = query.where(searchBy, isEqualTo: isEqualTo);
+      }
+
+      query = query.orderBy(orderBy, descending: descending).limit(limit);
+
+      if (startAfter != null) {
+        query = query.startAfterDocument(startAfter);
+      }
+
+      final querySnapshot = await query.get();
+
+      final paymentMethods =
+          querySnapshot.docs
+              .map(
+                (doc) => PaymentMethodModel.fromMap(
+                  doc.data() as Map<String, dynamic>,
+                ),
+              )
+              .toList();
+
+      if (searchQuery != null && searchQuery.isNotEmpty) {
+        final lowercaseQuery = searchQuery.toLowerCase();
+
+        paymentMethods.retainWhere((paymentMethod) {
+          switch (searchBy) {
+            case 'name':
+              return paymentMethod.name.toLowerCase().contains(lowercaseQuery);
+            default:
+              return false;
+          }
+        });
+      }
+
+      final hasMore = querySnapshot.docs.length >= limit;
+
+      final lastDocument =
+          querySnapshot.docs.isNotEmpty ? querySnapshot.docs.last : null;
+
+      return Right(
+        SuccessResponse(
+          data: PaginatedResult(
+            items: paymentMethods,
+            hasMore: hasMore,
+            lastDocument: lastDocument,
+          ),
+          message: 'PaymentMethods retrieved successfully',
+        ),
+      );
+    } catch (e) {
+      logger.e(e.toString());
+      return Left(
+        ErrorResponse(
+          message: 'Failed to search paymentMethods: ${e.toString()}',
+        ),
+      );
+    }
+  }
+
   Future<Either<ErrorResponse, SuccessResponse<PaymentMethodModel>>>
   getPaymentMethodById(String id) async {
     try {

@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:auto_route/annotations.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
@@ -277,41 +278,26 @@ class _AdminMenuItemUpsertScreenState
                                       child: Row(
                                         children: [
                                           if (category.picture != null) ...[
-                                            Image.network(
-                                              category.picture!,
+                                            CachedNetworkImage(
+                                              imageUrl: category.picture!,
                                               width: 24,
                                               height: 24,
-                                              errorBuilder:
-                                                  (
-                                                    context,
-                                                    error,
-                                                    stackTrace,
-                                                  ) => const Icon(
+                                              fit: BoxFit.cover,
+                                              placeholder:
+                                                  (context, url) => const Icon(
                                                     Icons.category,
                                                     size: 24,
                                                   ),
+                                              errorWidget:
+                                                  (context, url, error) =>
+                                                      const Icon(
+                                                        Icons.category,
+                                                        size: 24,
+                                                      ),
                                             ),
                                           ],
                                           const SizedBox(width: 8),
-                                          Expanded(
-                                            child: Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                Text(category.name),
-                                                if (category.description !=
-                                                    null)
-                                                  Text(
-                                                    category.description!,
-                                                    style:
-                                                        Theme.of(
-                                                          context,
-                                                        ).textTheme.bodySmall,
-                                                  ),
-                                              ],
-                                            ),
-                                          ),
+                                          Text(category.name),
                                         ],
                                       ),
                                     ),

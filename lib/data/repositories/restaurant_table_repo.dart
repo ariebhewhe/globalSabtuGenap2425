@@ -142,6 +142,85 @@ class RestaurantTableRepo {
     }
   }
 
+  Future<
+    Either<
+      ErrorResponse,
+      SuccessResponse<PaginatedResult<RestaurantTableModel>>
+    >
+  >
+  searchRestaurantTables({
+    String searchBy = "tableNumber",
+    String? searchQuery,
+    Object? isEqualTo,
+    int limit = 10,
+    DocumentSnapshot? startAfter,
+    String orderBy = 'createdAt',
+    bool descending = true,
+  }) async {
+    try {
+      Query query = _firebaseFirestore.collection(_collectionPath);
+
+      if (isEqualTo != null) {
+        query = query.where(searchBy, isEqualTo: isEqualTo);
+      }
+
+      query = query.orderBy(orderBy, descending: descending).limit(limit);
+
+      if (startAfter != null) {
+        query = query.startAfterDocument(startAfter);
+      }
+
+      final querySnapshot = await query.get();
+
+      final restaurantTables =
+          querySnapshot.docs
+              .map(
+                (doc) => RestaurantTableModel.fromMap(
+                  doc.data() as Map<String, dynamic>,
+                ),
+              )
+              .toList();
+
+      if (searchQuery != null && searchQuery.isNotEmpty) {
+        final lowercaseQuery = searchQuery.toLowerCase();
+
+        restaurantTables.retainWhere((restaurantTable) {
+          switch (searchBy) {
+            case 'tableNumber':
+              return restaurantTable.tableNumber.toLowerCase().contains(
+                lowercaseQuery,
+              );
+            default:
+              return false;
+          }
+        });
+      }
+
+      final hasMore = querySnapshot.docs.length >= limit;
+
+      final lastDocument =
+          querySnapshot.docs.isNotEmpty ? querySnapshot.docs.last : null;
+
+      return Right(
+        SuccessResponse(
+          data: PaginatedResult(
+            items: restaurantTables,
+            hasMore: hasMore,
+            lastDocument: lastDocument,
+          ),
+          message: 'RestaurantTables retrieved successfully',
+        ),
+      );
+    } catch (e) {
+      logger.e(e.toString());
+      return Left(
+        ErrorResponse(
+          message: 'Failed to search restaurantTables: ${e.toString()}',
+        ),
+      );
+    }
+  }
+
   Future<Either<ErrorResponse, SuccessResponse<RestaurantTableModel>>>
   getRestaurantTableById(String id) async {
     try {

@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:jamal/core/routes/app_router.dart';
 import 'package:jamal/core/theme/app_theme.dart';
-import 'package:jamal/core/utils/enums.dart'; // Meskipun diimpor, tidak digunakan di snippet ini
+import 'package:jamal/core/utils/enums.dart';
 import 'package:jamal/data/models/category_model.dart';
 import 'package:jamal/features/category/providers/categories_provider.dart';
 import 'package:jamal/features/category/providers/search_categories_provider.dart';
@@ -25,6 +25,7 @@ class AdminCategoriesScreen extends ConsumerStatefulWidget {
 class _AdminCategoriesScreenState extends ConsumerState<AdminCategoriesScreen> {
   final ScrollController _scrollController = ScrollController();
   final TextEditingController _searchController = TextEditingController();
+  final FocusNode _searchFocusNode = FocusNode();
 
   String _selectedSearchBy = 'name';
   final List<String> _searchByOptions = ['name', 'description'];
@@ -51,6 +52,7 @@ class _AdminCategoriesScreenState extends ConsumerState<AdminCategoriesScreen> {
     _scrollController.removeListener(_scrollListener);
     _scrollController.dispose();
     _searchController.dispose();
+    _searchFocusNode.dispose();
     super.dispose();
   }
 
@@ -88,6 +90,10 @@ class _AdminCategoriesScreenState extends ConsumerState<AdminCategoriesScreen> {
   }
 
   void _applyFilters() {
+    if (_searchFocusNode.hasFocus) {
+      _searchFocusNode.unfocus();
+    }
+
     if (isSearching) {
       ref
           .read(searchCategoriesProvider.notifier)
@@ -149,342 +155,348 @@ class _AdminCategoriesScreenState extends ConsumerState<AdminCategoriesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: const AdminAppBar(),
-      endDrawer: const MyEndDrawer(),
-      floatingActionButton: SafeArea(
-        child: Container(
-          decoration: BoxDecoration(
-            color: context.theme.primaryColor,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: IconButton(
-            onPressed: () => context.pushRoute(AdminCategoryUpsertRoute()),
-            icon: const Icon(Icons.add),
+    return GestureDetector(
+      onTap: () {
+        // * Cara ini akan menghilangkan fokus dari widget apapun yang sedang fokus
+        FocusScopeNode currentFocus = FocusScope.of(context);
+        if (!currentFocus.hasPrimaryFocus &&
+            currentFocus.focusedChild != null) {
+          FocusManager.instance.primaryFocus?.unfocus();
+        }
+      },
+      child: Scaffold(
+        appBar: const AdminAppBar(),
+        endDrawer: const MyEndDrawer(),
+        floatingActionButton: SafeArea(
+          child: Container(
+            decoration: BoxDecoration(
+              color: context.theme.primaryColor,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: IconButton(
+              onPressed: () => context.pushRoute(AdminCategoryUpsertRoute()),
+              icon: const Icon(Icons.add),
+            ),
           ),
         ),
-      ),
-      body: MyScreenContainer(
-        child: Consumer(
-          builder: (context, ref, child) {
-            const int skeletonItemCount = 6;
+        body: MyScreenContainer(
+          child: Consumer(
+            builder: (context, ref, child) {
+              const int skeletonItemCount = 6;
 
-            return RefreshIndicator(
-              onRefresh: _refreshData,
-              color: context.colors.primary,
-              backgroundColor: context.colors.surface,
-              child: Column(
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          controller: _searchController,
-                          decoration: InputDecoration(
-                            hintText: 'Search categories...',
-                            prefixIcon: Icon(
-                              Icons.search,
-                              color: context.textStyles.bodyMedium?.color,
+              return RefreshIndicator(
+                onRefresh: _refreshData,
+                color: context.colors.primary,
+                backgroundColor: context.colors.surface,
+                child: Column(
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: _searchController,
+                            focusNode: _searchFocusNode,
+                            decoration: InputDecoration(
+                              hintText: 'Search categories...',
+                              prefixIcon: Icon(
+                                Icons.search,
+                                color: context.textStyles.bodyMedium?.color,
+                              ),
+                              suffixIcon:
+                                  _searchController.text.isNotEmpty
+                                      ? IconButton(
+                                        icon: Icon(
+                                          Icons.clear,
+                                          color:
+                                              context
+                                                  .textStyles
+                                                  .bodyMedium
+                                                  ?.color,
+                                        ),
+                                        onPressed: () {
+                                          _searchController.clear();
+                                          _onSearchChanged('');
+                                          if (_searchFocusNode.hasFocus) {
+                                            _searchFocusNode.unfocus();
+                                          }
+                                        },
+                                      )
+                                      : null,
                             ),
-                            suffixIcon:
-                                _searchController.text.isNotEmpty
-                                    ? IconButton(
-                                      icon: Icon(
-                                        Icons.clear,
-                                        color:
-                                            context
-                                                .textStyles
-                                                .bodyMedium
-                                                ?.color,
-                                      ),
-                                      onPressed: () {
-                                        _searchController.clear();
-                                        _onSearchChanged('');
-                                      },
-                                    )
-                                    : null,
-                            // fillColor dari InputDecorationTheme sudah diatur di AppTheme
-                            // border, enabledBorder, focusedBorder juga dari AppTheme
+                            onChanged: _onSearchChanged,
+                            style: context.textStyles.bodyMedium,
                           ),
-                          onChanged: _onSearchChanged,
-                          style: context.textStyles.bodyMedium,
                         ),
-                      ),
-                      const SizedBox(width: 8),
-                      IconButton(
-                        icon: Icon(
-                          _showFilters
-                              ? Icons.filter_list
-                              : Icons.filter_list_outlined,
-                          color:
-                              _showFilters
-                                  ? context.colors.primary
-                                  : context.colors.onSurface.withOpacity(0.6),
+                        const SizedBox(width: 8),
+                        IconButton(
+                          icon: Icon(
+                            _showFilters
+                                ? Icons.filter_list
+                                : Icons.filter_list_outlined,
+                            color:
+                                _showFilters
+                                    ? context.colors.primary
+                                    : context.colors.onSurface.withOpacity(0.6),
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              _showFilters = !_showFilters;
+                            });
+                          },
                         ),
-                        onPressed: () {
-                          setState(() {
-                            _showFilters = !_showFilters;
-                          });
-                        },
-                      ),
-                    ],
-                  ),
+                      ],
+                    ),
 
-                  // Filters Section (Collapsible)
-                  AnimatedContainer(
-                    duration: const Duration(milliseconds: 300),
-                    height: _showFilters ? null : 0,
-                    child: AnimatedOpacity(
+                    AnimatedContainer(
                       duration: const Duration(milliseconds: 300),
-                      opacity: _showFilters ? 1.0 : 0.0,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16.0,
-                        ).copyWith(bottom: 16.0), // Added bottom padding
-                        child: Card(
-                          // CardTheme color dan shape sudah diatur di AppTheme
-                          child: Padding(
-                            padding: const EdgeInsets.all(16.0),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                if (isSearching) ...[
+                      height: _showFilters ? null : 0,
+                      child: AnimatedOpacity(
+                        duration: const Duration(milliseconds: 300),
+                        opacity: _showFilters ? 1.0 : 0.0,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16.0,
+                          ).copyWith(bottom: 16.0),
+                          child: Card(
+                            child: Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  if (isSearching) ...[
+                                    Text(
+                                      'Search In:',
+                                      style: context.textStyles.titleSmall,
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Wrap(
+                                      spacing: 8,
+                                      children:
+                                          _searchByOptions.map((option) {
+                                            return ChoiceChip(
+                                              label: Text(option.toUpperCase()),
+                                              selected:
+                                                  _selectedSearchBy == option,
+                                              onSelected: (selected) {
+                                                if (selected) {
+                                                  setState(() {
+                                                    _selectedSearchBy = option;
+                                                  });
+                                                  _applyFilters();
+                                                }
+                                              },
+                                              labelStyle: context
+                                                  .textStyles
+                                                  .bodySmall
+                                                  ?.copyWith(
+                                                    color:
+                                                        _selectedSearchBy ==
+                                                                option
+                                                            ? context
+                                                                .colors
+                                                                .onPrimary
+                                                            : context
+                                                                .textStyles
+                                                                .bodySmall
+                                                                ?.color,
+                                                  ),
+                                              selectedColor:
+                                                  context.colors.primary,
+                                              backgroundColor:
+                                                  context.colors.surfaceVariant,
+                                            );
+                                          }).toList(),
+                                    ),
+                                    const Divider(),
+                                  ],
                                   Text(
-                                    'Search In:',
+                                    'Sort By:',
                                     style: context.textStyles.titleSmall,
                                   ),
                                   const SizedBox(height: 8),
-                                  Wrap(
-                                    spacing: 8,
-                                    children:
-                                        _searchByOptions.map((option) {
-                                          return ChoiceChip(
-                                            label: Text(option.toUpperCase()),
-                                            selected:
-                                                _selectedSearchBy == option,
-                                            onSelected: (selected) {
-                                              if (selected) {
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: DropdownButtonFormField<String>(
+                                          value: _selectedOrderBy,
+                                          decoration: const InputDecoration(
+                                            contentPadding:
+                                                EdgeInsets.symmetric(
+                                                  horizontal: 12,
+                                                  vertical: 8,
+                                                ),
+                                          ),
+                                          items:
+                                              _orderByOptions.entries.map((
+                                                entry,
+                                              ) {
+                                                return DropdownMenuItem(
+                                                  value: entry.key,
+                                                  child: Text(
+                                                    entry.value,
+                                                    style:
+                                                        context
+                                                            .textStyles
+                                                            .bodyMedium,
+                                                  ),
+                                                );
+                                              }).toList(),
+                                          onChanged: (value) {
+                                            if (value != null) {
+                                              setState(() {
+                                                _selectedOrderBy = value;
+                                              });
+                                              _applyFilters();
+                                            }
+                                          },
+                                        ),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          IconButton(
+                                            icon: Icon(
+                                              Icons.keyboard_arrow_up,
+                                              color:
+                                                  !_isDescending
+                                                      ? context.colors.primary
+                                                      : context.colors.onSurface
+                                                          .withOpacity(0.6),
+                                            ),
+                                            onPressed: () {
+                                              if (_isDescending) {
                                                 setState(() {
-                                                  _selectedSearchBy = option;
+                                                  _isDescending = false;
                                                 });
                                                 _applyFilters();
                                               }
                                             },
-                                            labelStyle: context
-                                                .textStyles
-                                                .bodySmall
-                                                ?.copyWith(
-                                                  color:
-                                                      _selectedSearchBy ==
-                                                              option
-                                                          ? context
-                                                              .colors
-                                                              .onPrimary // atau warna lain yang kontras dari theme
-                                                          : context
-                                                              .textStyles
-                                                              .bodySmall
-                                                              ?.color,
-                                                ),
-                                            selectedColor:
-                                                context.colors.primary,
-                                            backgroundColor:
-                                                context
-                                                    .colors
-                                                    .surfaceVariant, // Atau dari cardTheme.color
-                                          );
-                                        }).toList(),
-                                  ),
-                                  const Divider(), // DividerTheme sudah diatur di AppTheme
-                                ],
-                                Text(
-                                  'Sort By:',
-                                  style: context.textStyles.titleSmall,
-                                ),
-                                const SizedBox(height: 8),
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: DropdownButtonFormField<String>(
-                                        value: _selectedOrderBy,
-                                        decoration: const InputDecoration(
-                                          // Menggunakan default dari AppTheme
-                                          // border: OutlineInputBorder(),
-                                          contentPadding: EdgeInsets.symmetric(
-                                            horizontal: 12,
-                                            vertical: 8,
+                                            tooltip: 'Ascending',
                                           ),
-                                        ),
-                                        items:
-                                            _orderByOptions.entries.map((
-                                              entry,
-                                            ) {
-                                              return DropdownMenuItem(
-                                                value: entry.key,
-                                                child: Text(
-                                                  entry.value,
-                                                  style:
-                                                      context
-                                                          .textStyles
-                                                          .bodyMedium,
-                                                ),
-                                              );
-                                            }).toList(),
-                                        onChanged: (value) {
-                                          if (value != null) {
-                                            setState(() {
-                                              _selectedOrderBy = value;
-                                            });
-                                            _applyFilters();
-                                          }
-                                        },
+                                          IconButton(
+                                            icon: Icon(
+                                              Icons.keyboard_arrow_down,
+                                              color:
+                                                  _isDescending
+                                                      ? context.colors.primary
+                                                      : context.colors.onSurface
+                                                          .withOpacity(0.6),
+                                            ),
+                                            onPressed: () {
+                                              if (!_isDescending) {
+                                                setState(() {
+                                                  _isDescending = true;
+                                                });
+                                                _applyFilters();
+                                              }
+                                            },
+                                            tooltip: 'Descending',
+                                          ),
+                                        ],
                                       ),
-                                    ),
-                                    const SizedBox(width: 12),
-                                    Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        IconButton(
-                                          icon: Icon(
-                                            Icons.keyboard_arrow_up,
-                                            color:
-                                                !_isDescending
-                                                    ? context.colors.primary
-                                                    : context.colors.onSurface
-                                                        .withOpacity(0.6),
-                                          ),
-                                          onPressed: () {
-                                            if (_isDescending) {
-                                              setState(() {
-                                                _isDescending = false;
-                                              });
-                                              _applyFilters();
-                                            }
-                                          },
-                                          tooltip: 'Ascending',
-                                        ),
-                                        IconButton(
-                                          icon: Icon(
-                                            Icons.keyboard_arrow_down,
-                                            color:
-                                                _isDescending
-                                                    ? context.colors.primary
-                                                    : context.colors.onSurface
-                                                        .withOpacity(0.6),
-                                          ),
-                                          onPressed: () {
-                                            if (!_isDescending) {
-                                              setState(() {
-                                                _isDescending = true;
-                                              });
-                                              _applyFilters();
-                                            }
-                                          },
-                                          tooltip: 'Descending',
-                                        ),
-                                      ],
-                                    ),
-                                  ],
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    if (isSearching ||
+                        _selectedOrderBy != 'createdAt' ||
+                        !_isDescending)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16.0,
+                          vertical: 8.0,
+                        ),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                _buildFilterInfoText(),
+                                style: context.textStyles.bodySmall?.copyWith(
+                                  fontStyle: FontStyle.italic,
                                 ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  // Current Search/Filter Info
-                  if (isSearching ||
-                      _selectedOrderBy != 'createdAt' ||
-                      !_isDescending)
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16.0,
-                        vertical: 8.0,
-                      ),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              _buildFilterInfoText(),
-                              style: context.textStyles.bodySmall?.copyWith(
-                                fontStyle: FontStyle.italic,
-                                // Warna sudah diatur oleh textStyles.bodySmall dari theme (textTertiaryLight/Dark)
                               ),
                             ),
-                          ),
-                          TextButton(
-                            // TextButtonTheme sudah diatur di AppTheme
-                            onPressed: () {
-                              _searchController.clear();
-                              setState(() {
-                                isSearching = false;
-                                _selectedSearchBy = 'name';
-                                _selectedOrderBy = 'createdAt';
-                                _isDescending = true;
-                              });
-                              ref
-                                  .read(searchCategoriesProvider.notifier)
-                                  .clearSearch();
-                              ref
-                                  .read(categoriesProvider.notifier)
-                                  .refreshCategories();
-                            },
-                            child: const Text('Reset'),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                  // Error Message
-                  if (errorMessage != null)
-                    Container(
-                      margin: const EdgeInsets.symmetric(
-                        horizontal: 16.0,
-                        vertical: 8.0,
-                      ),
-                      padding: const EdgeInsets.all(12.0),
-                      decoration: BoxDecoration(
-                        color: context.colors.error.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: context.colors.error.withOpacity(0.3),
+                            TextButton(
+                              onPressed: () {
+                                _searchController.clear();
+                                setState(() {
+                                  isSearching = false;
+                                  _selectedSearchBy = 'name';
+                                  _selectedOrderBy = 'createdAt';
+                                  _isDescending = true;
+                                });
+                                ref
+                                    .read(searchCategoriesProvider.notifier)
+                                    .clearSearch();
+                                ref
+                                    .read(categoriesProvider.notifier)
+                                    .refreshCategories();
+                                if (_searchFocusNode.hasFocus) {
+                                  _searchFocusNode.unfocus();
+                                }
+                              },
+                              child: const Text('Reset'),
+                            ),
+                          ],
                         ),
                       ),
-                      width: double.infinity,
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.error_outline,
-                            color: context.colors.error,
+
+                    if (errorMessage != null)
+                      Container(
+                        margin: const EdgeInsets.symmetric(
+                          horizontal: 16.0,
+                          vertical: 8.0,
+                        ),
+                        padding: const EdgeInsets.all(12.0),
+                        decoration: BoxDecoration(
+                          color: context.colors.error.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: context.colors.error.withOpacity(0.3),
                           ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              errorMessage!,
-                              style: context.textStyles.bodyMedium?.copyWith(
-                                color: context.colors.error,
+                        ),
+                        width: double.infinity,
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.error_outline,
+                              color: context.colors.error,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                errorMessage!,
+                                style: context.textStyles.bodyMedium?.copyWith(
+                                  color: context.colors.error,
+                                ),
                               ),
                             ),
-                          ),
-                          TextButton(
-                            // TextButtonTheme sudah diatur di AppTheme
-                            onPressed: _refreshData,
-                            child: Text(
-                              'Retry',
-                              style: TextStyle(color: context.colors.error),
-                            ), // Explicitly color retry to match error context
-                          ),
-                        ],
+                            TextButton(
+                              onPressed: _refreshData,
+                              child: Text(
+                                'Retry',
+                                style: TextStyle(color: context.colors.error),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
 
-                  // Categories Grid
-                  Expanded(child: _buildCategoriesGrid(skeletonItemCount)),
-                ],
-              ),
-            );
-          },
+                    const SizedBox(height: 16),
+
+                    Expanded(child: _buildCategoriesGrid(skeletonItemCount)),
+                  ],
+                ),
+              );
+            },
+          ),
         ),
       ),
     );
@@ -498,14 +510,11 @@ class _AdminCategoriesScreenState extends ConsumerState<AdminCategoriesScreen> {
     }
 
     if (_selectedOrderBy != 'createdAt' || !_isDescending) {
-      // Simplified condition to show sort info
       String sortOrder = _orderByOptions[_selectedOrderBy] ?? _selectedOrderBy;
       String direction = _isDescending ? "Descending" : "Ascending";
       if (_selectedOrderBy != 'createdAt' || !_isDescending) {
-        // Show default sort only if not createdAt & Descending
         info.add('Sorted by $sortOrder ($direction)');
       } else if (_selectedOrderBy == 'createdAt' && !_isDescending) {
-        // Special case for createdAt Ascending
         info.add('Sorted by $sortOrder ($direction)');
       }
     }
@@ -520,7 +529,7 @@ class _AdminCategoriesScreenState extends ConsumerState<AdminCategoriesScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              isSearching ? Icons.search_off : Icons.category_outlined,
+              isSearching ? Icons.search_off : Icons.food_bank,
               size: 64,
               color:
                   context.isDarkMode
@@ -543,7 +552,6 @@ class _AdminCategoriesScreenState extends ConsumerState<AdminCategoriesScreen> {
             const SizedBox(height: 16),
             if (isSearching)
               ElevatedButton(
-                // ElevatedButtonTheme sudah diatur di AppTheme
                 onPressed: () {
                   _searchController.clear();
                   _onSearchChanged('');
@@ -552,7 +560,6 @@ class _AdminCategoriesScreenState extends ConsumerState<AdminCategoriesScreen> {
               )
             else
               ElevatedButton(
-                // ElevatedButtonTheme sudah diatur di AppTheme
                 onPressed: _refreshData,
                 child: const Text('Refresh'),
               ),
@@ -565,12 +572,10 @@ class _AdminCategoriesScreenState extends ConsumerState<AdminCategoriesScreen> {
       enabled: isLoading,
       child: GridView.builder(
         controller: _scrollController,
-        padding: const EdgeInsets.all(16.0),
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2,
-          crossAxisSpacing: 16.0,
-          mainAxisSpacing: 16.0,
-          childAspectRatio: 0.8,
+          crossAxisSpacing: 8,
+          mainAxisSpacing: 8,
         ),
         itemCount:
             isLoading
@@ -593,10 +598,9 @@ class _AdminCategoriesScreenState extends ConsumerState<AdminCategoriesScreen> {
           final category =
               isLoading
                   ? CategoryModel(
-                    id: index.toString(), // Provide unique dummy IDs for keys
-                    name: 'Loading Item',
-                    description: 'Loading description...',
-                    picture: null,
+                    id: '',
+                    name: 'Loading Category',
+                    description: '',
                     createdAt: DateTime.now(),
                     updatedAt: DateTime.now(),
                   )

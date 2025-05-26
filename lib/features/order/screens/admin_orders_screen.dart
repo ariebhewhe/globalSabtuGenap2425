@@ -7,6 +7,7 @@ import 'package:jamal/data/models/order_model.dart';
 import 'package:jamal/features/order/providers/orders_provider.dart';
 import 'package:jamal/features/order/widgets/order_tile.dart';
 import 'package:jamal/shared/widgets/admin_app_bar.dart';
+import 'package:jamal/shared/widgets/my_end_drawer.dart';
 import 'package:jamal/shared/widgets/my_screen_container.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
@@ -51,6 +52,7 @@ class _AdminOrdersScreenState extends ConsumerState<AdminOrdersScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: const AdminAppBar(),
+      endDrawer: const MyEndDrawer(),
       body: MyScreenContainer(
         child: Consumer(
           builder: (context, ref, child) {

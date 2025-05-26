@@ -190,13 +190,6 @@ class MenuItemRepo {
     try {
       Query query = _firebaseFirestore.collection(_collectionPath);
 
-      if (searchQuery != null && searchQuery.isNotEmpty) {
-        query = query.where(
-          'searchableKeywords',
-          arrayContains: searchQuery.toLowerCase(),
-        );
-      }
-
       if (isEqualTo != null) {
         query = query.where(searchBy, isEqualTo: isEqualTo);
       }
@@ -209,7 +202,7 @@ class MenuItemRepo {
 
       final querySnapshot = await query.get();
 
-      final categories =
+      final menuItems =
           querySnapshot.docs
               .map(
                 (doc) =>
@@ -219,15 +212,15 @@ class MenuItemRepo {
 
       if (searchQuery != null && searchQuery.isNotEmpty) {
         final lowercaseQuery = searchQuery.toLowerCase();
-        categories.retainWhere((category) {
+
+        menuItems.retainWhere((menuItem) {
           switch (searchBy) {
             case 'name':
-              return category.name.toLowerCase().contains(lowercaseQuery);
+              return menuItem.name.toLowerCase().contains(lowercaseQuery);
             case 'description':
-              return category.description?.toLowerCase().contains(
-                    lowercaseQuery,
-                  ) ??
-                  false;
+              return menuItem.description.toLowerCase().contains(
+                lowercaseQuery,
+              );
             default:
               return false;
           }
@@ -242,7 +235,7 @@ class MenuItemRepo {
       return Right(
         SuccessResponse(
           data: PaginatedResult(
-            items: categories,
+            items: menuItems,
             hasMore: hasMore,
             lastDocument: lastDocument,
           ),
@@ -252,7 +245,7 @@ class MenuItemRepo {
     } catch (e) {
       logger.e(e.toString());
       return Left(
-        ErrorResponse(message: 'Failed to search categories: ${e.toString()}'),
+        ErrorResponse(message: 'Failed to search menuItems: ${e.toString()}'),
       );
     }
   }

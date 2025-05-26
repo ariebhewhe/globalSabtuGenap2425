@@ -4,38 +4,39 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:jamal/core/routes/app_router.dart';
 import 'package:jamal/core/theme/app_theme.dart';
 import 'package:jamal/core/utils/enums.dart';
-import 'package:jamal/data/models/menu_item_model.dart';
-import 'package:jamal/features/menu_item/presentation/widgets/menu_items_card.dart';
-import 'package:jamal/features/menu_item/providers/menu_items_provider.dart';
-import 'package:jamal/features/menu_item/providers/search_menu_items_provider.dart';
+import 'package:jamal/data/models/restaurant_table_model.dart';
+import 'package:jamal/features/restaurant_table/providers/restaurant_tables_provider.dart';
+import 'package:jamal/features/restaurant_table/providers/search_restaurant_tables_provider.dart';
+import 'package:jamal/features/restaurant_table/widgets/restaurant_table_tile.dart';
 import 'package:jamal/shared/widgets/admin_app_bar.dart';
 import 'package:jamal/shared/widgets/my_end_drawer.dart';
 import 'package:jamal/shared/widgets/my_screen_container.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
 @RoutePage()
-class AdminMenuItemsScreen extends ConsumerStatefulWidget {
-  const AdminMenuItemsScreen({Key? key}) : super(key: key);
+class AdminRestaurantTablesScreen extends ConsumerStatefulWidget {
+  const AdminRestaurantTablesScreen({Key? key}) : super(key: key);
 
   @override
-  ConsumerState<AdminMenuItemsScreen> createState() =>
-      _AdminMenuItemsScreenState();
+  ConsumerState<AdminRestaurantTablesScreen> createState() =>
+      _AdminRestaurantTablesScreenState();
 }
 
-class _AdminMenuItemsScreenState extends ConsumerState<AdminMenuItemsScreen> {
+class _AdminRestaurantTablesScreenState
+    extends ConsumerState<AdminRestaurantTablesScreen> {
   final ScrollController _scrollController = ScrollController();
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
 
-  String _selectedSearchBy = 'name';
-  final List<String> _searchByOptions = ['name', 'description'];
+  String _selectedSearchBy = 'tableNumber';
+  final List<String> _searchByOptions = ['tableNumber', 'description'];
 
   String _selectedOrderBy = 'createdAt';
   bool _isDescending = true;
   final Map<String, String> _orderByOptions = {
     'createdAt': 'Created Date',
     'updatedAt': 'Updated Date',
-    'name': 'Name',
+    'tableNumber': 'Table Number',
   };
 
   bool isSearching = false;
@@ -61,14 +62,19 @@ class _AdminMenuItemsScreenState extends ConsumerState<AdminMenuItemsScreen> {
         _scrollController.position.maxScrollExtent - 200) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (isSearching) {
-          final searchState = ref.read(searchMenuItemsProvider);
+          final searchState = ref.read(searchRestaurantTablesProvider);
           if (!searchState.isLoadingMore && searchState.hasMore) {
-            ref.read(searchMenuItemsProvider.notifier).loadMoreMenuItems();
+            ref
+                .read(searchRestaurantTablesProvider.notifier)
+                .loadMoreRestaurantTables();
           }
         } else {
-          final menuItemsState = ref.read(menuItemsProvider);
-          if (!menuItemsState.isLoadingMore && menuItemsState.hasMore) {
-            ref.read(menuItemsProvider.notifier).loadMoreMenuItems();
+          final restaurantTablesState = ref.read(restaurantTablesProvider);
+          if (!restaurantTablesState.isLoadingMore &&
+              restaurantTablesState.hasMore) {
+            ref
+                .read(restaurantTablesProvider.notifier)
+                .loadMoreRestaurantTables();
           }
         }
       });
@@ -82,10 +88,10 @@ class _AdminMenuItemsScreenState extends ConsumerState<AdminMenuItemsScreen> {
 
     if (isSearching) {
       ref
-          .read(searchMenuItemsProvider.notifier)
-          .searchMenuItems(query: query, searchBy: _selectedSearchBy);
+          .read(searchRestaurantTablesProvider.notifier)
+          .searchRestaurantTables(query: query, searchBy: _selectedSearchBy);
     } else {
-      ref.read(searchMenuItemsProvider.notifier).clearSearch();
+      ref.read(searchRestaurantTablesProvider.notifier).clearSearch();
     }
   }
 
@@ -96,15 +102,15 @@ class _AdminMenuItemsScreenState extends ConsumerState<AdminMenuItemsScreen> {
 
     if (isSearching) {
       ref
-          .read(searchMenuItemsProvider.notifier)
-          .searchMenuItems(
+          .read(searchRestaurantTablesProvider.notifier)
+          .searchRestaurantTables(
             query: _searchController.text,
             searchBy: _selectedSearchBy,
           );
     } else {
       ref
-          .read(menuItemsProvider.notifier)
-          .loadMenuItemsWithFilter(
+          .read(restaurantTablesProvider.notifier)
+          .loadRestaurantTablesWithFilter(
             orderBy: _selectedOrderBy,
             descending: _isDescending,
           );
@@ -113,43 +119,46 @@ class _AdminMenuItemsScreenState extends ConsumerState<AdminMenuItemsScreen> {
 
   Future<void> _refreshData() async {
     if (isSearching) {
-      ref.read(searchMenuItemsProvider.notifier).refreshMenuItems();
+      ref
+          .read(searchRestaurantTablesProvider.notifier)
+          .refreshRestaurantTables();
     } else {
-      ref.read(menuItemsProvider.notifier).refreshMenuItems();
+      ref.read(restaurantTablesProvider.notifier).refreshRestaurantTables();
     }
   }
 
   bool get isLoading {
     if (isSearching) {
-      final searchState = ref.watch(searchMenuItemsProvider);
-      return searchState.isLoading && searchState.menuItems.isEmpty;
+      final searchState = ref.watch(searchRestaurantTablesProvider);
+      return searchState.isLoading && searchState.restaurantTables.isEmpty;
     } else {
-      final menuItemsState = ref.watch(menuItemsProvider);
-      return menuItemsState.isLoading && menuItemsState.menuItems.isEmpty;
+      final restaurantTablesState = ref.watch(restaurantTablesProvider);
+      return restaurantTablesState.isLoading &&
+          restaurantTablesState.restaurantTables.isEmpty;
     }
   }
 
-  List<MenuItemModel> get menuItems {
+  List<RestaurantTableModel> get restaurantTables {
     if (isSearching) {
-      return ref.watch(searchMenuItemsProvider).menuItems;
+      return ref.watch(searchRestaurantTablesProvider).restaurantTables;
     } else {
-      return ref.watch(menuItemsProvider).menuItems;
+      return ref.watch(restaurantTablesProvider).restaurantTables;
     }
   }
 
   bool get isLoadingMore {
     if (isSearching) {
-      return ref.watch(searchMenuItemsProvider).isLoadingMore;
+      return ref.watch(searchRestaurantTablesProvider).isLoadingMore;
     } else {
-      return ref.watch(menuItemsProvider).isLoadingMore;
+      return ref.watch(restaurantTablesProvider).isLoadingMore;
     }
   }
 
   String? get errorMessage {
     if (isSearching) {
-      return ref.watch(searchMenuItemsProvider).errorMessage;
+      return ref.watch(searchRestaurantTablesProvider).errorMessage;
     } else {
-      return ref.watch(menuItemsProvider).errorMessage;
+      return ref.watch(restaurantTablesProvider).errorMessage;
     }
   }
 
@@ -174,7 +183,8 @@ class _AdminMenuItemsScreenState extends ConsumerState<AdminMenuItemsScreen> {
               borderRadius: BorderRadius.circular(8),
             ),
             child: IconButton(
-              onPressed: () => context.pushRoute(AdminMenuItemUpsertRoute()),
+              onPressed:
+                  () => context.pushRoute(AdminRestaurantTableUpsertRoute()),
               icon: const Icon(Icons.add),
             ),
           ),
@@ -197,7 +207,7 @@ class _AdminMenuItemsScreenState extends ConsumerState<AdminMenuItemsScreen> {
                             controller: _searchController,
                             focusNode: _searchFocusNode,
                             decoration: InputDecoration(
-                              hintText: 'Search menuItems...',
+                              hintText: 'Search restaurantTables...',
                               prefixIcon: Icon(
                                 Icons.search,
                                 color: context.textStyles.bodyMedium?.color,
@@ -428,16 +438,18 @@ class _AdminMenuItemsScreenState extends ConsumerState<AdminMenuItemsScreen> {
                                 _searchController.clear();
                                 setState(() {
                                   isSearching = false;
-                                  _selectedSearchBy = 'name';
+                                  _selectedSearchBy = 'tableNumber';
                                   _selectedOrderBy = 'createdAt';
                                   _isDescending = true;
                                 });
                                 ref
-                                    .read(searchMenuItemsProvider.notifier)
+                                    .read(
+                                      searchRestaurantTablesProvider.notifier,
+                                    )
                                     .clearSearch();
                                 ref
-                                    .read(menuItemsProvider.notifier)
-                                    .refreshMenuItems();
+                                    .read(restaurantTablesProvider.notifier)
+                                    .refreshRestaurantTables();
                                 if (_searchFocusNode.hasFocus) {
                                   _searchFocusNode.unfocus();
                                 }
@@ -491,7 +503,9 @@ class _AdminMenuItemsScreenState extends ConsumerState<AdminMenuItemsScreen> {
 
                     const SizedBox(height: 16),
 
-                    Expanded(child: _buildMenuItemsGrid(skeletonItemCount)),
+                    Expanded(
+                      child: _buildRestaurantTablesList(skeletonItemCount),
+                    ),
                   ],
                 ),
               );
@@ -522,8 +536,8 @@ class _AdminMenuItemsScreenState extends ConsumerState<AdminMenuItemsScreen> {
     return info.join(' • ');
   }
 
-  Widget _buildMenuItemsGrid(int skeletonItemCount) {
-    if (!isLoading && menuItems.isEmpty) {
+  Widget _buildRestaurantTablesList(int skeletonItemCount) {
+    if (!isLoading && restaurantTables.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -539,8 +553,8 @@ class _AdminMenuItemsScreenState extends ConsumerState<AdminMenuItemsScreen> {
             const SizedBox(height: 16),
             Text(
               isSearching
-                  ? 'No menuItems found for "${_searchController.text}"'
-                  : 'No menuItems available',
+                  ? 'No restaurantTables found for "${_searchController.text}"'
+                  : 'No restaurantTables available',
               style: context.textStyles.titleMedium?.copyWith(
                 color:
                     context.isDarkMode
@@ -570,20 +584,14 @@ class _AdminMenuItemsScreenState extends ConsumerState<AdminMenuItemsScreen> {
 
     return Skeletonizer(
       enabled: isLoading,
-      child: GridView.builder(
+      child: ListView.builder(
         controller: _scrollController,
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          crossAxisSpacing: 8,
-          mainAxisSpacing: 8,
-          childAspectRatio: 0.8,
-        ),
         itemCount:
             isLoading
                 ? skeletonItemCount
-                : menuItems.length + (isLoadingMore ? 1 : 0),
+                : restaurantTables.length + (isLoadingMore ? 1 : 0),
         itemBuilder: (context, index) {
-          if (!isLoading && index == menuItems.length && isLoadingMore) {
+          if (!isLoading && index == restaurantTables.length && isLoadingMore) {
             return Center(
               child: Padding(
                 padding: const EdgeInsets.all(8.0),
@@ -596,31 +604,29 @@ class _AdminMenuItemsScreenState extends ConsumerState<AdminMenuItemsScreen> {
             );
           }
 
-          final menuItem =
+          final restaurantTable =
               isLoading
-                  ? MenuItemModel(
+                  ? RestaurantTableModel(
                     id: '',
-                    name: 'Loading Item',
-                    description: '',
-                    price: 0.0,
-                    categoryId: '',
-                    imageUrl: null,
-                    isAvailable: true,
-                    isVegetarian: false,
-                    spiceLevel: 0,
+                    tableNumber: '',
+                    capacity: 0,
+                    isAvailable: false,
+                    location: Location.indoor,
                     createdAt: DateTime.now(),
                     updatedAt: DateTime.now(),
                   )
-                  : menuItems[index];
+                  : restaurantTables[index];
 
-          return MenuItemCard(
-            menuItem: menuItem,
+          return RestaurantTableTile(
+            restaurantTable: restaurantTable,
             onTap:
                 isLoading
                     ? null
                     : () {
                       context.router.push(
-                        AdminMenuItemUpsertRoute(menuItem: menuItem),
+                        AdminRestaurantTableUpsertRoute(
+                          restaurantTable: restaurantTable,
+                        ),
                       );
                     },
           );

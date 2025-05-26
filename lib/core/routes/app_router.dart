@@ -24,10 +24,12 @@ import 'package:jamal/features/order/screens/create_order_screen.dart';
 import 'package:jamal/features/order/screens/order_detail_screen.dart';
 import 'package:jamal/features/order/screens/orders_screen.dart';
 import 'package:jamal/features/payment_method/screens/admin_payment_method_upsert_screen.dart';
+import 'package:jamal/features/payment_method/screens/admin_payment_methods_screen.dart';
 import 'package:jamal/features/profile/presentation/screens/admin_profile_screen.dart';
 import 'package:jamal/features/profile/presentation/screens/profile_screen.dart';
 import 'package:jamal/features/menu_item/presentation/screens/menu_items_screen.dart';
 import 'package:jamal/features/menu_item/presentation/screens/menu_item_detail_screen.dart';
+import 'package:jamal/features/restaurant_table/presentation/screens/admin_restaurant_tables_screen.dart';
 import 'package:jamal/features/table_reservation/screens/admin_table_reservations_screen.dart';
 import 'package:jamal/features/table_reservation/screens/admin_update_table_reservation_screen.dart';
 import 'package:jamal/features/table_reservation/screens/table_reservation_detail_screen.dart';
@@ -113,6 +115,10 @@ class AppRouter extends RootStackRouter {
     ),
 
     AutoRoute(
+      page: AdminPaymentMethodsRoute.page,
+      guards: [_authGuard, _duplicateGuard],
+    ),
+    AutoRoute(
       page: AdminPaymentMethodUpsertRoute.page,
       guards: [_authGuard, _duplicateGuard],
     ),
@@ -126,6 +132,10 @@ class AppRouter extends RootStackRouter {
       guards: [_authGuard, _duplicateGuard],
     ),
 
+    AutoRoute(
+      page: AdminRestaurantTablesRoute.page,
+      guards: [_authGuard, _duplicateGuard],
+    ),
     AutoRoute(
       page: AdminRestaurantTableUpsertRoute.page,
       guards: [_authGuard, _duplicateGuard],

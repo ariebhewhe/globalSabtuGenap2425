@@ -4,25 +4,26 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:jamal/core/routes/app_router.dart';
 import 'package:jamal/core/theme/app_theme.dart';
 import 'package:jamal/core/utils/enums.dart';
-import 'package:jamal/data/models/menu_item_model.dart';
-import 'package:jamal/features/menu_item/presentation/widgets/menu_items_card.dart';
-import 'package:jamal/features/menu_item/providers/menu_items_provider.dart';
-import 'package:jamal/features/menu_item/providers/search_menu_items_provider.dart';
+import 'package:jamal/data/models/payment_method_model.dart';
+import 'package:jamal/features/payment_method/providers/payment_methods_provider.dart';
+import 'package:jamal/features/payment_method/providers/search_payment_methods_provider.dart';
+import 'package:jamal/features/payment_method/widgets/payment_method_tile.dart';
 import 'package:jamal/shared/widgets/admin_app_bar.dart';
 import 'package:jamal/shared/widgets/my_end_drawer.dart';
 import 'package:jamal/shared/widgets/my_screen_container.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
 @RoutePage()
-class AdminMenuItemsScreen extends ConsumerStatefulWidget {
-  const AdminMenuItemsScreen({Key? key}) : super(key: key);
+class AdminPaymentMethodsScreen extends ConsumerStatefulWidget {
+  const AdminPaymentMethodsScreen({Key? key}) : super(key: key);
 
   @override
-  ConsumerState<AdminMenuItemsScreen> createState() =>
-      _AdminMenuItemsScreenState();
+  ConsumerState<AdminPaymentMethodsScreen> createState() =>
+      _AdminPaymentMethodsScreenState();
 }
 
-class _AdminMenuItemsScreenState extends ConsumerState<AdminMenuItemsScreen> {
+class _AdminPaymentMethodsScreenState
+    extends ConsumerState<AdminPaymentMethodsScreen> {
   final ScrollController _scrollController = ScrollController();
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
@@ -61,14 +62,17 @@ class _AdminMenuItemsScreenState extends ConsumerState<AdminMenuItemsScreen> {
         _scrollController.position.maxScrollExtent - 200) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (isSearching) {
-          final searchState = ref.read(searchMenuItemsProvider);
+          final searchState = ref.read(searchPaymentMethodsProvider);
           if (!searchState.isLoadingMore && searchState.hasMore) {
-            ref.read(searchMenuItemsProvider.notifier).loadMoreMenuItems();
+            ref
+                .read(searchPaymentMethodsProvider.notifier)
+                .loadMorePaymentMethods();
           }
         } else {
-          final menuItemsState = ref.read(menuItemsProvider);
-          if (!menuItemsState.isLoadingMore && menuItemsState.hasMore) {
-            ref.read(menuItemsProvider.notifier).loadMoreMenuItems();
+          final paymentMethodsState = ref.read(paymentMethodsProvider);
+          if (!paymentMethodsState.isLoadingMore &&
+              paymentMethodsState.hasMore) {
+            ref.read(paymentMethodsProvider.notifier).loadMorePaymentMethods();
           }
         }
       });
@@ -82,10 +86,10 @@ class _AdminMenuItemsScreenState extends ConsumerState<AdminMenuItemsScreen> {
 
     if (isSearching) {
       ref
-          .read(searchMenuItemsProvider.notifier)
-          .searchMenuItems(query: query, searchBy: _selectedSearchBy);
+          .read(searchPaymentMethodsProvider.notifier)
+          .searchPaymentMethods(query: query, searchBy: _selectedSearchBy);
     } else {
-      ref.read(searchMenuItemsProvider.notifier).clearSearch();
+      ref.read(searchPaymentMethodsProvider.notifier).clearSearch();
     }
   }
 
@@ -96,15 +100,15 @@ class _AdminMenuItemsScreenState extends ConsumerState<AdminMenuItemsScreen> {
 
     if (isSearching) {
       ref
-          .read(searchMenuItemsProvider.notifier)
-          .searchMenuItems(
+          .read(searchPaymentMethodsProvider.notifier)
+          .searchPaymentMethods(
             query: _searchController.text,
             searchBy: _selectedSearchBy,
           );
     } else {
       ref
-          .read(menuItemsProvider.notifier)
-          .loadMenuItemsWithFilter(
+          .read(paymentMethodsProvider.notifier)
+          .loadPaymentMethodsWithFilter(
             orderBy: _selectedOrderBy,
             descending: _isDescending,
           );
@@ -113,43 +117,44 @@ class _AdminMenuItemsScreenState extends ConsumerState<AdminMenuItemsScreen> {
 
   Future<void> _refreshData() async {
     if (isSearching) {
-      ref.read(searchMenuItemsProvider.notifier).refreshMenuItems();
+      ref.read(searchPaymentMethodsProvider.notifier).refreshPaymentMethods();
     } else {
-      ref.read(menuItemsProvider.notifier).refreshMenuItems();
+      ref.read(paymentMethodsProvider.notifier).refreshPaymentMethods();
     }
   }
 
   bool get isLoading {
     if (isSearching) {
-      final searchState = ref.watch(searchMenuItemsProvider);
-      return searchState.isLoading && searchState.menuItems.isEmpty;
+      final searchState = ref.watch(searchPaymentMethodsProvider);
+      return searchState.isLoading && searchState.paymentMethods.isEmpty;
     } else {
-      final menuItemsState = ref.watch(menuItemsProvider);
-      return menuItemsState.isLoading && menuItemsState.menuItems.isEmpty;
+      final paymentMethodsState = ref.watch(paymentMethodsProvider);
+      return paymentMethodsState.isLoading &&
+          paymentMethodsState.paymentMethods.isEmpty;
     }
   }
 
-  List<MenuItemModel> get menuItems {
+  List<PaymentMethodModel> get paymentMethods {
     if (isSearching) {
-      return ref.watch(searchMenuItemsProvider).menuItems;
+      return ref.watch(searchPaymentMethodsProvider).paymentMethods;
     } else {
-      return ref.watch(menuItemsProvider).menuItems;
+      return ref.watch(paymentMethodsProvider).paymentMethods;
     }
   }
 
   bool get isLoadingMore {
     if (isSearching) {
-      return ref.watch(searchMenuItemsProvider).isLoadingMore;
+      return ref.watch(searchPaymentMethodsProvider).isLoadingMore;
     } else {
-      return ref.watch(menuItemsProvider).isLoadingMore;
+      return ref.watch(paymentMethodsProvider).isLoadingMore;
     }
   }
 
   String? get errorMessage {
     if (isSearching) {
-      return ref.watch(searchMenuItemsProvider).errorMessage;
+      return ref.watch(searchPaymentMethodsProvider).errorMessage;
     } else {
-      return ref.watch(menuItemsProvider).errorMessage;
+      return ref.watch(paymentMethodsProvider).errorMessage;
     }
   }
 
@@ -174,7 +179,8 @@ class _AdminMenuItemsScreenState extends ConsumerState<AdminMenuItemsScreen> {
               borderRadius: BorderRadius.circular(8),
             ),
             child: IconButton(
-              onPressed: () => context.pushRoute(AdminMenuItemUpsertRoute()),
+              onPressed:
+                  () => context.pushRoute(AdminPaymentMethodUpsertRoute()),
               icon: const Icon(Icons.add),
             ),
           ),
@@ -197,7 +203,7 @@ class _AdminMenuItemsScreenState extends ConsumerState<AdminMenuItemsScreen> {
                             controller: _searchController,
                             focusNode: _searchFocusNode,
                             decoration: InputDecoration(
-                              hintText: 'Search menuItems...',
+                              hintText: 'Search paymentMethods...',
                               prefixIcon: Icon(
                                 Icons.search,
                                 color: context.textStyles.bodyMedium?.color,
@@ -433,11 +439,11 @@ class _AdminMenuItemsScreenState extends ConsumerState<AdminMenuItemsScreen> {
                                   _isDescending = true;
                                 });
                                 ref
-                                    .read(searchMenuItemsProvider.notifier)
+                                    .read(searchPaymentMethodsProvider.notifier)
                                     .clearSearch();
                                 ref
-                                    .read(menuItemsProvider.notifier)
-                                    .refreshMenuItems();
+                                    .read(paymentMethodsProvider.notifier)
+                                    .refreshPaymentMethods();
                                 if (_searchFocusNode.hasFocus) {
                                   _searchFocusNode.unfocus();
                                 }
@@ -491,7 +497,9 @@ class _AdminMenuItemsScreenState extends ConsumerState<AdminMenuItemsScreen> {
 
                     const SizedBox(height: 16),
 
-                    Expanded(child: _buildMenuItemsGrid(skeletonItemCount)),
+                    Expanded(
+                      child: _buildPaymentMethodsList(skeletonItemCount),
+                    ),
                   ],
                 ),
               );
@@ -522,8 +530,8 @@ class _AdminMenuItemsScreenState extends ConsumerState<AdminMenuItemsScreen> {
     return info.join(' • ');
   }
 
-  Widget _buildMenuItemsGrid(int skeletonItemCount) {
-    if (!isLoading && menuItems.isEmpty) {
+  Widget _buildPaymentMethodsList(int skeletonItemCount) {
+    if (!isLoading && paymentMethods.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -539,8 +547,8 @@ class _AdminMenuItemsScreenState extends ConsumerState<AdminMenuItemsScreen> {
             const SizedBox(height: 16),
             Text(
               isSearching
-                  ? 'No menuItems found for "${_searchController.text}"'
-                  : 'No menuItems available',
+                  ? 'No paymentMethods found for "${_searchController.text}"'
+                  : 'No paymentMethods available',
               style: context.textStyles.titleMedium?.copyWith(
                 color:
                     context.isDarkMode
@@ -570,20 +578,14 @@ class _AdminMenuItemsScreenState extends ConsumerState<AdminMenuItemsScreen> {
 
     return Skeletonizer(
       enabled: isLoading,
-      child: GridView.builder(
+      child: ListView.builder(
         controller: _scrollController,
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          crossAxisSpacing: 8,
-          mainAxisSpacing: 8,
-          childAspectRatio: 0.8,
-        ),
         itemCount:
             isLoading
                 ? skeletonItemCount
-                : menuItems.length + (isLoadingMore ? 1 : 0),
+                : paymentMethods.length + (isLoadingMore ? 1 : 0),
         itemBuilder: (context, index) {
-          if (!isLoading && index == menuItems.length && isLoadingMore) {
+          if (!isLoading && index == paymentMethods.length && isLoadingMore) {
             return Center(
               child: Padding(
                 padding: const EdgeInsets.all(8.0),
@@ -596,31 +598,30 @@ class _AdminMenuItemsScreenState extends ConsumerState<AdminMenuItemsScreen> {
             );
           }
 
-          final menuItem =
+          final paymentMethod =
               isLoading
-                  ? MenuItemModel(
+                  ? PaymentMethodModel(
                     id: '',
-                    name: 'Loading Item',
+                    name: 'Loading Payment Method',
                     description: '',
-                    price: 0.0,
-                    categoryId: '',
-                    imageUrl: null,
-                    isAvailable: true,
-                    isVegetarian: false,
-                    spiceLevel: 0,
+                    minimumAmount: 0,
+                    maximumAmount: 0,
+                    paymentMethodType: PaymentMethodType.cash,
                     createdAt: DateTime.now(),
                     updatedAt: DateTime.now(),
                   )
-                  : menuItems[index];
+                  : paymentMethods[index];
 
-          return MenuItemCard(
-            menuItem: menuItem,
+          return PaymentMethodTile(
+            paymentMethod: paymentMethod,
             onTap:
                 isLoading
                     ? null
                     : () {
                       context.router.push(
-                        AdminMenuItemUpsertRoute(menuItem: menuItem),
+                        AdminPaymentMethodUpsertRoute(
+                          paymentMethod: paymentMethod,
+                        ),
                       );
                     },
           );

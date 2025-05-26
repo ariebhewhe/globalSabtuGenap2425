@@ -28,6 +28,28 @@ extension LocationExtension on Location {
       (e) => e.toString().split('.').last == location,
     );
   }
+
+  String get displayName {
+    switch (this) {
+      case Location.indoor:
+        return 'Indoor';
+      case Location.outdoor:
+        return 'Outdoor';
+      case Location.vip:
+        return 'VIP Area';
+    }
+  }
+
+  IconData get icon {
+    switch (this) {
+      case Location.indoor:
+        return Icons.deck_rounded;
+      case Location.outdoor:
+        return Icons.wb_sunny_rounded;
+      case Location.vip:
+        return Icons.star_rounded;
+    }
+  }
 }
 
 // * Order Type Enum

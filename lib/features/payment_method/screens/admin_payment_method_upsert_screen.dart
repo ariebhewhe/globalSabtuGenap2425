@@ -8,6 +8,9 @@ import 'package:image_picker/image_picker.dart';
 import 'package:jamal/data/models/payment_method_model.dart';
 import 'package:jamal/features/payment_method/providers/payment_method_mutation_provider.dart';
 import 'package:jamal/core/utils/enums.dart';
+import 'package:jamal/shared/widgets/admin_app_bar.dart';
+import 'package:jamal/shared/widgets/my_end_drawer.dart';
+import 'package:jamal/shared/widgets/my_screen_container.dart';
 
 @RoutePage()
 class AdminPaymentMethodUpsertScreen extends ConsumerStatefulWidget {
@@ -109,15 +112,9 @@ class _AdminPaymentMethodUpsertScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          widget.paymentMethod != null
-              ? 'Edit Payment Method'
-              : 'Add Payment Method',
-        ),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      appBar: const AdminAppBar(),
+      endDrawer: const MyEndDrawer(),
+      body: MyScreenContainer(
         child: SingleChildScrollView(
           child: Consumer(
             builder: (context, ref, child) {

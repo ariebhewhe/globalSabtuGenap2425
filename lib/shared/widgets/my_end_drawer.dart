@@ -45,12 +45,12 @@ class MyEndDrawer extends StatelessWidget {
       {
         'icon': Icons.payment,
         'title': 'Payment Method',
-        'route': AdminPaymentMethodUpsertRoute(),
+        'route': const AdminPaymentMethodsRoute(),
       },
       {
         'icon': Icons.table_bar,
         'title': 'Restaurant Table',
-        'route': AdminRestaurantTableUpsertRoute(),
+        'route': const AdminRestaurantTablesRoute(),
       },
       {
         'icon': Icons.receipt_long,

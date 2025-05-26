@@ -6,6 +6,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:jamal/data/models/restaurant_table_model.dart';
 import 'package:jamal/features/restaurant_table/providers/restaurant_table_mutation_provider.dart';
 import 'package:jamal/core/utils/enums.dart';
+import 'package:jamal/shared/widgets/admin_app_bar.dart';
+import 'package:jamal/shared/widgets/my_end_drawer.dart';
+import 'package:jamal/shared/widgets/my_screen_container.dart';
 
 @RoutePage()
 class AdminRestaurantTableUpsertScreen extends ConsumerStatefulWidget {
@@ -68,15 +71,9 @@ class _AdminRestaurantTableUpsertScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          widget.restaurantTable != null
-              ? 'Edit Payment Method'
-              : 'Add Payment Method',
-        ),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      appBar: const AdminAppBar(),
+      drawer: const MyEndDrawer(),
+      body: MyScreenContainer(
         child: SingleChildScrollView(
           child: Consumer(
             builder: (context, ref, child) {

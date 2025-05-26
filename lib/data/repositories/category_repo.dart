@@ -194,13 +194,6 @@ class CategoryRepo {
     try {
       Query query = _firebaseFirestore.collection(_collectionPath);
 
-      if (searchQuery != null && searchQuery.isNotEmpty) {
-        query = query.where(
-          'searchableKeywords',
-          arrayContains: searchQuery.toLowerCase(),
-        );
-      }
-
       if (isEqualTo != null) {
         query = query.where(searchBy, isEqualTo: isEqualTo);
       }
