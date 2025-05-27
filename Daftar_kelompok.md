@@ -1,4 +1,4 @@
 # Nama Kelompok
-- Miftahudin Aldi Saputra
-- Dwi Bayu Nugraha
-- Wahyu Nayoga
+- Miftahudin Aldi Saputra - 1122140079
+- Dwi Bayu Nugraha - 1122140068
+- Wahyu Nayoga - 1122140029
