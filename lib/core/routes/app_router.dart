@@ -11,13 +11,17 @@ import 'package:jamal/data/models/restaurant_table_model.dart';
 import 'package:jamal/data/models/table_reservation_model.dart';
 import 'package:jamal/features/auth/presentation/screens/login_screen.dart';
 import 'package:jamal/features/auth/presentation/screens/register_screen.dart';
+import 'package:jamal/features/cart/presentation/screens/admin_cart_screen.dart';
 import 'package:jamal/features/cart/presentation/screens/cart_screen.dart';
 import 'package:jamal/features/category/screens/admin_categories_screen.dart';
 import 'package:jamal/features/category/screens/admin_category_upsert_screen.dart';
 import 'package:jamal/features/home/presentation/screens/admin_home_screen.dart';
 import 'package:jamal/features/home/presentation/screens/home_screen.dart';
+import 'package:jamal/features/menu_item/presentation/screens/admin_menu_item_detail_screen.dart';
 import 'package:jamal/features/menu_item/presentation/screens/admin_menu_item_upsert_screen.dart';
 import 'package:jamal/features/menu_item/presentation/screens/admin_menu_items_screen.dart';
+import 'package:jamal/features/order/screens/admin_create_order_screen.dart';
+import 'package:jamal/features/order/screens/admin_order_detail_screen.dart';
 import 'package:jamal/features/order/screens/admin_orders_screen.dart';
 import 'package:jamal/features/order/screens/admin_update_order_screen.dart';
 import 'package:jamal/features/order/screens/create_order_screen.dart';
@@ -30,6 +34,7 @@ import 'package:jamal/features/profile/presentation/screens/profile_screen.dart'
 import 'package:jamal/features/menu_item/presentation/screens/menu_items_screen.dart';
 import 'package:jamal/features/menu_item/presentation/screens/menu_item_detail_screen.dart';
 import 'package:jamal/features/restaurant_table/presentation/screens/admin_restaurant_tables_screen.dart';
+import 'package:jamal/features/table_reservation/screens/admin_table_reservation_detail_screen.dart';
 import 'package:jamal/features/table_reservation/screens/admin_table_reservations_screen.dart';
 import 'package:jamal/features/table_reservation/screens/admin_update_table_reservation_screen.dart';
 import 'package:jamal/features/table_reservation/screens/table_reservation_detail_screen.dart';
@@ -110,6 +115,10 @@ class AppRouter extends RootStackRouter {
       guards: [_authGuard, _duplicateGuard],
     ),
     AutoRoute(
+      page: AdminMenuItemDetailRoute.page,
+      guards: [_authGuard, _duplicateGuard],
+    ),
+    AutoRoute(
       page: AdminMenuItemUpsertRoute.page,
       guards: [_authGuard, _duplicateGuard],
     ),
@@ -146,6 +155,10 @@ class AppRouter extends RootStackRouter {
       guards: [_authGuard, _duplicateGuard],
     ),
     AutoRoute(
+      page: AdminOrderDetailRoute.page,
+      guards: [_authGuard, _duplicateGuard],
+    ),
+    AutoRoute(
       page: AdminUpdateOrderRoute.page,
       guards: [_authGuard, _duplicateGuard],
     ),
@@ -155,9 +168,15 @@ class AppRouter extends RootStackRouter {
       guards: [_authGuard, _duplicateGuard],
     ),
     AutoRoute(
+      page: AdminTableReservationDetailRoute.page,
+      guards: [_authGuard, _duplicateGuard],
+    ),
+    AutoRoute(
       page: AdminUpdateTableReservationRoute.page,
       guards: [_authGuard, _duplicateGuard],
     ),
+
+    AutoRoute(page: AdminCartRoute.page, guards: [_authGuard, _duplicateGuard]),
   ];
 
   @override

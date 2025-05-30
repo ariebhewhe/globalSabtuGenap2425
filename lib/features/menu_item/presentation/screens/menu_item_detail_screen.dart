@@ -2,13 +2,14 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:jamal/core/routes/app_router.dart';
 import 'package:jamal/core/utils/enums.dart';
 import 'package:jamal/data/models/cart_item_model.dart';
 import 'package:jamal/data/models/menu_item_model.dart';
 import 'package:jamal/features/cart/providers/cart_item_mutation_provider.dart';
-import 'package:jamal/shared/widgets/user_app_bar.dart';
+import 'package:jamal/shared/widgets/admin_app_bar.dart';
+import 'package:jamal/shared/widgets/my_end_drawer.dart';
 import 'package:jamal/shared/widgets/my_screen_container.dart';
+import 'package:jamal/shared/widgets/user_app_bar.dart';
 
 @RoutePage()
 class MenuItemDetailScreen extends StatelessWidget {
@@ -27,6 +28,7 @@ class MenuItemDetailScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: const UserAppBar(),
+      endDrawer: const MyEndDrawer(),
       body: MyScreenContainer(
         child: SingleChildScrollView(
           child: Column(

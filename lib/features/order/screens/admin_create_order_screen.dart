@@ -18,18 +18,20 @@ import 'package:jamal/features/cart/providers/selected_cart_items_provider.dart'
 import 'package:jamal/features/order/providers/order_mutation_provider.dart';
 import 'package:jamal/features/payment_method/providers/payment_methods_provider.dart';
 import 'package:jamal/features/restaurant_table/providers/restaurant_tables_provider.dart';
-import 'package:jamal/shared/widgets/user_app_bar.dart';
+import 'package:jamal/shared/widgets/admin_app_bar.dart';
+import 'package:jamal/shared/widgets/my_end_drawer.dart';
 import 'package:jamal/shared/widgets/my_screen_container.dart';
 
 @RoutePage()
-class CreateOrderScreen extends ConsumerStatefulWidget {
-  const CreateOrderScreen({super.key});
+class AdminCreateOrderScreen extends ConsumerStatefulWidget {
+  const AdminCreateOrderScreen({super.key});
 
   @override
-  ConsumerState createState() => _CreateOrderScreenState();
+  ConsumerState createState() => _AdminCreateOrderScreenState();
 }
 
-class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
+class _AdminCreateOrderScreenState
+    extends ConsumerState<AdminCreateOrderScreen> {
   final _formKey = GlobalKey<FormBuilderState>();
   final ImagePicker _picker = ImagePicker();
 
@@ -158,7 +160,7 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
       ).showSnackBar(const SnackBar(content: Text('Pesanan berhasil dibuat!')));
 
       if (mounted) {
-        context.replaceRoute(const AdminOrdersRoute());
+        context.replaceRoute(const OrdersRoute());
       }
     }
   }
@@ -356,7 +358,8 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
     }
 
     return Scaffold(
-      appBar: const UserAppBar(),
+      appBar: const AdminAppBar(),
+      endDrawer: const MyEndDrawer(),
       body: MyScreenContainer(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16),

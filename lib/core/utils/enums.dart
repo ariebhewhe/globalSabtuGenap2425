@@ -85,7 +85,7 @@ extension OrderStatusExtension on OrderStatus {
 }
 
 // * Payment Method Enum
-enum PaymentMethodType { cash, creditCard, debitCard, eWallet }
+enum PaymentMethodType { cash, creditCard, debitCard, eWallet, bankTransfer }
 
 extension PaymentMethodTypeExtension on PaymentMethodType {
   String toMap() {

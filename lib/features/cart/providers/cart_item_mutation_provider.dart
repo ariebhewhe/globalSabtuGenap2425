@@ -54,6 +54,8 @@ class CartItemMutationNotifier extends StateNotifier<CartItemMutationState> {
 
         // * Refresh menu items dan menu items
         _ref.read(cartItemsProvider.notifier).refreshCartItems();
+        _ref.invalidate(totalCartQuantityProvider);
+        _ref.invalidate(distinctCartItemCountProvider);
 
         final activeId = _ref.read(activeCartItemIdProvider);
         if (activeId == id) {
@@ -79,6 +81,8 @@ class CartItemMutationNotifier extends StateNotifier<CartItemMutationState> {
 
         // * Refresh menu items
         _ref.read(cartItemsProvider.notifier).refreshCartItems();
+        _ref.invalidate(totalCartQuantityProvider);
+        _ref.invalidate(distinctCartItemCountProvider);
 
         // * Kalo delete clear active item id
         final activeId = _ref.read(activeCartItemIdProvider);

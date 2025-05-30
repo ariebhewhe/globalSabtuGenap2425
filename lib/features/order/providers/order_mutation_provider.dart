@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:jamal/data/models/order_model.dart';
 import 'package:jamal/data/repositories/order_repo.dart';
+import 'package:jamal/features/cart/providers/cart_item_aggregate_provider.dart';
 import 'package:jamal/features/cart/providers/cart_items_provider.dart';
 import 'package:jamal/features/order/providers/order_mutation_state.dart';
 import 'package:jamal/features/order/providers/order_provider.dart';
@@ -34,6 +35,8 @@ class OrderMutationNotifier extends StateNotifier<OrderMutationState> {
             .read(userTableReservationsProvider.notifier)
             .refreshTableReservations();
         _ref.read(cartItemsProvider.notifier).refreshCartItems();
+        _ref.invalidate(totalCartQuantityProvider);
+        _ref.invalidate(distinctCartItemCountProvider);
       },
     );
   }

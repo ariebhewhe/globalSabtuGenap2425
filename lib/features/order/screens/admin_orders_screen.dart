@@ -123,7 +123,7 @@ class _AdminOrdersScreenState extends ConsumerState<AdminOrdersScreen> {
                                       order: order,
                                       onTap:
                                           () => context.pushRoute(
-                                            AdminUpdateOrderRoute(order: order),
+                                            AdminOrderDetailRoute(order: order),
                                           ),
                                     ),
                                   );

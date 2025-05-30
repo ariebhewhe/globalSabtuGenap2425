@@ -620,7 +620,7 @@ class _AdminMenuItemsScreenState extends ConsumerState<AdminMenuItemsScreen> {
                     ? null
                     : () {
                       context.router.push(
-                        AdminMenuItemUpsertRoute(menuItem: menuItem),
+                        AdminMenuItemDetailRoute(menuItem: menuItem),
                       );
                     },
           );

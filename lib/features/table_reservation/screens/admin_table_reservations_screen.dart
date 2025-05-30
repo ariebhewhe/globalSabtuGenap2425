@@ -140,9 +140,8 @@ class _AdminTableReservationsScreenState
                                           isLoading
                                               ? null
                                               : () => context.pushRoute(
-                                                AdminUpdateTableReservationRoute(
-                                                  tableReservation:
-                                                      tableReservation,
+                                                AdminTableReservationDetailRoute(
+                                                  reservation: tableReservation,
                                                 ),
                                               ),
                                     ),
