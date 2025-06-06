@@ -150,21 +150,17 @@ class _AdminMenuItemUpsertScreenState
       previous,
       next,
     ) {
-      // Handle Error
       if (next.errorMessage != null &&
           (previous?.errorMessage != next.errorMessage)) {
         ToastUtils.showError(context: context, message: next.errorMessage!);
         ref.read(menuItemMutationProvider.notifier).resetErrorMessage();
       }
 
-      // Handle Success
       if (next.successMessage != null &&
           (previous?.successMessage != next.successMessage)) {
         ToastUtils.showSuccess(context: context, message: next.successMessage!);
         ref.read(menuItemMutationProvider.notifier).resetSuccessMessage();
 
-        // Navigasi setelah sukses!
-        // Asumsi Anda menggunakan auto_route, pop akan kembali ke halaman sebelumnya (list)
         context.router.pop();
       }
     });

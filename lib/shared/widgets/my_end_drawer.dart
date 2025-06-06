@@ -38,11 +38,11 @@ class MyEndDrawer extends StatelessWidget {
         'title': 'Menu',
         'route': const AdminMenuItemsRoute(),
       },
-      // {
-      //   'icon': Icons.category,
-      //   'title': 'Categories',
-      //   'route': const AdminCategoriesRoute(),
-      // },
+      {
+        'icon': Icons.category,
+        'title': 'Categories',
+        'route': const AdminCategoriesRoute(),
+      },
       {
         'icon': Icons.payment,
         'title': 'Payment Method',

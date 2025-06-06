@@ -11,6 +11,7 @@ import 'package:jamal/data/models/category_model.dart';
 import 'package:jamal/features/category/providers/category_mutation_provider.dart';
 import 'package:jamal/features/category/providers/category_mutation_state.dart';
 import 'package:jamal/shared/widgets/admin_app_bar.dart';
+import 'package:jamal/shared/widgets/my_end_drawer.dart';
 import 'package:jamal/shared/widgets/my_screen_container.dart';
 
 @RoutePage()
@@ -133,6 +134,7 @@ class _AdminCategoryUpsertScreenState
 
     return Scaffold(
       appBar: const AdminAppBar(),
+      endDrawer: const MyEndDrawer(),
       body: MyScreenContainer(
         child: SingleChildScrollView(
           child: AbsorbPointer(

@@ -27,6 +27,21 @@ class MenuItemModel extends BaseModel {
     required DateTime updatedAt,
   }) : super(id: id, createdAt: createdAt, updatedAt: updatedAt);
 
+  factory MenuItemModel.dummy() {
+    return MenuItemModel(
+      id: 'dummy_id',
+      name: 'Loading Item...',
+      description: 'lorem ipsum dolor sit amet consectetur adipiscing elit',
+      price: 99999,
+      isAvailable: true,
+      categoryId: 'dummy_category_id',
+      category: null,
+      imageUrl: null,
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+    );
+  }
+
   MenuItemModel copyWith({
     String? id,
     String? name,

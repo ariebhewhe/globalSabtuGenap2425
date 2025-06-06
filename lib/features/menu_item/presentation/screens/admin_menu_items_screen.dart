@@ -4,8 +4,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:jamal/core/routes/app_router.dart';
 import 'package:jamal/core/theme/app_theme.dart';
 import 'package:jamal/core/utils/enums.dart';
+import 'package:jamal/core/utils/toast_utils.dart';
 import 'package:jamal/data/models/menu_item_model.dart';
 import 'package:jamal/features/menu_item/presentation/widgets/menu_items_card.dart';
+import 'package:jamal/features/menu_item/providers/menu_item_mutation_provider.dart';
+import 'package:jamal/features/menu_item/providers/menu_item_mutation_state.dart';
 import 'package:jamal/features/menu_item/providers/menu_items_provider.dart';
 import 'package:jamal/features/menu_item/providers/search_menu_items_provider.dart';
 import 'package:jamal/shared/widgets/admin_app_bar.dart';
@@ -26,6 +29,9 @@ class _AdminMenuItemsScreenState extends ConsumerState<AdminMenuItemsScreen> {
   final ScrollController _scrollController = ScrollController();
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
+
+  bool _isSelectionMode = false;
+  final Set<String> _selectedItemIds = {};
 
   String _selectedSearchBy = 'name';
   final List<String> _searchByOptions = ['name', 'description'];
@@ -112,11 +118,231 @@ class _AdminMenuItemsScreenState extends ConsumerState<AdminMenuItemsScreen> {
   }
 
   Future<void> _refreshData() async {
+    if (_isSelectionMode) _exitSelectionMode();
+
     if (isSearching) {
-      ref.read(searchMenuItemsProvider.notifier).refreshMenuItems();
+      await ref.read(searchMenuItemsProvider.notifier).refreshMenuItems();
     } else {
-      ref.read(menuItemsProvider.notifier).refreshMenuItems();
+      await ref.read(menuItemsProvider.notifier).refreshMenuItems();
     }
+  }
+
+  void _enterSelectionMode(String itemId) {
+    if (_isSelectionMode) return;
+    setState(() {
+      _isSelectionMode = true;
+      _selectedItemIds.add(itemId);
+    });
+  }
+
+  void _exitSelectionMode() {
+    setState(() {
+      _isSelectionMode = false;
+      _selectedItemIds.clear();
+    });
+  }
+
+  void _onSelectItem(String itemId) {
+    setState(() {
+      if (_selectedItemIds.contains(itemId)) {
+        _selectedItemIds.remove(itemId);
+      } else {
+        _selectedItemIds.add(itemId);
+      }
+      if (_selectedItemIds.isEmpty) {
+        _isSelectionMode = false;
+      }
+    });
+  }
+
+  void _deleteSelectedItems() {
+    showDialog(
+      context: context,
+      builder:
+          (ctx) => AlertDialog(
+            title: const Text('Konfirmasi Hapus'),
+            content: Text(
+              'Anda yakin ingin menghapus ${_selectedItemIds.length} item yang dipilih?',
+            ),
+            actions: [
+              TextButton(
+                child: const Text('Batal'),
+                onPressed: () => Navigator.of(ctx).pop(),
+              ),
+              FilledButton(
+                child: const Text('Hapus'),
+                style: FilledButton.styleFrom(backgroundColor: Colors.red),
+                onPressed: () {
+                  ref
+                      .read(menuItemMutationProvider.notifier)
+                      .batchDeleteMenuItems(_selectedItemIds.toList());
+                  Navigator.of(ctx).pop();
+                  _exitSelectionMode();
+                },
+              ),
+            ],
+          ),
+    );
+  }
+
+  void _deleteAllItems() {
+    final allItemIds = menuItems.map((item) => item.id).toList();
+
+    if (allItemIds.isEmpty) {
+      ToastUtils.showError(
+        context: context,
+        message: 'Tidak ada item untuk dihapus',
+      );
+      return;
+    }
+
+    showDialog(
+      context: context,
+      builder:
+          (ctx) => AlertDialog(
+            title: const Text('Konfirmasi Hapus Semua'),
+            content: Text(
+              'Anda yakin ingin menghapus SEMUA ${allItemIds.length} item menu? Tindakan ini tidak dapat dibatalkan.',
+            ),
+            actions: [
+              TextButton(
+                child: const Text('Batal'),
+                onPressed: () => Navigator.of(ctx).pop(),
+              ),
+              FilledButton(
+                child: const Text('Hapus Semua'),
+                style: FilledButton.styleFrom(backgroundColor: Colors.red),
+                onPressed: () {
+                  ref
+                      .read(menuItemMutationProvider.notifier)
+                      .batchDeleteMenuItems(allItemIds);
+                  Navigator.of(ctx).pop();
+                  if (_isSelectionMode) _exitSelectionMode();
+                },
+              ),
+            ],
+          ),
+    );
+  }
+
+  void _showUtilityBottomSheet() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return Container(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 20),
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              Text(
+                'Menu Utilities',
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 20),
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).primaryColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(Icons.add, color: Theme.of(context).primaryColor),
+                ),
+                title: const Text('Add Menu Item'),
+                subtitle: const Text('Tambah item menu baru'),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  context.pushRoute(AdminMenuItemUpsertRoute());
+                },
+              ),
+              const Divider(),
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color:
+                        _isSelectionMode
+                            ? Colors.orange.withOpacity(0.1)
+                            : Colors.blue.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    _isSelectionMode ? Icons.check_circle : Icons.select_all,
+                    color: _isSelectionMode ? Colors.orange : Colors.blue,
+                  ),
+                ),
+                title: Text(
+                  _isSelectionMode ? 'Exit Selection Mode' : 'Select Items',
+                ),
+                subtitle: Text(
+                  _isSelectionMode
+                      ? 'Keluar dari mode seleksi'
+                      : 'Masuk ke mode seleksi untuk menghapus item',
+                ),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  if (_isSelectionMode) {
+                    _exitSelectionMode();
+                  } else {
+                    setState(() {
+                      _isSelectionMode = true;
+                    });
+                  }
+                },
+              ),
+              const Divider(),
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.red.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(Icons.delete_forever, color: Colors.red),
+                ),
+                title: const Text('Delete All Items'),
+                subtitle: const Text('Hapus semua item menu'),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  _deleteAllItems();
+                },
+              ),
+              const SizedBox(height: 20),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  AppBar _buildSelectionAppBar() {
+    return AppBar(
+      leading: IconButton(
+        icon: const Icon(Icons.close),
+        onPressed: _exitSelectionMode,
+      ),
+      title: Text('${_selectedItemIds.length} dipilih'),
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.delete_outline),
+          onPressed: _selectedItemIds.isNotEmpty ? _deleteSelectedItems : null,
+        ),
+      ],
+    );
   }
 
   bool get isLoading {
@@ -146,18 +372,28 @@ class _AdminMenuItemsScreenState extends ConsumerState<AdminMenuItemsScreen> {
   }
 
   String? get errorMessage {
-    if (isSearching) {
-      return ref.watch(searchMenuItemsProvider).errorMessage;
-    } else {
-      return ref.watch(menuItemsProvider).errorMessage;
-    }
+    final provider = isSearching ? searchMenuItemsProvider : menuItemsProvider;
+    return ref.watch(provider).errorMessage;
   }
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<MenuItemMutationState>(menuItemMutationProvider, (_, state) {
+      if (state.successMessage != null) {
+        ToastUtils.showSuccess(
+          context: context,
+          message: state.successMessage!,
+        );
+        ref.read(menuItemMutationProvider.notifier).resetSuccessMessage();
+      }
+      if (state.errorMessage != null) {
+        ToastUtils.showError(context: context, message: state.errorMessage!);
+        ref.read(menuItemMutationProvider.notifier).resetErrorMessage();
+      }
+    });
+
     return GestureDetector(
       onTap: () {
-        // * Cara ini akan menghilangkan fokus dari widget apapun yang sedang fokus
         FocusScopeNode currentFocus = FocusScope.of(context);
         if (!currentFocus.hasPrimaryFocus &&
             currentFocus.focusedChild != null) {
@@ -165,19 +401,13 @@ class _AdminMenuItemsScreenState extends ConsumerState<AdminMenuItemsScreen> {
         }
       },
       child: Scaffold(
-        appBar: const AdminAppBar(),
-        endDrawer: const MyEndDrawer(),
-        floatingActionButton: SafeArea(
-          child: Container(
-            decoration: BoxDecoration(
-              color: context.theme.primaryColor,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: IconButton(
-              onPressed: () => context.pushRoute(AdminMenuItemUpsertRoute()),
-              icon: const Icon(Icons.add),
-            ),
-          ),
+        appBar:
+            _isSelectionMode ? _buildSelectionAppBar() : const AdminAppBar(),
+        endDrawer: _isSelectionMode ? null : const MyEndDrawer(),
+        floatingActionButton: FloatingActionButton(
+          onPressed: _showUtilityBottomSheet,
+          child: const Icon(Icons.more_vert),
+          tooltip: 'Menu Utilities',
         ),
         body: MyScreenContainer(
           child: Consumer(
@@ -197,7 +427,7 @@ class _AdminMenuItemsScreenState extends ConsumerState<AdminMenuItemsScreen> {
                             controller: _searchController,
                             focusNode: _searchFocusNode,
                             decoration: InputDecoration(
-                              hintText: 'Search menuItems...',
+                              hintText: 'Search menu items...',
                               prefixIcon: Icon(
                                 Icons.search,
                                 color: context.textStyles.bodyMedium?.color,
@@ -247,6 +477,7 @@ class _AdminMenuItemsScreenState extends ConsumerState<AdminMenuItemsScreen> {
                       ],
                     ),
 
+                    // ... Filter UI remains the same ...
                     AnimatedContainer(
                       duration: const Duration(milliseconds: 300),
                       height: _showFilters ? null : 0,
@@ -490,7 +721,6 @@ class _AdminMenuItemsScreenState extends ConsumerState<AdminMenuItemsScreen> {
                       ),
 
                     const SizedBox(height: 16),
-
                     Expanded(child: _buildMenuItemsGrid(skeletonItemCount)),
                   ],
                 ),
@@ -529,7 +759,7 @@ class _AdminMenuItemsScreenState extends ConsumerState<AdminMenuItemsScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              isSearching ? Icons.search_off : Icons.food_bank,
+              isSearching ? Icons.search_off : Icons.food_bank_outlined,
               size: 64,
               color:
                   context.isDarkMode
@@ -539,8 +769,8 @@ class _AdminMenuItemsScreenState extends ConsumerState<AdminMenuItemsScreen> {
             const SizedBox(height: 16),
             Text(
               isSearching
-                  ? 'No menuItems found for "${_searchController.text}"'
-                  : 'No menuItems available',
+                  ? 'No menu items found for "${_searchController.text}"'
+                  : 'No menu items available',
               style: context.textStyles.titleMedium?.copyWith(
                 color:
                     context.isDarkMode
@@ -596,31 +826,54 @@ class _AdminMenuItemsScreenState extends ConsumerState<AdminMenuItemsScreen> {
             );
           }
 
-          final menuItem =
-              isLoading
-                  ? MenuItemModel(
-                    id: '',
-                    name: 'Loading Item',
-                    description: '',
-                    price: 0.0,
-                    categoryId: '',
-                    imageUrl: null,
-                    isAvailable: true,
-                    createdAt: DateTime.now(),
-                    updatedAt: DateTime.now(),
-                  )
-                  : menuItems[index];
+          final menuItem = isLoading ? MenuItemModel.dummy() : menuItems[index];
 
-          return MenuItemCard(
-            menuItem: menuItem,
-            onTap:
-                isLoading
-                    ? null
-                    : () {
-                      context.router.push(
-                        AdminMenuItemDetailRoute(menuItem: menuItem),
-                      );
-                    },
+          final isSelected = _selectedItemIds.contains(menuItem.id);
+
+          return Stack(
+            fit: StackFit.expand,
+            children: [
+              MenuItemCard(
+                menuItem: menuItem,
+                onTap:
+                    isLoading
+                        ? null
+                        : () {
+                          if (_isSelectionMode) {
+                            _onSelectItem(menuItem.id);
+                          } else {
+                            context.router.push(
+                              AdminMenuItemDetailRoute(menuItem: menuItem),
+                            );
+                          }
+                        },
+                onLongPress:
+                    isLoading ? null : () => _enterSelectionMode(menuItem.id),
+              ),
+              if (_isSelectionMode)
+                Positioned.fill(
+                  child: GestureDetector(
+                    onTap: () => _onSelectItem(menuItem.id),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                        color:
+                            isSelected
+                                ? Theme.of(
+                                  context,
+                                ).primaryColor.withOpacity(0.4)
+                                : Colors.black.withOpacity(0.2),
+                      ),
+                    ),
+                  ),
+                ),
+              if (isSelected)
+                const Positioned(
+                  top: 8,
+                  right: 8,
+                  child: Icon(Icons.check_circle, color: Colors.white),
+                ),
+            ],
           );
         },
       ),

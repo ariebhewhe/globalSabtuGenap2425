@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:jamal/core/routes/app_router.dart';
+import 'package:jamal/core/utils/enums.dart';
 import 'package:jamal/features/cart/providers/cart_item_aggregate_provider.dart';
 
 class AdminAppBar extends StatelessWidget implements PreferredSizeWidget {
@@ -26,22 +27,16 @@ class AdminAppBar extends StatelessWidget implements PreferredSizeWidget {
   Size get preferredSize => const Size.fromHeight(kToolbarHeight);
 
   String _getAppBarTitle(BuildContext context) {
-    // * Jika custom title disediakan, gunakan itu
     if (customTitle != null) {
       return customTitle!;
     }
 
-    // * Gunakan data dari AutoRoute untuk mendapatkan judul
     final router = context.router;
     final routeData = router.current;
 
-    // * Coba dapatkan nama page dari routeData
     final pageName = routeData.name;
     if (pageName.isNotEmpty) {
-      // * Format nama page (contoh: 'ProfileRoute' menjadi 'Profile')
       final formattedName = pageName.replaceAll('Route', '');
-
-      // * Pisahkan berdasarkan huruf kapital dan join dengan spasi
       final titleWords = <String>[];
       final chars = formattedName.characters.toList();
 
@@ -49,7 +44,6 @@ class AdminAppBar extends StatelessWidget implements PreferredSizeWidget {
       for (int i = 0; i < chars.length; i++) {
         final char = chars[i];
         if (i > 0 && char.toUpperCase() == char && char.toLowerCase() != char) {
-          // * Ini huruf kapital yang bukan karakter pertama
           if (currentWord.isNotEmpty) {
             titleWords.add(currentWord);
             currentWord = char;
@@ -72,11 +66,9 @@ class AdminAppBar extends StatelessWidget implements PreferredSizeWidget {
       return formattedName;
     }
 
-    // * Fallback ke path jika nama page tidak tersedia
     final currentPath = router.currentPath;
     final segments = currentPath.split('/').where((s) => s.isNotEmpty).toList();
     if (segments.isNotEmpty) {
-      // * Convert route segment to title case (e.g., "user-profile" to "User Profile")
       return segments.last
           .split(RegExp(r'[-_]'))
           .map(
@@ -88,7 +80,6 @@ class AdminAppBar extends StatelessWidget implements PreferredSizeWidget {
           .join(' ');
     }
 
-    // * Fallback ke default jika tidak ada informasi tersedia
     return 'App';
   }
 
@@ -107,7 +98,6 @@ class AdminAppBar extends StatelessWidget implements PreferredSizeWidget {
               child: Stack(
                 clipBehavior: Clip.none,
                 children: [
-                  // Cart Icon Button with improved styling
                   Container(
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(12),
@@ -120,14 +110,15 @@ class AdminAppBar extends StatelessWidget implements PreferredSizeWidget {
                         size: 26,
                         color:
                             itemCount > 0
-                                ? Theme.of(context).primaryColor
-                                : Theme.of(context).iconTheme.color,
+                                ? context
+                                    .theme
+                                    .colorScheme
+                                    .error // INI PERUBAHANNYA
+                                : context.theme.iconTheme.color,
                       ),
                       tooltip: 'Keranjang Belanja',
                     ),
                   ),
-
-                  // Badge with improved design
                   if (itemCount > 0)
                     Positioned(
                       top: 6,
@@ -144,13 +135,12 @@ class AdminAppBar extends StatelessWidget implements PreferredSizeWidget {
                                 horizontal: 6,
                               ),
                               decoration: BoxDecoration(
-                                color: Theme.of(context).colorScheme.error,
+                                color: context.theme.colorScheme.error,
                                 borderRadius: BorderRadius.circular(10),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Theme.of(
-                                      context,
-                                    ).colorScheme.error.withOpacity(0.3),
+                                    color: context.theme.colorScheme.error
+                                        .withOpacity(0.3),
                                     blurRadius: 4,
                                     offset: const Offset(0, 2),
                                   ),
@@ -160,8 +150,7 @@ class AdminAppBar extends StatelessWidget implements PreferredSizeWidget {
                                 child: Text(
                                   itemCount > 99 ? '99+' : itemCount.toString(),
                                   style: TextStyle(
-                                    color:
-                                        Theme.of(context).colorScheme.onError,
+                                    color: context.theme.colorScheme.onError,
                                     fontSize: 11,
                                     fontWeight: FontWeight.bold,
                                   ),
@@ -220,7 +209,7 @@ class AdminAppBar extends StatelessWidget implements PreferredSizeWidget {
       title: Text(_getAppBarTitle(context)),
       actions: [
         _buildCartIcon(context),
-        const SizedBox(width: 8), // Add some spacing
+        const SizedBox(width: 8),
         Builder(
           builder:
               (innerContext) => IconButton(

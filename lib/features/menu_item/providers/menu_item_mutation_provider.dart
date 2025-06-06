@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:jamal/data/models/menu_item_model.dart';
 import 'package:jamal/data/repositories/menu_item_repo.dart';
+import 'package:jamal/features/cart/providers/cart_items_provider.dart';
 import 'package:jamal/features/menu_item/providers/menu_item_mutation_state.dart';
 import 'package:jamal/features/menu_item/providers/menu_item_provider.dart';
 import 'package:jamal/features/menu_item/providers/menu_items_provider.dart';
@@ -84,10 +85,55 @@ class MenuItemMutationNotifier extends StateNotifier<MenuItemMutationState> {
 
         // * Refresh menu items
         _ref.invalidate(menuItemsProvider);
+        _ref.invalidate(cartItemsProvider);
 
         // * Kalo delete clear active item id
         final activeId = _ref.read(activeMenuItemIdProvider);
         if (activeId == id) {
+          _ref.read(activeMenuItemIdProvider.notifier).state = null;
+        }
+      },
+    );
+  }
+
+  Future<void> batchAddMenuItems(List<CreateMenuItemDto> dtos) async {
+    state = state.copyWith(isLoading: true);
+    final result = await _menuItemRepo.batchAddMenuItems(dtos);
+    result.match(
+      (error) =>
+          state = state.copyWith(isLoading: false, errorMessage: error.message),
+      (success) {
+        state = state.copyWith(
+          isLoading: false,
+          successMessage: success.message,
+        );
+        _ref.invalidate(menuItemsProvider);
+      },
+    );
+  }
+
+  Future<void> batchDeleteMenuItems(
+    List<String> ids, {
+    bool deleteImages = true,
+  }) async {
+    state = state.copyWith(isLoading: true);
+    final result = await _menuItemRepo.batchDeleteMenuItems(
+      ids,
+      deleteImages: deleteImages,
+    );
+    result.match(
+      (error) =>
+          state = state.copyWith(isLoading: false, errorMessage: error.message),
+      (success) {
+        state = state.copyWith(
+          isLoading: false,
+          successMessage: success.message,
+        );
+        _ref.invalidate(menuItemsProvider);
+        _ref.invalidate(cartItemsProvider);
+
+        final activeId = _ref.read(activeMenuItemIdProvider);
+        if (activeId != null && ids.contains(activeId)) {
           _ref.read(activeMenuItemIdProvider.notifier).state = null;
         }
       },

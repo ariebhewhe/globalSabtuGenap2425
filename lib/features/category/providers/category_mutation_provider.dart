@@ -4,6 +4,7 @@ import 'package:jamal/data/repositories/category_repo.dart';
 import 'package:jamal/features/category/providers/category_mutation_state.dart';
 import 'package:jamal/features/category/providers/category_provider.dart';
 import 'package:jamal/features/category/providers/categories_provider.dart';
+import 'package:jamal/features/menu_item/providers/menu_items_provider.dart';
 
 class CategoryMutationNotifier extends StateNotifier<CategoryMutationState> {
   final CategoryRepo _categoryRepo;
@@ -27,7 +28,8 @@ class CategoryMutationNotifier extends StateNotifier<CategoryMutationState> {
         );
 
         // * Refresh menu items list
-        _ref.read(categoriesProvider.notifier).refreshCategories();
+        _ref.invalidate(categoriesProvider);
+        _ref.invalidate(menuItemsProvider);
       },
     );
   }
@@ -55,7 +57,8 @@ class CategoryMutationNotifier extends StateNotifier<CategoryMutationState> {
         );
 
         // * Refresh menu items dan menu items
-        _ref.read(categoriesProvider.notifier).refreshCategories();
+        _ref.invalidate(categoriesProvider);
+        _ref.invalidate(menuItemsProvider);
 
         final activeId = _ref.read(activeCategoryIdProvider);
         if (activeId == id) {
@@ -83,7 +86,8 @@ class CategoryMutationNotifier extends StateNotifier<CategoryMutationState> {
         );
 
         // * Refresh menu items
-        _ref.read(categoriesProvider.notifier).refreshCategories();
+        _ref.invalidate(categoriesProvider);
+        _ref.invalidate(menuItemsProvider);
 
         // * Kalo delete clear active item id
         final activeId = _ref.read(activeCategoryIdProvider);
