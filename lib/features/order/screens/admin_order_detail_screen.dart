@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:jamal/core/routes/app_router.dart';
 import 'package:jamal/core/utils/enums.dart';
+import 'package:jamal/core/utils/toast_utils.dart'; // Import ToastUtils
 import 'package:jamal/data/models/order_model.dart';
 import 'package:jamal/features/order/providers/order_mutation_provider.dart';
 import 'package:jamal/main.dart';
@@ -33,7 +34,7 @@ class _AdminOrderDetailScreenState extends State<AdminOrderDetailScreen> {
 
   String _formatDateTime(DateTime? dateTime) {
     if (dateTime == null) return 'N/A';
-    return DateFormat('dd MMM リ, HH:mm', 'id_ID').format(dateTime);
+    return DateFormat('dd MMM yyyy, HH:mm', 'id_ID').format(dateTime);
   }
 
   String _formatCurrency(double amount) {
@@ -192,27 +193,12 @@ class _AdminOrderDetailScreenState extends State<AdminOrderDetailScreen> {
       _isSavingInvoice = true;
     });
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          'Menyiapkan invoice...',
-          style: context.textStyles.labelMedium?.copyWith(
-            color: context.colors.onSurface,
-          ),
-        ),
-        backgroundColor: context.colors.surface.withOpacity(0.8),
-        duration: const Duration(
-          seconds: 1,
-        ), // Kurangi durasi untuk notif singkat
-      ),
-    );
+    ToastUtils.showInfo(context: context, message: 'Menyiapkan invoice...');
 
     try {
       final Uint8List? imageBytes = await _screenshotController.capture(
-        delay: const Duration(milliseconds: 150), // Sedikit delay
-        pixelRatio:
-            MediaQuery.of(context).devicePixelRatio *
-            1.5, // Kualitas cukup baik
+        delay: const Duration(milliseconds: 150),
+        pixelRatio: MediaQuery.of(context).devicePixelRatio * 1.5,
       );
 
       if (imageBytes == null) {
@@ -222,54 +208,31 @@ class _AdminOrderDetailScreenState extends State<AdminOrderDetailScreen> {
       final String fileName =
           'Invoice_Order_${widget.order.id.length > 6 ? widget.order.id.substring(0, 6) : widget.order.id}_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}';
 
-      // Menggunakan file_saver
-      // Ini akan membuka dialog "Save As" dari sistem operasi
       String? filePath = await FileSaver.instance.saveFile(
-        name: fileName, // Nama file (tanpa ekstensi)
+        name: fileName,
         bytes: imageBytes,
-        ext: 'png', // Ekstensi file
-        mimeType: MimeType.png, // Tipe MIME
+        ext: 'png',
+        mimeType: MimeType.png,
       );
 
       if (filePath != null && filePath.isNotEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Invoice disimpan: $filePath',
-              style: context.textStyles.labelMedium?.copyWith(
-                color: context.colors.onPrimary,
-              ),
-            ),
-            backgroundColor: context.colors.primary,
-            behavior: SnackBarBehavior.floating,
-            duration: const Duration(seconds: 5), // Tampilkan path lebih lama
-          ),
+        if (!context.mounted) return;
+        ToastUtils.showSuccess(
+          context: context,
+          message: 'Invoice disimpan: $filePath',
         );
       } else {
-        // Pengguna mungkin membatalkan dialog penyimpanan
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Penyimpanan dibatalkan oleh pengguna.',
-              style: context.textStyles.labelMedium,
-            ),
-            backgroundColor: context.colors.secondary,
-            behavior: SnackBarBehavior.floating,
-          ),
+        if (!context.mounted) return;
+        ToastUtils.showWarning(
+          context: context,
+          message: 'Penyimpanan dibatalkan oleh pengguna.',
         );
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Error menyimpan: ${e.toString()}',
-            style: context.textStyles.labelMedium?.copyWith(
-              color: context.colors.onError,
-            ),
-          ),
-          backgroundColor: context.colors.error,
-          behavior: SnackBarBehavior.floating,
-        ),
+      if (!context.mounted) return;
+      ToastUtils.showError(
+        context: context,
+        message: 'Error menyimpan: ${e.toString()}',
       );
       logger.e("Error capturing or saving invoice: ${e.toString()}");
     } finally {
@@ -556,7 +519,7 @@ class _AdminOrderDetailScreenState extends State<AdminOrderDetailScreen> {
               context.theme.scaffoldBackgroundColor,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.1),
+              color: Colors.black.withOpacity(0.1),
               blurRadius: 4,
               offset: const Offset(0, -2),
             ),
@@ -568,7 +531,7 @@ class _AdminOrderDetailScreenState extends State<AdminOrderDetailScreen> {
               // Helper method untuk menangani aksi hapus
               Future<void> handleDeleteAction() async {
                 final bool? confirmed = await showDialog<bool>(
-                  context: context, // Menggunakan context dari Consumer builder
+                  context: context,
                   barrierDismissible: false,
                   builder: (BuildContext dialogContext) {
                     return AlertDialog(
@@ -577,7 +540,7 @@ class _AdminOrderDetailScreenState extends State<AdminOrderDetailScreen> {
                         style: dialogContext.textStyles.titleLarge,
                       ),
                       content: Text(
-                        'Apakah Anda yakin ingin menghapus menu "${widget.order.id}"?\nTindakan ini tidak dapat diurungkan.',
+                        'Apakah Anda yakin ingin menghapus pesanan "${widget.order.id}"?\nTindakan ini tidak dapat diurungkan.',
                         style: dialogContext.textStyles.bodyMedium,
                       ),
                       actions: <Widget>[
@@ -585,8 +548,8 @@ class _AdminOrderDetailScreenState extends State<AdminOrderDetailScreen> {
                           child: Text(
                             'Batal',
                             style: TextStyle(
-                              color: dialogContext.colors.onSurface.withValues(
-                                alpha: 0.8,
+                              color: dialogContext.colors.onSurface.withOpacity(
+                                0.8,
                               ),
                             ),
                           ),
@@ -615,24 +578,17 @@ class _AdminOrderDetailScreenState extends State<AdminOrderDetailScreen> {
                         .deleteOrder(widget.order.id);
 
                     if (!context.mounted) return;
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('${widget.order.id} berhasil dihapus.'),
-                        backgroundColor: context.colors.primary,
-                        duration: const Duration(seconds: 2),
-                      ),
+                    ToastUtils.showSuccess(
+                      context: context,
+                      message: '${widget.order.id} berhasil dihapus.',
                     );
                     AutoRouter.of(context).pop();
                   } catch (e) {
                     if (!context.mounted) return;
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
+                    ToastUtils.showError(
+                      context: context,
+                      message:
                           'Gagal menghapus ${widget.order.id}: ${e.toString()}',
-                        ),
-                        backgroundColor: context.colors.error,
-                        duration: const Duration(seconds: 3),
-                      ),
                     );
                   }
                 }
@@ -680,7 +636,7 @@ class _AdminOrderDetailScreenState extends State<AdminOrderDetailScreen> {
                   PopupMenuButton<String>(
                     icon: Icon(
                       Icons.more_vert,
-                      color: context.colors.onSurface.withValues(alpha: 0.8),
+                      color: context.colors.onSurface.withOpacity(0.8),
                       size: 28,
                     ),
                     tooltip: 'Opsi Admin',
@@ -703,7 +659,7 @@ class _AdminOrderDetailScreenState extends State<AdminOrderDetailScreen> {
                               color: popupContext.colors.primary,
                             ),
                             title: Text(
-                              'Ubah Menu',
+                              'Ubah Pesanan',
                               style: popupContext.textStyles.bodyLarge,
                             ),
                           ),
@@ -716,7 +672,7 @@ class _AdminOrderDetailScreenState extends State<AdminOrderDetailScreen> {
                               color: popupContext.colors.error,
                             ),
                             title: Text(
-                              'Hapus Menu',
+                              'Hapus Pesanan',
                               style: popupContext.textStyles.bodyLarge,
                             ),
                           ),

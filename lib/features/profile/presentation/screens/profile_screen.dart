@@ -5,9 +5,11 @@ import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:jamal/core/utils/toast_utils.dart';
 import 'package:jamal/data/models/user_model.dart';
 import 'package:jamal/features/user/providers/user_mutation_provider.dart';
 import 'package:jamal/features/auth/auth_provider.dart';
+import 'package:jamal/features/user/providers/user_mutation_state.dart';
 
 @RoutePage()
 class ProfileScreen extends ConsumerStatefulWidget {
@@ -100,23 +102,19 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final currentUserAsync = ref.watch(currentUserProvider);
     final mutationState = ref.watch(userMutationProvider);
 
-    // Handle success and error messages
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mutationState.successMessage != null) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(mutationState.successMessage!)));
-        ref.read(userMutationProvider.notifier).resetSuccessMessage();
+    ref.listen<UserMutationState>(userMutationProvider, (previous, next) {
+      if (next.errorMessage != null &&
+          (previous?.errorMessage != next.errorMessage)) {
+        ToastUtils.showError(context: context, message: next.errorMessage!);
+        ref.read(userMutationProvider.notifier).resetErrorMessage();
       }
 
-      if (mutationState.errorMessage != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(mutationState.errorMessage!),
-            backgroundColor: Theme.of(context).colorScheme.error,
-          ),
-        );
-        ref.read(userMutationProvider.notifier).resetErrorMessage();
+      if (next.successMessage != null &&
+          (previous?.successMessage != next.successMessage)) {
+        ToastUtils.showSuccess(context: context, message: next.successMessage!);
+        ref.read(userMutationProvider.notifier).resetSuccessMessage();
+
+        context.router.pop();
       }
     });
 

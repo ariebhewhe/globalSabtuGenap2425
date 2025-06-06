@@ -6,6 +6,7 @@ import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:jamal/core/routes/app_router.dart';
 import 'package:jamal/core/utils/enums.dart';
+import 'package:jamal/core/utils/toast_utils.dart';
 import 'package:jamal/features/auth/auth_provider.dart';
 import 'package:jamal/shared/widgets/my_screen_container.dart';
 
@@ -24,72 +25,42 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     _formKey.currentState?.reset();
   }
 
-  void _submitForm() async {
+  void _submitForm() {
     final isValid = _formKey.currentState?.saveAndValidate() ?? false;
+    if (!isValid) return;
 
-    if (isValid) {
-      final formValues = _formKey.currentState!.value;
-
-      await ref
-          .read(authMutationProvider.notifier)
-          .loginWithEmail(
-            email: formValues['email'] as String,
-            password: formValues['password'] as String,
-          );
-
-      if (!mounted) return;
-      final authState = ref.read(authMutationProvider);
-
-      if (authState.userModel != null) {
-        _resetForm();
-        if (authState.userModel!.role == Role.admin) {
-          context.replaceRoute(const AdminTabRoute());
-        } else {
-          context.replaceRoute(const UserTabRoute());
-        }
-      } else if (authState.errorMessage != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(authState.errorMessage!),
-            backgroundColor: context.colors.error,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-          ),
+    final formValues = _formKey.currentState!.value;
+    ref
+        .read(authMutationProvider.notifier)
+        .loginWithEmail(
+          email: formValues['email'] as String,
+          password: formValues['password'] as String,
         );
-        ref.read(authMutationProvider.notifier).resetErrorMessage();
-      }
-    }
   }
 
-  void _loginWithGoogle() async {
-    await ref.read(authMutationProvider.notifier).loginWithGoogle();
-
-    if (!mounted) return;
-    final authState = ref.read(authMutationProvider);
-
-    if (authState.userModel != null) {
-      if (authState.userModel!.role == Role.admin) {
-        context.replaceRoute(const AdminTabRoute());
-      } else {
-        context.replaceRoute(const UserTabRoute());
-      }
-    } else if (authState.errorMessage != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(authState.errorMessage!),
-          backgroundColor: context.colors.error,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        ),
-      );
-      ref.read(authMutationProvider.notifier).resetErrorMessage();
-    }
+  void _loginWithGoogle() {
+    ref.read(authMutationProvider.notifier).loginWithGoogle();
   }
 
   @override
   Widget build(BuildContext context) {
+    ref.listen(authMutationProvider, (previous, next) {
+      if (next.errorMessage != null) {
+        ToastUtils.showError(context: context, message: next.errorMessage!);
+        ref.read(authMutationProvider.notifier).resetErrorMessage();
+      }
+
+      if (next.userModel != null) {
+        ToastUtils.showSuccess(context: context, message: 'Login berhasil!');
+        _resetForm();
+        if (next.userModel!.role == Role.admin) {
+          context.replaceRoute(const AdminTabRoute());
+        } else {
+          context.replaceRoute(const UserTabRoute());
+        }
+      }
+    });
+
     return Scaffold(
       backgroundColor: context.theme.scaffoldBackgroundColor,
       appBar: AppBar(
@@ -149,7 +120,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 ),
                           ),
                           const SizedBox(height: 32),
-
                           FormBuilderTextField(
                             initialValue: "admin@gmail.com",
                             keyboardType: TextInputType.emailAddress,
@@ -184,7 +154,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             ]),
                           ),
                           const SizedBox(height: 20),
-
                           FormBuilderTextField(
                             name: 'password',
                             initialValue: "177013",
@@ -220,7 +189,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             ]),
                           ),
                           const SizedBox(height: 28),
-
                           SizedBox(
                             width: double.infinity,
                             child: ElevatedButton(
@@ -256,7 +224,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             ),
                           ),
                           const SizedBox(height: 16),
-
                           SizedBox(
                             width: double.infinity,
                             child: ElevatedButton.icon(

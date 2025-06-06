@@ -606,8 +606,6 @@ class _AdminMenuItemsScreenState extends ConsumerState<AdminMenuItemsScreen> {
                     categoryId: '',
                     imageUrl: null,
                     isAvailable: true,
-                    isVegetarian: false,
-                    spiceLevel: 0,
                     createdAt: DateTime.now(),
                     updatedAt: DateTime.now(),
                   )

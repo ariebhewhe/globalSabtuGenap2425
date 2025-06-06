@@ -27,7 +27,7 @@ class MenuItemMutationNotifier extends StateNotifier<MenuItemMutationState> {
         );
 
         // * Refresh menu items list
-        _ref.read(menuItemsProvider.notifier).refreshMenuItems();
+        _ref.invalidate(menuItemsProvider);
       },
     );
   }
@@ -55,7 +55,7 @@ class MenuItemMutationNotifier extends StateNotifier<MenuItemMutationState> {
         );
 
         // * Refresh menu items dan menu items
-        _ref.read(menuItemsProvider.notifier).refreshMenuItems();
+        _ref.invalidate(menuItemsProvider);
 
         final activeId = _ref.read(activeMenuItemIdProvider);
         if (activeId == id) {
@@ -83,7 +83,7 @@ class MenuItemMutationNotifier extends StateNotifier<MenuItemMutationState> {
         );
 
         // * Refresh menu items
-        _ref.read(menuItemsProvider.notifier).refreshMenuItems();
+        _ref.invalidate(menuItemsProvider);
 
         // * Kalo delete clear active item id
         final activeId = _ref.read(activeMenuItemIdProvider);

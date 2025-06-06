@@ -1,6 +1,10 @@
+// ignore_for_file: public_member_api_docs, sort_constructors_first
+import 'dart:convert';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
+
 import 'package:jamal/core/helpers/error_response.dart';
 import 'package:jamal/core/helpers/success_response.dart';
 import 'package:jamal/core/utils/logger.dart';
@@ -395,4 +399,86 @@ class MenuItemRepo {
       );
     }
   }
+
+  // * Aggregate
+  Future<Either<ErrorResponse, SuccessResponse<MenuItemsCountAggregate>>>
+  getMenuItemsCount() async {
+    try {
+      final menuItemsCollection = _firebaseFirestore.collection(
+        _collectionPath,
+      );
+
+      final allMenuItems = await menuItemsCollection.count().get();
+      final allMenuItemCount = allMenuItems.count;
+
+      final activeMenuItemSnapshot =
+          await menuItemsCollection
+              .where('isActive', isEqualTo: true)
+              .count()
+              .get();
+      final activeMenuItemCount = activeMenuItemSnapshot.count;
+
+      final nonActiveMenuItemSnapshot =
+          await menuItemsCollection
+              .where('isActive', isEqualTo: true)
+              .count()
+              .get();
+      final nonActiveMenuItemCount = nonActiveMenuItemSnapshot.count;
+
+      final menuItemAggregate = MenuItemsCountAggregate(
+        allMenuItemCount: allMenuItemCount ?? 0,
+        activeMenuItemCount: activeMenuItemCount ?? 0,
+        nonActiveMenuItemCount: nonActiveMenuItemCount ?? 0,
+      );
+
+      return Right(
+        SuccessResponse(
+          data: menuItemAggregate,
+          message: "MenuItem counts retrieved successfully",
+        ),
+      );
+    } catch (e) {
+      logger.e(e.toString());
+      return Left(
+        ErrorResponse(
+          message: 'Failed to get menuItem counts: ${e.toString()}',
+        ),
+      );
+    }
+  }
+}
+
+class MenuItemsCountAggregate {
+  final int allMenuItemCount;
+  final int activeMenuItemCount;
+  final int nonActiveMenuItemCount;
+
+  MenuItemsCountAggregate({
+    required this.allMenuItemCount,
+    required this.activeMenuItemCount,
+    required this.nonActiveMenuItemCount,
+  });
+
+  Map<String, dynamic> toMap() {
+    return <String, dynamic>{
+      'allMenuItemCount': allMenuItemCount,
+      'activeMenuItemCount': activeMenuItemCount,
+      'nonActiveMenuItemCount': nonActiveMenuItemCount,
+    };
+  }
+
+  factory MenuItemsCountAggregate.fromMap(Map<String, dynamic> map) {
+    return MenuItemsCountAggregate(
+      allMenuItemCount: map['allMenuItemCount'] as int,
+      activeMenuItemCount: map['activeMenuItemCount'] as int,
+      nonActiveMenuItemCount: map['nonActiveMenuItemCount'] as int,
+    );
+  }
+
+  String toJson() => json.encode(toMap());
+
+  factory MenuItemsCountAggregate.fromJson(String source) =>
+      MenuItemsCountAggregate.fromMap(
+        json.decode(source) as Map<String, dynamic>,
+      );
 }

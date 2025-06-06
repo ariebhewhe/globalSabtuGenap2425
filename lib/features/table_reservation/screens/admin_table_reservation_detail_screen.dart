@@ -5,13 +5,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:jamal/core/routes/app_router.dart';
 import 'package:jamal/core/utils/enums.dart';
+import 'package:jamal/core/utils/toast_utils.dart'; // Import ToastUtils
 import 'package:jamal/data/models/table_reservation_model.dart';
 import 'package:jamal/features/table_reservation/providers/table_reservation_mutation_provider.dart';
 import 'package:jamal/main.dart';
 import 'package:jamal/shared/widgets/admin_app_bar.dart';
 import 'package:jamal/shared/widgets/my_end_drawer.dart';
 import 'package:jamal/shared/widgets/my_screen_container.dart';
-import 'package:jamal/shared/widgets/user_app_bar.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:file_saver/file_saver.dart';
 
@@ -190,17 +190,9 @@ class _AdminTableReservationDetailScreenState
       _isSavingInvoice = true;
     });
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          'Menyiapkan bukti reservasi...',
-          style: context.textStyles.labelMedium?.copyWith(
-            color: context.colors.onSurface,
-          ),
-        ),
-        backgroundColor: context.colors.surface.withOpacity(0.8),
-        duration: const Duration(seconds: 1),
-      ),
+    ToastUtils.showInfo(
+      context: context,
+      message: 'Menyiapkan bukti reservasi...',
     );
 
     try {
@@ -223,46 +215,24 @@ class _AdminTableReservationDetailScreenState
         mimeType: MimeType.png,
       );
 
-      if (filePath.isNotEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Bukti reservasi disimpan: $filePath',
-              style: context.textStyles.labelMedium?.copyWith(
-                color: context.colors.onPrimary,
-              ),
-            ),
-            backgroundColor: context.colors.primary,
-            behavior: SnackBarBehavior.floating,
-            duration: const Duration(seconds: 5),
-          ),
+      if (filePath != null && filePath.isNotEmpty) {
+        if (!context.mounted) return;
+        ToastUtils.showSuccess(
+          context: context,
+          message: 'Bukti reservasi disimpan: $filePath',
         );
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Penyimpanan dibatalkan oleh pengguna.',
-              style: context.textStyles.labelMedium?.copyWith(
-                color: context.colors.onSecondary,
-              ),
-            ),
-            backgroundColor: context.colors.secondary,
-            behavior: SnackBarBehavior.floating,
-          ),
+        if (!context.mounted) return;
+        ToastUtils.showWarning(
+          context: context,
+          message: 'Penyimpanan dibatalkan oleh pengguna.',
         );
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Error menyimpan: ${e.toString()}',
-            style: context.textStyles.labelMedium?.copyWith(
-              color: context.colors.onError,
-            ),
-          ),
-          backgroundColor: context.colors.error,
-          behavior: SnackBarBehavior.floating,
-        ),
+      if (!context.mounted) return;
+      ToastUtils.showError(
+        context: context,
+        message: 'Error menyimpan: ${e.toString()}',
       );
       logger.e("Error capturing or saving reservation proof: ${e.toString()}");
     } finally {
@@ -314,7 +284,6 @@ class _AdminTableReservationDetailScreenState
                   widget.reservation.userId,
                   icon: Icons.person_outline,
                 ),
-
                 if (widget.reservation.orderId.isNotEmpty)
                   _buildDetailRow(
                     context,
@@ -334,7 +303,6 @@ class _AdminTableReservationDetailScreenState
                   _buildStatusChip(context, widget.reservation.status.toMap()),
                   icon: Icons.flag_outlined,
                 ),
-
                 _buildDetailRow(
                   context,
                   'Dibuat Pada:',
@@ -447,7 +415,7 @@ class _AdminTableReservationDetailScreenState
               context.theme.scaffoldBackgroundColor,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.1),
+              color: Colors.black.withOpacity(0.1),
               blurRadius: 4,
               offset: const Offset(0, -2),
             ),
@@ -456,10 +424,9 @@ class _AdminTableReservationDetailScreenState
         child: SafeArea(
           child: Consumer(
             builder: (context, ref, child) {
-              // Helper method untuk menangani aksi hapus
               Future<void> handleDeleteAction() async {
                 final bool? confirmed = await showDialog<bool>(
-                  context: context, // Menggunakan context dari Consumer builder
+                  context: context,
                   barrierDismissible: false,
                   builder: (BuildContext dialogContext) {
                     return AlertDialog(
@@ -468,7 +435,7 @@ class _AdminTableReservationDetailScreenState
                         style: dialogContext.textStyles.titleLarge,
                       ),
                       content: Text(
-                        'Apakah Anda yakin ingin menghapus menu "${widget.reservation.id}"?\nTindakan ini tidak dapat diurungkan.',
+                        'Apakah Anda yakin ingin menghapus reservasi "${widget.reservation.id}"?\nTindakan ini tidak dapat diurungkan.',
                         style: dialogContext.textStyles.bodyMedium,
                       ),
                       actions: <Widget>[
@@ -476,8 +443,8 @@ class _AdminTableReservationDetailScreenState
                           child: Text(
                             'Batal',
                             style: TextStyle(
-                              color: dialogContext.colors.onSurface.withValues(
-                                alpha: 0.8,
+                              color: dialogContext.colors.onSurface.withOpacity(
+                                0.8,
                               ),
                             ),
                           ),
@@ -506,26 +473,17 @@ class _AdminTableReservationDetailScreenState
                         .deleteTableReservation(widget.reservation.id);
 
                     if (!context.mounted) return;
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          '${widget.reservation.id} berhasil dihapus.',
-                        ),
-                        backgroundColor: context.colors.primary,
-                        duration: const Duration(seconds: 2),
-                      ),
+                    ToastUtils.showSuccess(
+                      context: context,
+                      message: '${widget.reservation.id} berhasil dihapus.',
                     );
                     AutoRouter.of(context).pop();
                   } catch (e) {
                     if (!context.mounted) return;
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
+                    ToastUtils.showError(
+                      context: context,
+                      message:
                           'Gagal menghapus ${widget.reservation.id}: ${e.toString()}',
-                        ),
-                        backgroundColor: context.colors.error,
-                        duration: const Duration(seconds: 3),
-                      ),
                     );
                   }
                 }
@@ -575,7 +533,7 @@ class _AdminTableReservationDetailScreenState
                   PopupMenuButton<String>(
                     icon: Icon(
                       Icons.more_vert,
-                      color: context.colors.onSurface.withValues(alpha: 0.8),
+                      color: context.colors.onSurface.withOpacity(0.8),
                       size: 28,
                     ),
                     tooltip: 'Opsi Admin',
@@ -600,7 +558,7 @@ class _AdminTableReservationDetailScreenState
                               color: popupContext.colors.primary,
                             ),
                             title: Text(
-                              'Ubah Menu',
+                              'Ubah Reservasi',
                               style: popupContext.textStyles.bodyLarge,
                             ),
                           ),
@@ -613,7 +571,7 @@ class _AdminTableReservationDetailScreenState
                               color: popupContext.colors.error,
                             ),
                             title: Text(
-                              'Hapus Menu',
+                              'Hapus Reservasi',
                               style: popupContext.textStyles.bodyLarge,
                             ),
                           ),

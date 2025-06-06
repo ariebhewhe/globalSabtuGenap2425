@@ -1,17 +1,19 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
+
 import 'package:jamal/core/helpers/error_response.dart';
 import 'package:jamal/core/helpers/success_response.dart';
 import 'package:jamal/core/utils/enums.dart';
 import 'package:jamal/core/utils/logger.dart';
 import 'package:jamal/data/models/order_model.dart';
 import 'package:jamal/providers.dart';
+import 'package:jamal/shared/models/paginated_result.dart';
 import 'package:jamal/shared/services/cloudinary_service.dart';
 import 'package:jamal/shared/services/current_user_storage_service.dart';
-import 'package:jamal/shared/models/paginated_result.dart';
 
 final orderRepoProvider = Provider.autoDispose<OrderRepo>((ref) {
   final firestore = ref.watch(firebaseFirestoreProvider);
@@ -107,7 +109,6 @@ class OrderRepo {
         'orderType': orderDataMap['orderType'],
         'status': OrderStatus.pending.toMap(),
         'totalAmount': totalAmount,
-
         'paymentStatus': PaymentStatus.unpaid.toMap(),
         'orderDate': DateTime.now().millisecondsSinceEpoch,
         'estimatedReadyTime': orderDataMap['estimatedReadyTime'],
@@ -391,4 +392,209 @@ class OrderRepo {
       );
     }
   }
+
+  // * Aggregate
+  Future<Either<ErrorResponse, SuccessResponse<OrdersCountAggregate>>>
+  getOrdersCount() async {
+    try {
+      final ordersCollection = _firebaseFirestore.collection(_collectionPath);
+
+      // Membuat daftar future untuk setiap kueri agregat
+      final totalCountFuture = ordersCollection.count().get();
+
+      final statusCountFutures =
+          OrderStatus.values.map((status) {
+            return ordersCollection
+                .where('status', isEqualTo: status.toMap())
+                .count()
+                .get();
+          }).toList();
+
+      final typeCountFutures =
+          OrderType.values.map((type) {
+            return ordersCollection
+                .where('orderType', isEqualTo: type.toMap())
+                .count()
+                .get();
+          }).toList();
+
+      // Menjalankan semua kueri secara paralel untuk efisiensi
+      final totalSnapshot = await totalCountFuture;
+      final statusSnapshots = await Future.wait(statusCountFutures);
+      final typeSnapshots = await Future.wait(typeCountFutures);
+
+      // Memproses hasil kueri
+      final totalOrders = totalSnapshot.count ?? 0;
+
+      final statusCounts = <OrderStatus, int>{};
+      for (int i = 0; i < OrderStatus.values.length; i++) {
+        statusCounts[OrderStatus.values[i]] = statusSnapshots[i].count ?? 0;
+      }
+
+      final typeCounts = <OrderType, int>{};
+      for (int i = 0; i < OrderType.values.length; i++) {
+        typeCounts[OrderType.values[i]] = typeSnapshots[i].count ?? 0;
+      }
+
+      final orderAggregate = OrdersCountAggregate(
+        totalOrders: totalOrders,
+        statusCounts: statusCounts,
+        typeCounts: typeCounts,
+      );
+
+      return Right(
+        SuccessResponse(
+          data: orderAggregate,
+          message: "Order aggregates retrieved successfully",
+        ),
+      );
+    } catch (e) {
+      logger.e(e.toString());
+      return Left(
+        ErrorResponse(message: 'Failed to get order counts: ${e.toString()}'),
+      );
+    }
+  }
+
+  Future<Either<ErrorResponse, SuccessResponse<OrdersRevenueAggregate>>>
+  getOrderRevenue() async {
+    try {
+      final ordersCollection = _firebaseFirestore.collection(_collectionPath);
+      final querySnapshot = await ordersCollection.get();
+
+      final now = DateTime.now();
+      // Mendefinisikan awal dari setiap periode waktu
+      final startOfToday = DateTime(now.year, now.month, now.day);
+      final startOfMonth = DateTime(now.year, now.month, 1);
+      final startOfYear = DateTime(now.year, 1, 1);
+
+      double totalRevenueAllTime = 0;
+      double totalRevenueToday = 0;
+      double totalRevenueThisMonth = 0;
+      double totalRevenueThisYear = 0;
+
+      // SOLUSI: Gunakan OrderModel.fromMap untuk konversi yang aman
+      for (var doc in querySnapshot.docs) {
+        // Ubah data mentah menjadi objek OrderModel yang sudah jelas tipenya
+        final order = OrderModel.fromMap(doc.data() as Map<String, dynamic>);
+
+        // Akses properti langsung dari objek, ini jauh lebih aman
+        final double amount = order.totalAmount;
+        final DateTime orderDate = order.orderDate;
+
+        totalRevenueAllTime += amount;
+
+        // Logika perbandingan tanggal tetap sama, tapi sekarang dengan data yang valid
+        if (!orderDate.isBefore(startOfToday)) {
+          totalRevenueToday += amount;
+        }
+        if (!orderDate.isBefore(startOfMonth)) {
+          totalRevenueThisMonth += amount;
+        }
+        if (!orderDate.isBefore(startOfYear)) {
+          totalRevenueThisYear += amount;
+        }
+      }
+
+      final revenueAggregate = OrdersRevenueAggregate(
+        totalRevenueAllTime: totalRevenueAllTime,
+        totalRevenueToday: totalRevenueToday,
+        totalRevenueThisMonth: totalRevenueThisMonth,
+        totalRevenueThisYear: totalRevenueThisYear,
+      );
+
+      return Right(
+        SuccessResponse(
+          data: revenueAggregate,
+          message: 'Order revenue retrieved successfully',
+        ),
+      );
+    } catch (e) {
+      logger.e('Failed to get order revenue: ${e.toString()}');
+      return Left(
+        ErrorResponse(message: 'Failed to get order revenue: ${e.toString()}'),
+      );
+    }
+  }
+}
+
+class OrdersCountAggregate {
+  final int totalOrders;
+  final Map<OrderStatus, int> statusCounts;
+  final Map<OrderType, int> typeCounts;
+
+  OrdersCountAggregate({
+    required this.totalOrders,
+    required this.statusCounts,
+    required this.typeCounts,
+  });
+
+  Map<String, dynamic> toMap() {
+    return <String, dynamic>{
+      'totalOrders': totalOrders,
+      'statusCounts': statusCounts.map(
+        (key, value) => MapEntry(key.toMap(), value),
+      ),
+      'typeCounts': typeCounts.map(
+        (key, value) => MapEntry(key.toMap(), value),
+      ),
+    };
+  }
+
+  factory OrdersCountAggregate.fromMap(Map<String, dynamic> map) {
+    return OrdersCountAggregate(
+      totalOrders: map['totalOrders'] as int,
+      statusCounts: (map['statusCounts'] as Map<String, dynamic>).map(
+        (key, value) =>
+            MapEntry(OrderStatusExtension.fromMap(key), value as int),
+      ),
+      typeCounts: (map['typeCounts'] as Map<String, dynamic>).map(
+        (key, value) => MapEntry(OrderTypeExtension.fromMap(key), value as int),
+      ),
+    );
+  }
+
+  String toJson() => json.encode(toMap());
+
+  factory OrdersCountAggregate.fromJson(String source) =>
+      OrdersCountAggregate.fromMap(json.decode(source) as Map<String, dynamic>);
+}
+
+class OrdersRevenueAggregate {
+  final double totalRevenueAllTime;
+  final double totalRevenueToday;
+  final double totalRevenueThisMonth;
+  final double totalRevenueThisYear;
+
+  OrdersRevenueAggregate({
+    required this.totalRevenueAllTime,
+    required this.totalRevenueToday,
+    required this.totalRevenueThisMonth,
+    required this.totalRevenueThisYear,
+  });
+
+  Map<String, dynamic> toMap() {
+    return <String, dynamic>{
+      'totalRevenueAllTime': totalRevenueAllTime,
+      'totalRevenueToday': totalRevenueToday,
+      'totalRevenueThisMonth': totalRevenueThisMonth,
+      'totalRevenueThisYear': totalRevenueThisYear,
+    };
+  }
+
+  factory OrdersRevenueAggregate.fromMap(Map<String, dynamic> map) {
+    return OrdersRevenueAggregate(
+      totalRevenueAllTime: (map['totalRevenueAllTime'] as num).toDouble(),
+      totalRevenueToday: (map['totalRevenueToday'] as num).toDouble(),
+      totalRevenueThisMonth: (map['totalRevenueThisMonth'] as num).toDouble(),
+      totalRevenueThisYear: (map['totalRevenueThisYear'] as num).toDouble(),
+    );
+  }
+
+  String toJson() => json.encode(toMap());
+
+  factory OrdersRevenueAggregate.fromJson(String source) =>
+      OrdersRevenueAggregate.fromMap(
+        json.decode(source) as Map<String, dynamic>,
+      );
 }

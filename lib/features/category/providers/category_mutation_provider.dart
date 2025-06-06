@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:jamal/data/models/category_model.dart';
 import 'package:jamal/data/repositories/category_repo.dart';
@@ -14,13 +12,10 @@ class CategoryMutationNotifier extends StateNotifier<CategoryMutationState> {
   CategoryMutationNotifier(this._categoryRepo, this._ref)
     : super(CategoryMutationState());
 
-  Future<void> addCategory(CategoryModel newCategory, {File? imageFile}) async {
+  Future<void> addCategory(CreateCategoryDto newCategory) async {
     state = state.copyWith(isLoading: true);
 
-    final result = await _categoryRepo.addCategory(
-      newCategory,
-      imageFile: imageFile,
-    );
+    final result = await _categoryRepo.addCategory(newCategory);
 
     result.match(
       (error) =>
@@ -39,8 +34,7 @@ class CategoryMutationNotifier extends StateNotifier<CategoryMutationState> {
 
   Future<void> updateCategory(
     String id,
-    CategoryModel updatedCategory, {
-    File? imageFile,
+    UpdateCategoryDto updatedCategory, {
     bool deleteExistingImage = false,
   }) async {
     state = state.copyWith(isLoading: true);
@@ -48,7 +42,6 @@ class CategoryMutationNotifier extends StateNotifier<CategoryMutationState> {
     final result = await _categoryRepo.updateCategory(
       id,
       updatedCategory,
-      imageFile: imageFile,
       deleteExistingImage: deleteExistingImage,
     );
 

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:jamal/core/routes/app_router.dart';
 import 'package:jamal/core/utils/enums.dart';
+import 'package:jamal/core/utils/toast_utils.dart';
 import 'package:jamal/features/auth/auth_provider.dart';
 import 'package:jamal/shared/providers/theme_provider.dart';
 
@@ -37,11 +38,11 @@ class MyEndDrawer extends StatelessWidget {
         'title': 'Menu',
         'route': const AdminMenuItemsRoute(),
       },
-      {
-        'icon': Icons.category,
-        'title': 'Categories',
-        'route': const AdminCategoriesRoute(),
-      },
+      // {
+      //   'icon': Icons.category,
+      //   'title': 'Categories',
+      //   'route': const AdminCategoriesRoute(),
+      // },
       {
         'icon': Icons.payment,
         'title': 'Payment Method',
@@ -549,13 +550,9 @@ class MyEndDrawer extends StatelessWidget {
       onTap: () {
         ref.read(themeProvider.notifier).setTheme(mode);
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Theme berhasil diubah ke $title'),
-            duration: const Duration(seconds: 2),
-            backgroundColor: context.theme.colorScheme.primary,
-            behavior: SnackBarBehavior.floating,
-          ),
+        ToastUtils.showSuccess(
+          context: context,
+          message: "Tema berhasil diubah",
         );
       },
     );

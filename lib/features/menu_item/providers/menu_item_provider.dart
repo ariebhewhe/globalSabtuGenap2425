@@ -1,7 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:jamal/data/repositories/menu_item_repo.dart';
 import 'package:jamal/features/menu_item/providers/menu_item_state.dart';
-import 'package:jamal/providers.dart';
 
 class MenuItemNotifier extends StateNotifier<MenuItemState> {
   final MenuItemRepo _menuItemRepo;

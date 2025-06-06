@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:jamal/core/abstractions/base_model.dart';
 
@@ -95,31 +96,23 @@ class CategoryModel extends BaseModel {
 class CreateCategoryDto {
   final String name;
   String? description;
-  String? picture;
+  File? pictureFile;
 
-  CreateCategoryDto({required this.name, this.description, this.picture});
+  CreateCategoryDto({required this.name, this.description, this.pictureFile});
 
   Map<String, dynamic> toMap() {
-    return <String, dynamic>{
-      'name': name,
-      'description': description,
-      'picture': picture,
-    };
+    return <String, dynamic>{'name': name, 'description': description};
   }
 }
 
 class UpdateCategoryDto {
   final String? name;
   String? description;
-  String? picture;
+  File? pictureFile;
 
-  UpdateCategoryDto({this.name, this.description, this.picture});
+  UpdateCategoryDto({this.name, this.description, this.pictureFile});
 
   Map<String, dynamic> toMap() {
-    return <String, dynamic>{
-      'name': name,
-      'description': description,
-      'picture': picture,
-    };
+    return <String, dynamic>{'name': name, 'description': description};
   }
 }

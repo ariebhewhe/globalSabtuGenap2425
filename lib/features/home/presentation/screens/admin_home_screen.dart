@@ -1,10 +1,15 @@
 import 'package:auto_route/auto_route.dart';
+import 'package:fl_chart/fl_chart.dart'; // Tetap di-import jika akan dipakai lagi
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart'; // Import untuk formatting angka dan mata uang
 import 'package:jamal/core/theme/app_theme.dart';
 import 'package:jamal/core/utils/enums.dart';
+import 'package:jamal/features/menu_item/providers/menu_item_aggregate_provider.dart';
+import 'package:jamal/features/order/providers/order_aggregate_provider.dart';
+import 'package:jamal/features/user/providers/user_aggregate_provider.dart';
 import 'package:jamal/shared/widgets/my_screen_container.dart';
-import 'package:fl_chart/fl_chart.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 
 @RoutePage()
 class AdminHomeScreen extends ConsumerWidget {
@@ -12,317 +17,434 @@ class AdminHomeScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final summaryData = [
-      {
-        'title': 'Total Pengguna',
-        'value': '1,305',
-        'icon': Icons.people_alt_outlined,
-        'color': context.colors.primary,
-      },
-      {
-        'title': 'Total Pesanan',
-        'value': '3,480',
-        'icon': Icons.shopping_bag_outlined,
-        'color': context.colors.secondary,
-      },
-      {
-        'title': 'Pendapatan Bulan Ini',
-        'value': 'Rp 82.150.000',
-        'icon': Icons.monetization_on_outlined,
-        'color': context.colors.tertiary,
-      },
-      {
-        'title': 'Produk Aktif',
-        'value': '729',
-        'icon': Icons.inventory_2_outlined,
-        'color':
-            context.isDarkMode
-                ? AppTheme.primaryFocusDark
-                : AppTheme.primaryFocusLight,
-      },
-    ];
-
-    final List<FlSpot> salesSpots = [
-      const FlSpot(0, 65),
-      const FlSpot(1, 70),
-      const FlSpot(2, 85),
-      const FlSpot(3, 80),
-      const FlSpot(4, 95),
-      const FlSpot(5, 90),
-    ];
-
-    final List<String> monthLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun'];
+    // Watch semua provider
+    final usersCountAsync = ref.watch(usersCountProvider);
+    final ordersCountAsync = ref.watch(ordersCountProvider);
+    final orderRevenueAsync = ref.watch(orderRevenueProvider);
+    final menuItemsCountAsync = ref.watch(menuItemsCountProvider);
 
     return MyScreenContainer(
       child: Scaffold(
-        body: ListView(
-          padding: const EdgeInsets.all(16.0),
-          children: [
-            Text(
-              'Ringkasan Umum',
-              style: context.textStyles.headlineSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: context.textStyles.headlineSmall?.color,
-              ),
-            ),
-            const SizedBox(height: 16.0),
-            GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount:
-                    MediaQuery.of(context).size.width > 1200
-                        ? 4
-                        : (MediaQuery.of(context).size.width > 700 ? 2 : 1),
-                crossAxisSpacing: 16.0,
-                mainAxisSpacing: 16.0,
-                childAspectRatio:
-                    MediaQuery.of(context).size.width > 700 ? 2.0 : 2.4,
-              ),
-              itemCount: summaryData.length,
-              itemBuilder: (context, index) {
-                final item = summaryData[index];
-                return _buildSummaryCard(
-                  context,
-                  title: item['title'] as String,
-                  value: item['value'] as String,
-                  icon: item['icon'] as IconData,
-                  iconColor: item['color'] as Color,
-                );
-              },
-            ),
-            const SizedBox(height: 24.0),
-            Text(
-              'Grafik Penjualan (6 Bulan Terakhir)',
-              style: context.textStyles.headlineSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: context.textStyles.headlineSmall?.color,
-              ),
-            ),
-            const SizedBox(height: 16.0),
-            Card(
-              color: context.cardTheme.color ?? context.theme.cardColor,
-              elevation: context.cardTheme.elevation ?? 2.0,
-              shape: context.cardTheme.shape,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
-                child: SizedBox(
-                  height: 300,
-                  child: LineChart(
-                    LineChartData(
-                      gridData: FlGridData(
-                        show: true,
-                        drawVerticalLine: true,
-                        horizontalInterval: 20,
-                        verticalInterval: 1,
-                        getDrawingHorizontalLine: (value) {
-                          return FlLine(
-                            color: context.theme.dividerColor.withOpacity(0.3),
-                            strokeWidth: 1,
-                          );
-                        },
-                        getDrawingVerticalLine: (value) {
-                          return FlLine(
-                            color: context.theme.dividerColor.withOpacity(0.3),
-                            strokeWidth: 1,
-                          );
-                        },
+        backgroundColor: context.colors.surface,
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header
+              Container(
+                padding: const EdgeInsets.all(24.0),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      context.colors.primary,
+                      context.colors.primary.withOpacity(0.8),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: context.colors.primary.withOpacity(0.3),
+                      blurRadius: 15,
+                      offset: const Offset(0, 5),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                      titlesData: FlTitlesData(
-                        show: true,
-                        rightTitles: const AxisTitles(
-                          sideTitles: SideTitles(showTitles: false),
-                        ),
-                        topTitles: const AxisTitles(
-                          sideTitles: SideTitles(showTitles: false),
-                        ),
-                        bottomTitles: AxisTitles(
-                          sideTitles: SideTitles(
-                            showTitles: true,
-                            reservedSize: 30,
-                            interval: 1,
-                            getTitlesWidget: (double value, TitleMeta meta) {
-                              // meta ada di sini
-                              final index = value.toInt();
-                              if (index >= 0 && index < monthLabels.length) {
-                                return SideTitleWidget(
-                                  // Panggil SideTitleWidget
-                                  meta: meta, // FIX 1: Tambahkan meta
-                                  space: 8.0,
-                                  child: Text(
-                                    monthLabels[index],
-                                    style: context.textStyles.bodySmall
-                                        ?.copyWith(
-                                          color:
-                                              context
-                                                  .textStyles
-                                                  .bodySmall
-                                                  ?.color,
-                                        ),
-                                  ),
-                                  // FIX 3: Hapus axisSide dari sini
-                                );
-                              }
-                              return Container();
-                            },
-                          ),
-                        ),
-                        leftTitles: AxisTitles(
-                          sideTitles: SideTitles(
-                            showTitles: true,
-                            reservedSize: 40, // Lebar area untuk label Y-axis
-                            interval: 25,
-                            getTitlesWidget: (double value, TitleMeta meta) {
-                              return Text(
-                                '${value.toInt()}', // Format label Y-axis
-                                style: context.textStyles.bodySmall?.copyWith(
-                                  color: context.textStyles.bodySmall?.color,
-                                ),
-                                textAlign: TextAlign.left,
-                              );
-                            },
-                          ),
-                        ),
-                      ),
-                      borderData: FlBorderData(
-                        show: true,
-                        border: Border.all(
-                          color: context.theme.dividerColor,
-                          width: 1,
-                        ),
-                      ),
-                      minX: 0,
-                      maxX: (salesSpots.length - 1).toDouble(),
-                      minY: 0,
-                      maxY: 120,
-                      lineBarsData: [
-                        LineChartBarData(
-                          spots: salesSpots,
-                          isCurved: true,
-                          color: context.colors.primary,
-                          barWidth: 4,
-                          isStrokeCapRound: true,
-                          dotData: const FlDotData(show: true),
-                          belowBarData: BarAreaData(
-                            show: true,
-                            color: context.colors.primary.withOpacity(0.2),
-                          ),
-                        ),
-                      ],
-                      lineTouchData: LineTouchData(
-                        touchTooltipData: LineTouchTooltipData(
-                          // FIX 2: Ganti tooltipBgColor dengan getTooltipColor
-                          getTooltipColor:
-                              (_) =>
-                                  context.cardTheme.color ??
-                                  context.theme.cardColor,
-                          getTooltipItems: (List<LineBarSpot> touchedBarSpots) {
-                            return touchedBarSpots.map((barSpot) {
-                              final flSpot = barSpot;
-                              return LineTooltipItem(
-                                '${monthLabels[flSpot.x.toInt()]}\n',
-                                context.textStyles.bodySmall!.copyWith(
-                                  color: context.colors.primary,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                                children: <TextSpan>[
-                                  TextSpan(
-                                    text:
-                                        'Rp ${flSpot.y.toStringAsFixed(0)} Jt',
-                                    style: context.textStyles.bodySmall!
-                                        .copyWith(
-                                          color:
-                                              context
-                                                  .textStyles
-                                                  .bodySmall
-                                                  ?.color,
-                                        ),
-                                  ),
-                                ],
-                              );
-                            }).toList();
-                          },
-                        ),
+                      child: const Icon(
+                        Icons.dashboard_rounded,
+                        color: Colors.white,
+                        size: 32,
                       ),
                     ),
-                  ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Dashboard Admin',
+                            style: context.textStyles.headlineMedium?.copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Ringkasan data dan statistik aplikasi',
+                            style: context.textStyles.bodyMedium?.copyWith(
+                              color: Colors.white.withOpacity(0.9),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ),
-            const SizedBox(height: 24.0),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                Flexible(
-                  child: ElevatedButton.icon(
-                    icon: const Icon(Icons.add_circle_outline),
-                    label: const Text('Item Baru'),
-                    onPressed: () {},
-                    style: context.elevatedButtonTheme.style,
-                  ),
+              const SizedBox(height: 32),
+
+              // Grid Cards
+              GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: _getCrossAxisCount(context),
+                  crossAxisSpacing: 20.0,
+                  mainAxisSpacing: 20.0,
+                  childAspectRatio: _getChildAspectRatio(context),
                 ),
-                const SizedBox(width: 16),
-                Flexible(
-                  child: OutlinedButton.icon(
-                    icon: const Icon(Icons.settings_outlined),
-                    label: const Text('Pengaturan'),
-                    onPressed: () {},
-                    // style: context.outlinedButtonTheme.style,
-                  ),
-                ),
-              ],
-            ),
-          ],
+                itemCount: 4,
+                itemBuilder: (context, index) {
+                  switch (index) {
+                    case 0:
+                      return _buildUsersCard(context, usersCountAsync);
+                    case 1:
+                      return _buildOrdersCard(context, ordersCountAsync);
+                    case 2:
+                      return _buildRevenueCard(context, orderRevenueAsync);
+                    case 3:
+                      return _buildMenuItemsCard(context, menuItemsCountAsync);
+                    default:
+                      return const SizedBox();
+                  }
+                },
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildSummaryCard(
-    BuildContext context, {
-    required String title,
-    required String value,
-    required IconData icon,
-    required Color iconColor,
-  }) {
-    return Card(
-      color: context.cardTheme.color ?? context.theme.cardColor,
-      elevation: context.cardTheme.elevation ?? 2.0,
-      shape: context.cardTheme.shape,
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: Text(
-                    title,
-                    style: context.textStyles.titleMedium?.copyWith(
-                      color: context.textStyles.titleMedium?.color,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
+  int _getCrossAxisCount(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
+    if (width > 1200) return 4;
+    if (width > 800) return 2;
+    return 1;
+  }
+
+  double _getChildAspectRatio(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
+    if (width > 1200) return 1.3;
+    if (width > 800) return 1.4;
+    return 1.1;
+  }
+
+  Widget _buildUsersCard(BuildContext context, AsyncValue usersCountAsync) {
+    return Skeletonizer(
+      enabled: usersCountAsync.isLoading,
+      child: _buildStatsCard(
+        context,
+        title: 'Total Pengguna',
+        icon: Icons.people_alt_rounded,
+        iconColor: context.colors.primary,
+        backgroundColor: context.colors.primary.withOpacity(0.1),
+        isError: usersCountAsync.hasError,
+        errorMessage: 'Gagal memuat data pengguna',
+        details: usersCountAsync.when(
+          data:
+              (data) => {
+                'Semua': NumberFormat.decimalPattern(
+                  'id_ID',
+                ).format(data.allUserCount),
+                'Admin': NumberFormat.decimalPattern(
+                  'id_ID',
+                ).format(data.adminCount),
+                'User': NumberFormat.decimalPattern(
+                  'id_ID',
+                ).format(data.userCount),
+              },
+          loading: () => _getDummyDetails(),
+          error: (_, __) => _getDummyDetails(),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildOrdersCard(BuildContext context, AsyncValue ordersCountAsync) {
+    return Skeletonizer(
+      enabled: ordersCountAsync.isLoading,
+      child: _buildStatsCard(
+        context,
+        title: 'Total Pesanan',
+        icon: Icons.shopping_bag_rounded,
+        iconColor: context.colors.secondary,
+        backgroundColor: context.colors.secondary.withOpacity(0.1),
+        isError: ordersCountAsync.hasError,
+        errorMessage: 'Gagal memuat data pesanan',
+        details: ordersCountAsync.when(
+          data:
+              (data) => {
+                'Semua': NumberFormat.decimalPattern(
+                  'id_ID',
+                ).format(data.totalOrders),
+                ...data.statusCounts.map(
+                  (key, value) => MapEntry(
+                    key.toString().split('.').last,
+                    NumberFormat.decimalPattern('id_ID').format(value),
                   ),
                 ),
-                const SizedBox(width: 8),
-                Icon(icon, color: iconColor, size: 28),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Text(
-              value,
-              style: context.textStyles.headlineMedium?.copyWith(
-                color: context.textStyles.headlineMedium?.color,
-                fontWeight: FontWeight.w700,
+              },
+          loading: () => _getDummyDetails(),
+          error: (_, __) => _getDummyDetails(),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRevenueCard(BuildContext context, AsyncValue orderRevenueAsync) {
+    return Skeletonizer(
+      enabled: orderRevenueAsync.isLoading,
+      child: _buildStatsCard(
+        context,
+        title: 'Total Pendapatan',
+        icon: Icons.monetization_on_rounded,
+        iconColor: context.colors.tertiary,
+        backgroundColor: context.colors.tertiary.withOpacity(0.1),
+        isError: orderRevenueAsync.hasError,
+        errorMessage: 'Gagal memuat data pendapatan',
+        details: orderRevenueAsync.when(
+          data:
+              (data) => {
+                'Bulan Ini': NumberFormat.currency(
+                  locale: 'id_ID',
+                  symbol: 'Rp ',
+                  decimalDigits: 0,
+                ).format(data.totalRevenueThisMonth),
+                'Hari Ini': NumberFormat.currency(
+                  locale: 'id_ID',
+                  symbol: 'Rp ',
+                  decimalDigits: 0,
+                ).format(data.totalRevenueToday),
+                'Tahun Ini': NumberFormat.currency(
+                  locale: 'id_ID',
+                  symbol: 'Rp ',
+                  decimalDigits: 0,
+                ).format(data.totalRevenueThisYear),
+              },
+          loading: () => _getDummyDetails(),
+          error: (_, __) => _getDummyDetails(),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMenuItemsCard(
+    BuildContext context,
+    AsyncValue menuItemsCountAsync,
+  ) {
+    return Skeletonizer(
+      enabled: menuItemsCountAsync.isLoading,
+      child: _buildStatsCard(
+        context,
+        title: 'Total Produk',
+        icon: Icons.inventory_2_rounded,
+        iconColor:
+            context.isDarkMode
+                ? AppTheme.primaryFocusDark
+                : AppTheme.primaryFocusLight,
+        backgroundColor: (context.isDarkMode
+                ? AppTheme.primaryFocusDark
+                : AppTheme.primaryFocusLight)
+            .withOpacity(0.1),
+        isError: menuItemsCountAsync.hasError,
+        errorMessage: 'Gagal memuat data produk',
+        details: menuItemsCountAsync.when(
+          data:
+              (data) => {
+                'Semua': NumberFormat.decimalPattern(
+                  'id_ID',
+                ).format(data.allMenuItemCount),
+                'Aktif': NumberFormat.decimalPattern(
+                  'id_ID',
+                ).format(data.activeMenuItemCount),
+                'Non-Aktif': NumberFormat.decimalPattern(
+                  'id_ID',
+                ).format(data.nonActiveMenuItemCount),
+              },
+          loading: () => _getDummyDetails(),
+          error: (_, __) => _getDummyDetails(),
+        ),
+      ),
+    );
+  }
+
+  Map<String, String> _getDummyDetails() {
+    return {'Loading': '0', 'Data': '0', 'Please Wait': '0'};
+  }
+
+  Widget _buildStatsCard(
+    BuildContext context, {
+    required String title,
+    required IconData icon,
+    required Color iconColor,
+    required Color backgroundColor,
+    required bool isError,
+    required String errorMessage,
+    required Map<String, String> details,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: context.cardTheme.color,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color:
+              context.isDarkMode
+                  ? Colors.white.withOpacity(0.1)
+                  : Colors.black.withOpacity(0.1),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color:
+                context.isDarkMode
+                    ? Colors.black.withOpacity(0.3)
+                    : Colors.grey.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: Stack(
+          children: [
+            // Background pattern
+            Positioned(
+              top: -50,
+              right: -50,
+              child: Container(
+                width: 120,
+                height: 120,
+                decoration: BoxDecoration(
+                  color: backgroundColor,
+                  shape: BoxShape.circle,
+                ),
               ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+            ),
+            Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Header
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: backgroundColor,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(icon, color: iconColor, size: 24),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          title,
+                          style: context.textStyles.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: context.textStyles.titleMedium?.color,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // Content
+                  if (isError)
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: context.colors.error.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.error_outline,
+                            color: context.colors.error,
+                            size: 20,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              errorMessage,
+                              style: context.textStyles.bodySmall?.copyWith(
+                                color: context.colors.error,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  else
+                    ...details.entries.map((entry) {
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 12),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
+                        decoration: BoxDecoration(
+                          color:
+                              context.isDarkMode
+                                  ? Colors.white.withOpacity(0.05)
+                                  : Colors.black.withOpacity(0.03),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color:
+                                context.isDarkMode
+                                    ? Colors.white.withOpacity(0.1)
+                                    : Colors.black.withOpacity(0.05),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              entry.key,
+                              style: context.textStyles.bodyMedium?.copyWith(
+                                color: context.textStyles.bodyMedium?.color
+                                    ?.withOpacity(0.8),
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: iconColor.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Text(
+                                entry.value,
+                                style: context.textStyles.bodyMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: iconColor,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }).toList(),
+                ],
+              ),
             ),
           ],
         ),

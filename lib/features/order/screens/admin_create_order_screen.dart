@@ -9,6 +9,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:jamal/core/routes/app_router.dart';
 import 'package:jamal/core/utils/enums.dart';
+import 'package:jamal/core/utils/toast_utils.dart';
 import 'package:jamal/data/models/order_item_model.dart';
 import 'package:jamal/data/models/order_model.dart';
 import 'package:jamal/data/models/payment_method_model.dart';
@@ -16,6 +17,7 @@ import 'package:jamal/data/models/restaurant_table_model.dart';
 import 'package:jamal/data/models/table_reservation_model.dart';
 import 'package:jamal/features/cart/providers/selected_cart_items_provider.dart';
 import 'package:jamal/features/order/providers/order_mutation_provider.dart';
+import 'package:jamal/features/order/providers/order_mutation_state.dart';
 import 'package:jamal/features/payment_method/providers/payment_methods_provider.dart';
 import 'package:jamal/features/restaurant_table/providers/restaurant_tables_provider.dart';
 import 'package:jamal/shared/widgets/admin_app_bar.dart';
@@ -111,13 +113,9 @@ class _AdminCreateOrderScreenState
       if (selectedPaymentMethod?.paymentMethodType ==
               PaymentMethodType.bankTransfer &&
           _selectedTransferProofFile == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Untuk metode Bank Transfer, mohon unggah bukti transfer.',
-            ),
-            backgroundColor: Colors.red,
-          ),
+        ToastUtils.showWarning(
+          context: context,
+          message: 'Untuk metode Bank Transfer, mohon unggah bukti transfer.',
         );
         return;
       }
@@ -134,9 +132,10 @@ class _AdminCreateOrderScreenState
             table: selectedTable,
           );
         } else {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(const SnackBar(content: Text('Meja belum dipilih!')));
+          ToastUtils.showWarning(
+            context: context,
+            message: 'Meja belum dipilih',
+          );
           return;
         }
       }
@@ -154,14 +153,6 @@ class _AdminCreateOrderScreenState
       await ref.read(orderMutationProvider.notifier).addOrder(newOrder);
 
       ref.read(selectedCartItemsProvider.notifier).clearSelectedItems();
-
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Pesanan berhasil dibuat!')));
-
-      if (mounted) {
-        context.replaceRoute(const OrdersRoute());
-      }
     }
   }
 
@@ -356,6 +347,25 @@ class _AdminCreateOrderScreenState
     if (_orderItems.isEmpty && ref.read(selectedCartItemsProvider).isNotEmpty) {
       _convertCartItemsToOrderItems();
     }
+
+    ref.listen<OrderMutationState>(orderMutationProvider, (previous, next) {
+      if (next.errorMessage != null &&
+          (previous?.errorMessage != next.errorMessage)) {
+        ToastUtils.showError(context: context, message: next.errorMessage!);
+        ref.read(orderMutationProvider.notifier).resetErrorMessage();
+      }
+
+      if (next.successMessage != null &&
+          (previous?.successMessage != next.successMessage)) {
+        ToastUtils.showSuccess(context: context, message: next.successMessage!);
+        ref.read(orderMutationProvider.notifier).resetSuccessMessage();
+
+        context.router.pushAndPopUntil(
+          const AdminOrdersRoute(),
+          predicate: (route) => route.isFirst,
+        );
+      }
+    });
 
     return Scaffold(
       appBar: const AdminAppBar(),

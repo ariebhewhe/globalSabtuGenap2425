@@ -1,8 +1,12 @@
+// ignore_for_file: public_member_api_docs, sort_constructors_first
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
+
 import 'package:jamal/core/helpers/error_response.dart';
 import 'package:jamal/core/helpers/success_response.dart';
 import 'package:jamal/core/utils/logger.dart';
@@ -11,7 +15,6 @@ import 'package:jamal/providers.dart';
 import 'package:jamal/shared/models/paginated_result.dart';
 import 'package:jamal/shared/services/cloudinary_service.dart';
 import 'package:jamal/shared/services/current_user_storage_service.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 
 final userRepoProvider = Provider.autoDispose<UserRepo>((ref) {
   final firestore = ref.watch(firebaseFirestoreProvider);
@@ -442,4 +445,74 @@ class UserRepo {
       );
     }
   }
+
+  // * Aggregate
+  Future<Either<ErrorResponse, SuccessResponse<UsersCountAggregate>>>
+  getUsersCount() async {
+    try {
+      final usersCollection = _firebaseFirestore.collection(_collectionPath);
+
+      final allUserSnapshot = await usersCollection.count().get();
+      final allUserCount = allUserSnapshot.count;
+
+      final adminSnapshot =
+          await usersCollection.where('role', isEqualTo: 'admin').count().get();
+      final adminCount = adminSnapshot.count;
+
+      final userSnapshot =
+          await usersCollection.where('role', isEqualTo: 'user').count().get();
+      final userCount = userSnapshot.count;
+
+      final userAggregate = UsersCountAggregate(
+        allUserCount: allUserCount ?? 0,
+        adminCount: adminCount ?? 0,
+        userCount: userCount ?? 0,
+      );
+
+      return Right(
+        SuccessResponse(
+          data: userAggregate,
+          message: "User counts retrieved successfully",
+        ),
+      );
+    } catch (e) {
+      logger.e(e.toString());
+      return Left(
+        ErrorResponse(message: 'Failed to get user counts: ${e.toString()}'),
+      );
+    }
+  }
+}
+
+class UsersCountAggregate {
+  final int allUserCount;
+  final int adminCount;
+  final int userCount;
+
+  UsersCountAggregate({
+    required this.allUserCount,
+    required this.adminCount,
+    required this.userCount,
+  });
+
+  Map<String, dynamic> toMap() {
+    return <String, dynamic>{
+      'allUserCount': allUserCount,
+      'adminCount': adminCount,
+      'userCount': userCount,
+    };
+  }
+
+  factory UsersCountAggregate.fromMap(Map<String, dynamic> map) {
+    return UsersCountAggregate(
+      allUserCount: map['allUserCount'] as int,
+      adminCount: map['adminCount'] as int,
+      userCount: map['userCount'] as int,
+    );
+  }
+
+  String toJson() => json.encode(toMap());
+
+  factory UsersCountAggregate.fromJson(String source) =>
+      UsersCountAggregate.fromMap(json.decode(source) as Map<String, dynamic>);
 }

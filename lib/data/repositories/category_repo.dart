@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
@@ -29,21 +27,20 @@ class CategoryRepo {
   CategoryRepo(this._firebaseFirestore, this._cloudinaryService);
 
   Future<Either<ErrorResponse, SuccessResponse<CategoryModel>>> addCategory(
-    CategoryModel newCategory, {
-    File? imageFile,
-  }) async {
+    CreateCategoryDto dto,
+  ) async {
     try {
       final categoriesCollection = _firebaseFirestore.collection(
         _collectionPath,
       );
       final docRef = categoriesCollection.doc();
 
-      String? picture = newCategory.picture;
+      String? picture;
 
-      if (imageFile != null) {
+      if (dto.pictureFile != null) {
         try {
           final uploadResponse = await _cloudinaryService.uploadImage(
-            imageFile: imageFile,
+            imageFile: dto.pictureFile!,
             folder: _cloudinaryFolder,
           );
 
@@ -56,17 +53,21 @@ class CategoryRepo {
         }
       }
 
-      final categoryWithId = newCategory.copyWith(
-        id: docRef.id,
-        picture: picture,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      );
+      final categoryData = dto.toMap();
 
-      await docRef.set(categoryWithId.toMap());
+      categoryData['id'] = docRef.id;
+      if (picture != null) {
+        categoryData['picture'] = picture;
+      }
+      categoryData['createdAt'] = DateTime.now().millisecondsSinceEpoch;
+      categoryData['updatedAt'] = DateTime.now().millisecondsSinceEpoch;
+
+      await docRef.set(categoryData);
+
+      final category = CategoryModel.fromMap(categoryData);
 
       return Right(
-        SuccessResponse(data: categoryWithId, message: 'New categorie added'),
+        SuccessResponse(data: category, message: 'New categorie added'),
       );
     } catch (e) {
       logger.e(e.toString());
@@ -276,86 +277,85 @@ class CategoryRepo {
 
   Future<Either<ErrorResponse, SuccessResponse<CategoryModel>>> updateCategory(
     String id,
-    CategoryModel updatedCategory, {
-    File? imageFile,
+    UpdateCategoryDto dto, {
     bool deleteExistingImage = false,
   }) async {
     try {
-      final categoryResult = await getCategoryById(id);
-      if (categoryResult.isLeft()) {
+      final paymentMethodResult = await getCategoryById(id);
+      if (paymentMethodResult.isLeft()) {
         return Left(ErrorResponse(message: 'Category not found'));
       }
 
-      final existingCategory = categoryResult.getRight().toNullable()!.data;
-      String? picture = updatedCategory.picture ?? existingCategory.picture;
+      final existingCategory =
+          paymentMethodResult.getRight().toNullable()!.data;
+      final updateData = dto.toMap();
+      String? finalImageUrl = existingCategory.picture;
 
-      // * Hapus gambar yang ada di Cloudinary jika diminta
       if (deleteExistingImage && existingCategory.picture != null) {
         try {
-          // * Ekstrak public ID dari URL gambar yang ada
           final existingImageUrl = existingCategory.picture!;
           final uri = Uri.parse(existingImageUrl);
           final pathSegments = uri.pathSegments;
 
-          // * Cari indeks "upload" dalam path
           final uploadIndex = pathSegments.indexOf('upload');
           if (uploadIndex != -1 && uploadIndex < pathSegments.length - 1) {
-            // * Ambil semua segment setelah "upload", kecuali ekstensi file terakhir
             final segments = pathSegments.sublist(uploadIndex + 1);
-
-            // * Gabungkan segments untuk mendapatkan public ID dengan folder
             String fullPath = segments.join('/');
-
-            // * Hilangkan ekstensi file (misal .jpg, .png)
             final lastDotIndex = fullPath.lastIndexOf('.');
             if (lastDotIndex != -1) {
               fullPath = fullPath.substring(0, lastDotIndex);
             }
 
             await _cloudinaryService.deleteImage(fullPath);
-            picture = null;
+            finalImageUrl = null;
           }
         } catch (e) {
           logger.e('Failed to delete existing image: ${e.toString()}');
         }
       }
 
-      if (imageFile != null) {
+      if (dto.pictureFile != null) {
         try {
           final uploadResponse = await _cloudinaryService.uploadImage(
-            imageFile: imageFile,
+            imageFile: dto.pictureFile!,
             folder: _cloudinaryFolder,
           );
 
-          picture = uploadResponse.secureUrl;
+          finalImageUrl = uploadResponse.secureUrl;
         } catch (e) {
-          logger.e('Failed to upload image: ${e.toString()}');
+          logger.e('Failed to upload new image: ${e.toString()}');
           return Left(
-            ErrorResponse(message: 'Failed to upload image: ${e.toString()}'),
+            ErrorResponse(
+              message: 'Failed to upload new image: ${e.toString()}',
+            ),
           );
         }
       }
 
-      final categoryWithUpdatedTimestamp = updatedCategory.copyWith(
-        picture: picture,
-        updatedAt: DateTime.now(),
-      );
+      if (finalImageUrl != null) {
+        updateData['picture'] = finalImageUrl;
+      } else if (deleteExistingImage || dto.pictureFile != null) {
+        updateData['picture'] = null;
+      }
+
+      updateData['updatedAt'] = DateTime.now().millisecondsSinceEpoch;
 
       await _firebaseFirestore
           .collection(_collectionPath)
           .doc(id)
-          .update(categoryWithUpdatedTimestamp.toMap());
+          .update(updateData);
+
+      final updatedDocSnapshot =
+          await _firebaseFirestore.collection(_collectionPath).doc(id).get();
+      final updatedCategory = CategoryModel.fromMap(updatedDocSnapshot.data()!);
 
       return Right(
-        SuccessResponse(
-          data: categoryWithUpdatedTimestamp,
-          message: "Category updated",
-        ),
+        SuccessResponse(data: updatedCategory, message: "Category updated"),
       );
     } catch (e) {
       logger.e(e.toString());
       return Left(
-        ErrorResponse(message: 'Failed to update menu ${e.toString()}'),
+        ErrorResponse(message: 'Failed to update category ${e.toString()}'),
       );
     }
   }

@@ -1,11 +1,14 @@
 import 'package:auto_route/annotations.dart';
+import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:jamal/core/utils/enums.dart';
+import 'package:jamal/core/utils/toast_utils.dart';
 import 'package:jamal/data/models/order_model.dart';
 import 'package:jamal/features/order/providers/order_mutation_provider.dart';
+import 'package:jamal/features/order/providers/order_mutation_state.dart';
 import 'package:jamal/shared/widgets/admin_app_bar.dart';
 import 'package:jamal/shared/widgets/my_end_drawer.dart';
 import 'package:jamal/shared/widgets/my_screen_container.dart';
@@ -59,6 +62,21 @@ class _AdminUpdateOrderScreenState
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<OrderMutationState>(orderMutationProvider, (previous, next) {
+      if (next.errorMessage != null &&
+          (previous?.errorMessage != next.errorMessage)) {
+        ToastUtils.showError(context: context, message: next.errorMessage!);
+        ref.read(orderMutationProvider.notifier).resetErrorMessage();
+      }
+
+      if (next.successMessage != null &&
+          (previous?.successMessage != next.successMessage)) {
+        ToastUtils.showSuccess(context: context, message: next.successMessage!);
+        ref.read(orderMutationProvider.notifier).resetSuccessMessage();
+
+        context.router.pop();
+      }
+    });
     return Scaffold(
       appBar: const AdminAppBar(),
       endDrawer: const MyEndDrawer(),
@@ -67,27 +85,6 @@ class _AdminUpdateOrderScreenState
           child: Consumer(
             builder: (context, ref, child) {
               final mutationState = ref.watch(orderMutationProvider);
-
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (mutationState.successMessage != null) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(mutationState.successMessage!)),
-                  );
-                  ref
-                      .read(orderMutationProvider.notifier)
-                      .resetSuccessMessage();
-                }
-
-                if (mutationState.errorMessage != null) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(mutationState.errorMessage!),
-                      backgroundColor: context.colors.error,
-                    ),
-                  );
-                  ref.read(orderMutationProvider.notifier).resetErrorMessage();
-                }
-              });
 
               return AbsorbPointer(
                 absorbing: mutationState.isLoading,

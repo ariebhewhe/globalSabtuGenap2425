@@ -1,13 +1,16 @@
 import 'dart:io';
 import 'package:auto_route/annotations.dart';
+import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:jamal/core/utils/toast_utils.dart';
 import 'package:jamal/data/models/payment_method_model.dart';
 import 'package:jamal/features/payment_method/providers/payment_method_mutation_provider.dart';
 import 'package:jamal/core/utils/enums.dart';
+import 'package:jamal/features/payment_method/providers/payment_method_mutation_state.dart';
 import 'package:jamal/shared/widgets/admin_app_bar.dart';
 import 'package:jamal/shared/widgets/my_end_drawer.dart';
 import 'package:jamal/shared/widgets/my_screen_container.dart';
@@ -77,23 +80,9 @@ class _AdminPaymentMethodUpsertScreenState
     final bool hasExistingImage = widget.paymentMethod?.logo != null;
 
     if (_selectedImageFile == null && !hasExistingImage && !isAdding) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text(
-            'Please select a new image or ensure an existing one is kept.',
-          ),
-          backgroundColor: context.colors.error,
-        ),
-      );
-      return;
-    }
-
-    if (isAdding && _selectedImageFile == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Please select an image.'),
-          backgroundColor: context.colors.error,
-        ),
+      ToastUtils.showWarning(
+        context: context,
+        message: 'Please select a new image or ensure an existing one is kept.',
       );
       return;
     }
@@ -102,6 +91,14 @@ class _AdminPaymentMethodUpsertScreenState
       final formValues = _formKey.currentState!.value;
 
       if (isAdding) {
+        if (_selectedImageFile == null) {
+          ToastUtils.showWarning(
+            context: context,
+            message: 'Please select an image.',
+          );
+          return;
+        }
+
         final createPaymentMethodDto = CreatePaymentMethodDto(
           name: formValues['name'] as String,
           description: formValues['description'] as String?,
@@ -154,6 +151,25 @@ class _AdminPaymentMethodUpsertScreenState
     final isAdding = widget.paymentMethod == null;
     final hasExistingImage = widget.paymentMethod?.logo != null;
 
+    ref.listen<PaymentMethodMutationState>(paymentMethodMutationProvider, (
+      previous,
+      next,
+    ) {
+      if (next.errorMessage != null &&
+          (previous?.errorMessage != next.errorMessage)) {
+        ToastUtils.showError(context: context, message: next.errorMessage!);
+        ref.read(paymentMethodMutationProvider.notifier).resetErrorMessage();
+      }
+
+      if (next.successMessage != null &&
+          (previous?.successMessage != next.successMessage)) {
+        ToastUtils.showSuccess(context: context, message: next.successMessage!);
+        ref.read(paymentMethodMutationProvider.notifier).resetSuccessMessage();
+
+        context.router.pop();
+      }
+    });
+
     return Scaffold(
       appBar: const AdminAppBar(),
       endDrawer: const MyEndDrawer(),
@@ -162,32 +178,6 @@ class _AdminPaymentMethodUpsertScreenState
           child: Consumer(
             builder: (context, ref, child) {
               final mutationState = ref.watch(paymentMethodMutationProvider);
-
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (mutationState.successMessage != null) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(mutationState.successMessage!)),
-                  );
-
-                  ref
-                      .read(paymentMethodMutationProvider.notifier)
-                      .resetSuccessMessage();
-                }
-
-                if (mutationState.errorMessage != null) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(mutationState.errorMessage!),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-
-                  ref
-                      .read(paymentMethodMutationProvider.notifier)
-                      .resetErrorMessage();
-                }
-              });
-
               final isSubmitting = mutationState.isLoading;
 
               return AbsorbPointer(

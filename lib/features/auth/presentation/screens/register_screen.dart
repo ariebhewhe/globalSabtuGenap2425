@@ -6,6 +6,7 @@ import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:jamal/core/routes/app_router.dart';
 import 'package:jamal/core/utils/enums.dart';
+import 'package:jamal/core/utils/toast_utils.dart';
 import 'package:jamal/features/auth/auth_provider.dart';
 import 'package:jamal/shared/widgets/my_screen_container.dart';
 
@@ -24,64 +25,49 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     _formKey.currentState?.reset();
   }
 
-  void _submitForm() async {
+  void _submitForm() {
     final isValid = _formKey.currentState?.saveAndValidate() ?? false;
+    if (!isValid) return;
 
-    if (isValid) {
-      final formValues = _formKey.currentState!.value;
-      final String password = formValues['password'] as String;
-      final String confirmPassword = formValues['confirmPassword'] as String;
+    final formValues = _formKey.currentState!.value;
+    final String password = formValues['password'] as String;
+    final String confirmPassword = formValues['confirmPassword'] as String;
 
-      if (password != confirmPassword) {
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text(
-              "Password dan konfirmasi password tidak cocok.",
-            ),
-            backgroundColor: context.colors.error,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-          ),
-        );
-        return;
-      }
-
-      await ref
-          .read(authMutationProvider.notifier)
-          .register(
-            username: formValues['username'] as String,
-            email: formValues['email'] as String,
-            password: password,
-          );
-
-      if (!mounted) return;
-      final authState = ref.read(authMutationProvider);
-
-      if (authState.userModel != null) {
-        _resetForm();
-
-        context.replaceRoute(const LoginRoute());
-      } else if (authState.errorMessage != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(authState.errorMessage!),
-            backgroundColor: context.colors.error,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-          ),
-        );
-        ref.read(authMutationProvider.notifier).resetErrorMessage();
-      }
+    if (password != confirmPassword) {
+      ToastUtils.showWarning(
+        context: context,
+        message: "Password dan konfirmasi password tidak cocok.",
+      );
+      return;
     }
+
+    ref
+        .read(authMutationProvider.notifier)
+        .register(
+          username: formValues['username'] as String,
+          email: formValues['email'] as String,
+          password: password,
+        );
   }
 
   @override
   Widget build(BuildContext context) {
+    ref.listen(authMutationProvider, (previous, next) {
+      if (next.errorMessage != null) {
+        ToastUtils.showError(context: context, message: next.errorMessage!);
+        ref.read(authMutationProvider.notifier).resetErrorMessage();
+      }
+
+      if (next.userModel != null) {
+        ToastUtils.showSuccess(
+          context: context,
+          message: 'Registrasi berhasil! Silakan login.',
+        );
+        _resetForm();
+        context.replaceRoute(const LoginRoute());
+      }
+    });
+
     return Scaffold(
       backgroundColor: context.theme.scaffoldBackgroundColor,
       appBar: AppBar(
@@ -141,7 +127,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                                 ),
                           ),
                           const SizedBox(height: 32),
-
                           FormBuilderTextField(
                             name: 'username',
                             style: context.textStyles.bodyLarge?.copyWith(
@@ -175,7 +160,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                             ]),
                           ),
                           const SizedBox(height: 20),
-
                           FormBuilderTextField(
                             name: 'email',
                             keyboardType: TextInputType.emailAddress,
@@ -209,7 +193,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                             ]),
                           ),
                           const SizedBox(height: 20),
-
                           FormBuilderTextField(
                             name: 'password',
                             obscureText: true,
@@ -244,7 +227,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                             ]),
                           ),
                           const SizedBox(height: 20),
-
                           FormBuilderTextField(
                             name: 'confirmPassword',
                             obscureText: true,
@@ -286,7 +268,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                             ]),
                           ),
                           const SizedBox(height: 28),
-
                           SizedBox(
                             width: double.infinity,
                             child: ElevatedButton(

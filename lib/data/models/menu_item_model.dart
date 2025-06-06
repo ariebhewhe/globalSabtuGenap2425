@@ -1,28 +1,28 @@
+// ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:convert';
 import 'dart:io';
 
 import 'package:jamal/core/abstractions/base_model.dart';
+import 'package:jamal/data/models/category_model.dart';
 
 class MenuItemModel extends BaseModel {
   final String name;
   final String description;
   final double price;
-  final String categoryId;
+  final String? categoryId;
   final String? imageUrl;
   final bool isAvailable;
-  final bool isVegetarian;
-  final int spiceLevel;
+  final CategoryModel? category;
 
   MenuItemModel({
     required String id,
     required this.name,
     required this.description,
     required this.price,
-    required this.categoryId,
+    this.categoryId,
     this.imageUrl,
     required this.isAvailable,
-    required this.isVegetarian,
-    required this.spiceLevel,
+    this.category, // Ditambahkan di sini
     required DateTime createdAt,
     required DateTime updatedAt,
   }) : super(id: id, createdAt: createdAt, updatedAt: updatedAt);
@@ -35,8 +35,7 @@ class MenuItemModel extends BaseModel {
     String? categoryId,
     String? imageUrl,
     bool? isAvailable,
-    bool? isVegetarian,
-    int? spiceLevel,
+    CategoryModel? category, // Ditambahkan di sini
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -48,8 +47,7 @@ class MenuItemModel extends BaseModel {
       categoryId: categoryId ?? this.categoryId,
       imageUrl: imageUrl ?? this.imageUrl,
       isAvailable: isAvailable ?? this.isAvailable,
-      isVegetarian: isVegetarian ?? this.isVegetarian,
-      spiceLevel: spiceLevel ?? this.spiceLevel,
+      category: category ?? this.category, // Ditambahkan di sini
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -65,8 +63,7 @@ class MenuItemModel extends BaseModel {
       'categoryId': categoryId,
       'imageUrl': imageUrl,
       'isAvailable': isAvailable,
-      'isVegetarian': isVegetarian,
-      'spiceLevel': spiceLevel,
+      'category': category?.toMap(), // Ditambahkan di sini
       'createdAt': createdAt.millisecondsSinceEpoch,
       'updatedAt': updatedAt.millisecondsSinceEpoch,
     };
@@ -79,11 +76,15 @@ class MenuItemModel extends BaseModel {
       name: map['name'] as String,
       description: map['description'] as String,
       price: map['price'] as double,
-      categoryId: map['categoryId'] as String,
+      categoryId:
+          map['categoryId'] != null ? map['categoryId'] as String : null,
       imageUrl: map['imageUrl'] != null ? map['imageUrl'] as String : null,
       isAvailable: map['isAvailable'] as bool,
-      isVegetarian: map['isVegetarian'] as bool,
-      spiceLevel: map['spiceLevel'] as int,
+      // Ditambahkan di sini
+      category:
+          map['category'] != null
+              ? CategoryModel.fromMap(map['category'] as Map<String, dynamic>)
+              : null,
       createdAt: DateTime.fromMillisecondsSinceEpoch(map['createdAt'] as int),
       updatedAt: DateTime.fromMillisecondsSinceEpoch(map['updatedAt'] as int),
     );
@@ -98,7 +99,7 @@ class MenuItemModel extends BaseModel {
 
   @override
   String toString() {
-    return 'MenuItemModel(id: $id, name: $name, description: $description, price: $price, categoryId: $categoryId, imageUrl: $imageUrl, isAvailable: $isAvailable, isVegetarian: $isVegetarian, spiceLevel: $spiceLevel, createdAt: $createdAt, updatedAt: $updatedAt)';
+    return 'MenuItemModel(id: $id, name: $name, description: $description, price: $price, categoryId: $categoryId, imageUrl: $imageUrl, isAvailable: $isAvailable, category: $category, createdAt: $createdAt, updatedAt: $updatedAt)';
   }
 
   @override
@@ -112,8 +113,7 @@ class MenuItemModel extends BaseModel {
         other.categoryId == categoryId &&
         other.imageUrl == imageUrl &&
         other.isAvailable == isAvailable &&
-        other.isVegetarian == isVegetarian &&
-        other.spiceLevel == spiceLevel &&
+        other.category == category && // Ditambahkan di sini
         other.createdAt == createdAt &&
         other.updatedAt == updatedAt;
   }
@@ -127,8 +127,7 @@ class MenuItemModel extends BaseModel {
         categoryId.hashCode ^
         imageUrl.hashCode ^
         isAvailable.hashCode ^
-        isVegetarian.hashCode ^
-        spiceLevel.hashCode ^
+        category.hashCode ^ // Ditambahkan di sini
         createdAt.hashCode ^
         updatedAt.hashCode;
   }
@@ -138,21 +137,17 @@ class CreateMenuItemDto {
   final String name;
   final String description;
   final double price;
-  final String categoryId;
+  final String? categoryId;
   File? imageFile;
   final bool isAvailable;
-  final bool isVegetarian;
-  final int spiceLevel;
 
   CreateMenuItemDto({
     required this.name,
     required this.description,
     required this.price,
-    required this.categoryId,
+    this.categoryId,
     this.imageFile,
     required this.isAvailable,
-    required this.isVegetarian,
-    required this.spiceLevel,
   });
 
   Map<String, dynamic> toMap() {
@@ -162,12 +157,24 @@ class CreateMenuItemDto {
       'price': price,
       'categoryId': categoryId,
       'isAvailable': isAvailable,
-      'isVegetarian': isVegetarian,
-      'spiceLevel': spiceLevel,
     };
   }
 
   String toJson() => json.encode(toMap());
+
+  factory CreateMenuItemDto.fromMap(Map<String, dynamic> map) {
+    return CreateMenuItemDto(
+      name: map['name'] as String,
+      description: map['description'] as String,
+      price: map['price'] as double,
+      categoryId:
+          map['categoryId'] != null ? map['categoryId'] as String : null,
+      isAvailable: map['isAvailable'] as bool,
+    );
+  }
+
+  factory CreateMenuItemDto.fromJson(String source) =>
+      CreateMenuItemDto.fromMap(json.decode(source) as Map<String, dynamic>);
 }
 
 class UpdateMenuItemDto {
@@ -177,8 +184,6 @@ class UpdateMenuItemDto {
   final String? categoryId;
   File? imageFile;
   final bool? isAvailable;
-  final bool? isVegetarian;
-  final int? spiceLevel;
 
   UpdateMenuItemDto({
     this.name,
@@ -187,8 +192,6 @@ class UpdateMenuItemDto {
     this.categoryId,
     this.imageFile,
     this.isAvailable,
-    this.isVegetarian,
-    this.spiceLevel,
   });
 
   Map<String, dynamic> toMap() {
@@ -198,8 +201,6 @@ class UpdateMenuItemDto {
     if (price != null) map['price'] = price;
     if (categoryId != null) map['categoryId'] = categoryId;
     if (isAvailable != null) map['isAvailable'] = isAvailable;
-    if (isVegetarian != null) map['isVegetarian'] = isVegetarian;
-    if (spiceLevel != null) map['spiceLevel'] = spiceLevel;
     return map;
   }
 
@@ -211,12 +212,16 @@ class DenormalizedMenuItemModel {
   final String name;
   final double price;
   final String? imageUrl;
+  final String? categoryId;
+  final CategoryModel? category;
 
   DenormalizedMenuItemModel({
     required this.id,
     required this.name,
     required this.price,
     this.imageUrl,
+    this.categoryId,
+    this.category,
   });
 
   DenormalizedMenuItemModel copyWith({
@@ -224,12 +229,16 @@ class DenormalizedMenuItemModel {
     String? name,
     double? price,
     String? imageUrl,
+    String? categoryId,
+    CategoryModel? category,
   }) {
     return DenormalizedMenuItemModel(
       id: id ?? this.id,
       name: name ?? this.name,
       price: price ?? this.price,
       imageUrl: imageUrl ?? this.imageUrl,
+      categoryId: categoryId ?? this.categoryId,
+      category: category ?? this.category,
     );
   }
 
@@ -239,6 +248,8 @@ class DenormalizedMenuItemModel {
       'name': name,
       'price': price,
       'imageUrl': imageUrl,
+      'categoryId': categoryId,
+      'category': category?.toMap(),
     };
   }
 
@@ -248,6 +259,12 @@ class DenormalizedMenuItemModel {
       name: map['name'] as String,
       price: map['price'] as double,
       imageUrl: map['imageUrl'] != null ? map['imageUrl'] as String : null,
+      categoryId:
+          map['categoryId'] != null ? map['categoryId'] as String : null,
+      category:
+          map['category'] != null
+              ? CategoryModel.fromMap(map['category'] as Map<String, dynamic>)
+              : null,
     );
   }
 
@@ -260,7 +277,7 @@ class DenormalizedMenuItemModel {
 
   @override
   String toString() {
-    return 'DenormalizedMenuItemModel(id: $id, name: $name, price: $price, imageUrl: $imageUrl)';
+    return 'DenormalizedMenuItemModel(id: $id, name: $name, price: $price, imageUrl: $imageUrl, categoryId: $categoryId, category: $category)';
   }
 
   @override
@@ -270,12 +287,19 @@ class DenormalizedMenuItemModel {
     return other.id == id &&
         other.name == name &&
         other.price == price &&
-        other.imageUrl == imageUrl;
+        other.imageUrl == imageUrl &&
+        other.categoryId == categoryId &&
+        other.category == category;
   }
 
   @override
   int get hashCode {
-    return id.hashCode ^ name.hashCode ^ price.hashCode ^ imageUrl.hashCode;
+    return id.hashCode ^
+        name.hashCode ^
+        price.hashCode ^
+        imageUrl.hashCode ^
+        categoryId.hashCode ^
+        category.hashCode;
   }
 
   factory DenormalizedMenuItemModel.fromMenuItemModel(MenuItemModel menuItem) {

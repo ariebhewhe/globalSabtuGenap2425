@@ -10,8 +10,8 @@ import 'package:jamal/core/utils/logger.dart';
 import 'package:jamal/firebase_options.dart';
 import 'package:jamal/providers.dart';
 import 'package:jamal/shared/providers/theme_provider.dart';
-
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:bot_toast/bot_toast.dart';
 
 final logger = AppLogger();
 
@@ -71,12 +71,16 @@ class MyApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final appRouter = ref.watch(appRouterProvider);
     final themeMode = ref.watch(themeProvider);
+    final botToastBuilder = BotToastInit();
 
     return MaterialApp.router(
       debugShowCheckedModeBanner: false,
       title: "Jamal",
       theme: themeMode.getThemeData(context),
-      routerConfig: appRouter.config(),
+      builder: (context, child) => botToastBuilder(context, child),
+      routerConfig: appRouter.config(
+        navigatorObservers: () => [BotToastNavigatorObserver()],
+      ),
     );
   }
 }

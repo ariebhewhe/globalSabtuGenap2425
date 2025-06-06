@@ -17,50 +17,65 @@ class MenuItemCard extends StatelessWidget {
       child: Card(
         elevation: 4.0,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
+        clipBehavior: Clip.antiAlias, // Memastikan konten di-clip sesuai shape
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Expanded(
-              child: ClipRRect(
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(8.0),
-                ),
-                child:
-                    (menuItem.imageUrl != null && menuItem.imageUrl!.isNotEmpty)
-                        ? CachedNetworkImage(
-                          imageUrl: menuItem.imageUrl!,
-                          fit: BoxFit.cover,
-                          placeholder:
-                              (context, url) => Center(
-                                child: CircularProgressIndicator(
-                                  color: context.colors.primary,
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  (menuItem.imageUrl != null && menuItem.imageUrl!.isNotEmpty)
+                      ? CachedNetworkImage(
+                        imageUrl: menuItem.imageUrl!,
+                        fit: BoxFit.cover,
+                        placeholder:
+                            (context, url) => Center(
+                              child: CircularProgressIndicator(
+                                color: context.colors.primary,
+                              ),
+                            ),
+                        errorWidget:
+                            (context, url, error) => Center(
+                              child: Icon(
+                                Icons.fastfood_outlined,
+                                size: 40,
+                                color: context.colors.onSurface.withOpacity(
+                                  0.5,
                                 ),
                               ),
-                          errorWidget:
-                              (context, url, error) => Center(
-                                child: Icon(
-                                  Icons.fastfood_outlined,
-                                  size: 40,
-                                  color: context.colors.onSurface.withOpacity(
-                                    0.5,
-                                  ),
-                                ),
-                              ),
-                        )
-                        : Center(
+                            ),
+                      )
+                      : Center(
+                        child: Icon(
+                          Icons.fastfood_outlined,
+                          size: 40,
+                          color: context.colors.onSurface.withOpacity(0.5),
+                        ),
+                      ),
+                  if (!menuItem.isAvailable)
+                    Positioned.fill(
+                      child: Container(
+                        color: Colors.black.withOpacity(0.5),
+                        child: Center(
                           child: Text(
-                            'No Image Available',
-                            style: context.textStyles.bodyMedium?.copyWith(
-                              color: context.colors.onSurface.withOpacity(0.5),
+                            'Tidak Tersedia',
+                            style: context.textStyles.titleSmall?.copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
                         ),
+                      ),
+                    ),
+                ],
               ),
             ),
             Padding(
               padding: const EdgeInsets.all(8.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
                     menuItem.name,
@@ -78,49 +93,6 @@ class MenuItemCard extends StatelessWidget {
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-                  const SizedBox(height: 4.0),
-                  Row(
-                    children: [
-                      Icon(
-                        menuItem.isVegetarian
-                            ? Icons.local_florist
-                            : Icons.fastfood,
-                        size: 16,
-                        color:
-                            menuItem.isVegetarian
-                                ? Colors.green
-                                : context.colors.tertiary,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        menuItem.isVegetarian ? 'Vegetarian' : 'Non-Veg',
-                        style: context.textStyles.bodySmall,
-                      ),
-                      const Spacer(),
-                      if (menuItem.spiceLevel > 0)
-                        Row(
-                          children: List.generate(
-                            menuItem.spiceLevel,
-                            (i) => Icon(
-                              Icons.local_fire_department,
-                              size: 16,
-                              color: context.colors.tertiary,
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                  if (!menuItem.isAvailable)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 4.0),
-                      child: Text(
-                        'Tidak Tersedia',
-                        style: context.textStyles.bodySmall?.copyWith(
-                          color: context.colors.error,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
                 ],
               ),
             ),

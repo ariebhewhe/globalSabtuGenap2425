@@ -94,17 +94,6 @@ class PopularMenuItemCard extends StatelessWidget {
                       color: Theme.of(context).primaryColor,
                     ),
                   ),
-
-                  // Spice level
-                  Row(
-                    children: [
-                      const Text(
-                        'Spice Level: ',
-                        style: TextStyle(fontSize: 12, color: Colors.grey),
-                      ),
-                      _buildSpiceLevel(),
-                    ],
-                  ),
                 ],
               ),
             ),
@@ -131,20 +120,6 @@ class PopularMenuItemCard extends StatelessWidget {
               menuItem.isAvailable
                   ? Colors.green.shade800
                   : Colors.red.shade800,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSpiceLevel() {
-    return Row(
-      children: List.generate(
-        3,
-        (index) => Icon(
-          Icons.local_fire_department,
-          size: 16,
-          color:
-              index < menuItem.spiceLevel ? Colors.red : Colors.grey.shade300,
         ),
       ),
     );

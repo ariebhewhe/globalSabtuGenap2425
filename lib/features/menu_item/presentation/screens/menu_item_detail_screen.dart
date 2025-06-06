@@ -6,7 +6,6 @@ import 'package:jamal/core/utils/enums.dart';
 import 'package:jamal/data/models/cart_item_model.dart';
 import 'package:jamal/data/models/menu_item_model.dart';
 import 'package:jamal/features/cart/providers/cart_item_mutation_provider.dart';
-import 'package:jamal/shared/widgets/admin_app_bar.dart';
 import 'package:jamal/shared/widgets/my_end_drawer.dart';
 import 'package:jamal/shared/widgets/my_screen_container.dart';
 import 'package:jamal/shared/widgets/user_app_bar.dart';
@@ -22,9 +21,6 @@ class MenuItemDetailScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final Color availableColor = context.colors.primary;
     final Color unavailableColor = context.colors.error;
-    final Color vegetarianColor = context.colors.secondary;
-    final Color nonVegetarianColor = context.colors.tertiary;
-    final Color spiceColor = context.colors.error;
 
     return Scaffold(
       appBar: const UserAppBar(),
@@ -86,7 +82,6 @@ class MenuItemDetailScreen extends StatelessWidget {
                   ),
                 ),
               const SizedBox(height: 24.0),
-
               Text(
                 menuItem.name,
                 style: context.textStyles.headlineMedium?.copyWith(
@@ -94,7 +89,6 @@ class MenuItemDetailScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 8.0),
-
               Text(
                 'Harga: Rp ${menuItem.price.toStringAsFixed(0)}',
                 style: context.textStyles.titleLarge?.copyWith(
@@ -103,7 +97,6 @@ class MenuItemDetailScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 16.0),
-
               Text(
                 'Deskripsi:',
                 style: context.textStyles.titleMedium?.copyWith(
@@ -118,13 +111,11 @@ class MenuItemDetailScreen extends StatelessWidget {
                 style: context.textStyles.bodyLarge,
               ),
               const SizedBox(height: 16.0),
-
               Text(
                 'Kategori: ${menuItem.categoryId}',
                 style: context.textStyles.bodyMedium,
               ),
               const SizedBox(height: 12.0),
-
               Row(
                 children: [
                   Icon(
@@ -150,61 +141,7 @@ class MenuItemDetailScreen extends StatelessWidget {
                   ),
                 ],
               ),
-              const SizedBox(height: 8.0),
-
-              Row(
-                children: [
-                  Icon(
-                    menuItem.isVegetarian
-                        ? Icons.eco_outlined
-                        : Icons.restaurant_menu_outlined,
-                    color:
-                        menuItem.isVegetarian
-                            ? vegetarianColor
-                            : nonVegetarianColor,
-                    size: 20,
-                  ),
-                  const SizedBox(width: 8.0),
-                  Text(
-                    menuItem.isVegetarian ? 'Vegetarian' : 'Non-Vegetarian',
-                    style: context.textStyles.bodyLarge?.copyWith(
-                      color:
-                          menuItem.isVegetarian
-                              ? vegetarianColor
-                              : nonVegetarianColor,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8.0),
-
-              if (menuItem.spiceLevel > 0)
-                Row(
-                  children: [
-                    Text(
-                      'Tingkat Pedas: ',
-                      style: context.textStyles.bodyLarge,
-                    ),
-                    Row(
-                      children: List.generate(
-                        menuItem.spiceLevel,
-                        (i) => Icon(
-                          Icons.local_fire_department,
-                          size: 20,
-                          color: spiceColor,
-                        ),
-                      ),
-                    ),
-                    Text(
-                      ' (${menuItem.spiceLevel}/5)',
-                      style: context.textStyles.bodyLarge?.copyWith(
-                        color: spiceColor,
-                      ),
-                    ),
-                  ],
-                ),
               const SizedBox(height: 24.0),
-
               Text(
                 'Ditambahkan: ${menuItem.createdAt.toLocal().toString().split('.')[0]}',
                 style: context.textStyles.labelSmall?.copyWith(
@@ -246,37 +183,43 @@ class MenuItemDetailScreen extends StatelessWidget {
             builder: (context, ref, child) {
               return ElevatedButton.icon(
                 icon: const Icon(Icons.shopping_cart_checkout),
-                onPressed: () {
-                  ref
-                      .read(cartItemMutationProvider.notifier)
-                      .addCartItem(
-                        CreateCartItemDto(
-                          menuItemId: menuItem.id,
-                          quantity: 1,
-                          menuItem: DenormalizedMenuItemModel(
-                            id: menuItem.id,
-                            name: menuItem.name,
-                            price: menuItem.price,
-                            imageUrl: menuItem.imageUrl,
-                          ),
-                        ),
-                      );
+                onPressed:
+                    !menuItem.isAvailable
+                        ? null
+                        : () {
+                          ref
+                              .read(cartItemMutationProvider.notifier)
+                              .addCartItem(
+                                CreateCartItemDto(
+                                  menuItemId: menuItem.id,
+                                  quantity: 1,
+                                  menuItem: DenormalizedMenuItemModel(
+                                    id: menuItem.id,
+                                    name: menuItem.name,
+                                    price: menuItem.price,
+                                    imageUrl: menuItem.imageUrl,
+                                  ),
+                                ),
+                              );
 
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        '${menuItem.name} ditambahkan ke keranjang!',
-                      ),
-                      backgroundColor: context.colors.primary,
-                      duration: const Duration(seconds: 2),
-                    ),
-                  );
-                },
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                '${menuItem.name} ditambahkan ke keranjang!',
+                              ),
+                              backgroundColor: context.colors.primary,
+                              duration: const Duration(seconds: 2),
+                            ),
+                          );
+                        },
                 label: const Text('Keranjang'),
-
                 style: ElevatedButton.styleFrom(
                   backgroundColor: context.colors.secondary,
                   foregroundColor: context.colors.onSecondary,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  textStyle: context.textStyles.titleSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               );
             },
