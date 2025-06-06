@@ -8,8 +8,14 @@ import 'package:jamal/data/models/payment_method_model.dart';
 class PaymentMethodTile extends StatelessWidget {
   final PaymentMethodModel paymentMethod;
   final VoidCallback? onTap;
+  final void Function()? onLongPress;
 
-  const PaymentMethodTile({super.key, required this.paymentMethod, this.onTap});
+  const PaymentMethodTile({
+    super.key,
+    required this.paymentMethod,
+    this.onTap,
+    this.onLongPress,
+  });
 
   String _formatCurrency(double amount) {
     final format = NumberFormat.currency(
@@ -71,6 +77,7 @@ class PaymentMethodTile extends StatelessWidget {
 
     return Card(
       child: InkWell(
+        onLongPress: onLongPress,
         onTap: onTap,
         borderRadius:
             cardTheme.shape is RoundedRectangleBorder

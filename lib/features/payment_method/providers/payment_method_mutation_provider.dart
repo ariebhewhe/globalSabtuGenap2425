@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:jamal/data/models/payment_method_model.dart';
 import 'package:jamal/data/repositories/payment_method_repo.dart';
@@ -93,6 +91,49 @@ class PaymentMethodMutationNotifier
         // * Kalo delete clear active item id
         final activeId = _ref.read(activePaymentMethodIdProvider);
         if (activeId == id) {
+          _ref.read(activePaymentMethodIdProvider.notifier).state = null;
+        }
+      },
+    );
+  }
+
+  Future<void> batchAddPaymentMethods(List<CreatePaymentMethodDto> dtos) async {
+    state = state.copyWith(isLoading: true);
+    final result = await _paymentMethodRepo.batchAddPaymentMethods(dtos);
+    result.match(
+      (error) =>
+          state = state.copyWith(isLoading: false, errorMessage: error.message),
+      (success) {
+        state = state.copyWith(
+          isLoading: false,
+          successMessage: success.message,
+        );
+        _ref.invalidate(paymentMethodsProvider);
+      },
+    );
+  }
+
+  Future<void> batchDeletePaymentMethods(
+    List<String> ids, {
+    bool deleteImages = true,
+  }) async {
+    state = state.copyWith(isLoading: true);
+    final result = await _paymentMethodRepo.batchDeletePaymentMethods(
+      ids,
+      deleteImages: deleteImages,
+    );
+    result.match(
+      (error) =>
+          state = state.copyWith(isLoading: false, errorMessage: error.message),
+      (success) {
+        state = state.copyWith(
+          isLoading: false,
+          successMessage: success.message,
+        );
+        _ref.invalidate(paymentMethodsProvider);
+
+        final activeId = _ref.read(activePaymentMethodIdProvider);
+        if (activeId != null && ids.contains(activeId)) {
           _ref.read(activePaymentMethodIdProvider.notifier).state = null;
         }
       },

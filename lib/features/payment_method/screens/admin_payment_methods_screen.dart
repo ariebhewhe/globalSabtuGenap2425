@@ -4,7 +4,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:jamal/core/routes/app_router.dart';
 import 'package:jamal/core/theme/app_theme.dart';
 import 'package:jamal/core/utils/enums.dart';
+import 'package:jamal/core/utils/toast_utils.dart';
 import 'package:jamal/data/models/payment_method_model.dart';
+import 'package:jamal/features/payment_method/providers/payment_method_mutation_provider.dart'; // Asumsi provider ini ada
+import 'package:jamal/features/payment_method/providers/payment_method_mutation_state.dart';
 import 'package:jamal/features/payment_method/providers/payment_methods_provider.dart';
 import 'package:jamal/features/payment_method/providers/search_payment_methods_provider.dart';
 import 'package:jamal/features/payment_method/widgets/payment_method_tile.dart';
@@ -27,6 +30,9 @@ class _AdminPaymentMethodsScreenState
   final ScrollController _scrollController = ScrollController();
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
+
+  bool _isSelectionMode = false;
+  final Set<String> _selectedPaymentMethodIds = {};
 
   String _selectedSearchBy = 'name';
   final List<String> _searchByOptions = ['name', 'description'];
@@ -116,11 +122,238 @@ class _AdminPaymentMethodsScreenState
   }
 
   Future<void> _refreshData() async {
+    if (_isSelectionMode) _exitSelectionMode();
+
     if (isSearching) {
-      ref.read(searchPaymentMethodsProvider.notifier).refreshPaymentMethods();
+      await ref
+          .read(searchPaymentMethodsProvider.notifier)
+          .refreshPaymentMethods();
     } else {
-      ref.read(paymentMethodsProvider.notifier).refreshPaymentMethods();
+      await ref.read(paymentMethodsProvider.notifier).refreshPaymentMethods();
     }
+  }
+
+  void _enterSelectionMode(String paymentMethodId) {
+    if (_isSelectionMode) return;
+    setState(() {
+      _isSelectionMode = true;
+      _selectedPaymentMethodIds.add(paymentMethodId);
+    });
+  }
+
+  void _exitSelectionMode() {
+    setState(() {
+      _isSelectionMode = false;
+      _selectedPaymentMethodIds.clear();
+    });
+  }
+
+  void _onSelectItem(String paymentMethodId) {
+    setState(() {
+      if (_selectedPaymentMethodIds.contains(paymentMethodId)) {
+        _selectedPaymentMethodIds.remove(paymentMethodId);
+      } else {
+        _selectedPaymentMethodIds.add(paymentMethodId);
+      }
+      if (_selectedPaymentMethodIds.isEmpty) {
+        _isSelectionMode = false;
+      }
+    });
+  }
+
+  void _deleteSelectedItems() {
+    showDialog(
+      context: context,
+      builder:
+          (ctx) => AlertDialog(
+            title: const Text('Konfirmasi Hapus'),
+            content: Text(
+              'Anda yakin ingin menghapus ${_selectedPaymentMethodIds.length} metode pembayaran yang dipilih?',
+            ),
+            actions: [
+              TextButton(
+                child: const Text('Batal'),
+                onPressed: () => Navigator.of(ctx).pop(),
+              ),
+              FilledButton(
+                child: const Text('Hapus'),
+                style: FilledButton.styleFrom(backgroundColor: Colors.red),
+                onPressed: () {
+                  ref
+                      .read(paymentMethodMutationProvider.notifier)
+                      .batchDeletePaymentMethods(
+                        _selectedPaymentMethodIds.toList(),
+                      );
+                  Navigator.of(ctx).pop();
+                  _exitSelectionMode();
+                },
+              ),
+            ],
+          ),
+    );
+  }
+
+  void _deleteAllItems() {
+    final allItemIds = paymentMethods.map((item) => item.id).toList();
+
+    if (allItemIds.isEmpty) {
+      ToastUtils.showError(
+        context: context,
+        message: 'Tidak ada item untuk dihapus',
+      );
+      return;
+    }
+
+    showDialog(
+      context: context,
+      builder:
+          (ctx) => AlertDialog(
+            title: const Text('Konfirmasi Hapus Semua'),
+            content: Text(
+              'Anda yakin ingin menghapus SEMUA ${allItemIds.length} metode pembayaran? Tindakan ini tidak dapat dibatalkan.',
+            ),
+            actions: [
+              TextButton(
+                child: const Text('Batal'),
+                onPressed: () => Navigator.of(ctx).pop(),
+              ),
+              FilledButton(
+                child: const Text('Hapus Semua'),
+                style: FilledButton.styleFrom(backgroundColor: Colors.red),
+                onPressed: () {
+                  ref
+                      .read(paymentMethodMutationProvider.notifier)
+                      .batchDeletePaymentMethods(allItemIds);
+                  Navigator.of(ctx).pop();
+                  if (_isSelectionMode) _exitSelectionMode();
+                },
+              ),
+            ],
+          ),
+    );
+  }
+
+  void _showUtilityBottomSheet() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return Container(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 20),
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              Text(
+                'Payment Method Utilities',
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 20),
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).primaryColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(Icons.add, color: Theme.of(context).primaryColor),
+                ),
+                title: const Text('Add Payment Method'),
+                subtitle: const Text('Tambah metode pembayaran baru'),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  context.pushRoute(AdminPaymentMethodUpsertRoute());
+                },
+              ),
+              const Divider(),
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color:
+                        _isSelectionMode
+                            ? Colors.orange.withOpacity(0.1)
+                            : Colors.blue.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    _isSelectionMode ? Icons.check_circle : Icons.select_all,
+                    color: _isSelectionMode ? Colors.orange : Colors.blue,
+                  ),
+                ),
+                title: Text(
+                  _isSelectionMode ? 'Exit Selection Mode' : 'Select Items',
+                ),
+                subtitle: Text(
+                  _isSelectionMode
+                      ? 'Keluar dari mode seleksi'
+                      : 'Masuk ke mode seleksi untuk menghapus item',
+                ),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  if (_isSelectionMode) {
+                    _exitSelectionMode();
+                  } else {
+                    setState(() {
+                      _isSelectionMode = true;
+                    });
+                  }
+                },
+              ),
+              const Divider(),
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.red.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(Icons.delete_forever, color: Colors.red),
+                ),
+                title: const Text('Delete All Items'),
+                subtitle: const Text('Hapus semua metode pembayaran'),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  _deleteAllItems();
+                },
+              ),
+              const SizedBox(height: 20),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  AppBar _buildSelectionAppBar() {
+    return AppBar(
+      leading: IconButton(
+        icon: const Icon(Icons.close),
+        onPressed: _exitSelectionMode,
+      ),
+      title: Text('${_selectedPaymentMethodIds.length} dipilih'),
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.delete_outline),
+          onPressed:
+              _selectedPaymentMethodIds.isNotEmpty
+                  ? _deleteSelectedItems
+                  : null,
+        ),
+      ],
+    );
   }
 
   bool get isLoading {
@@ -160,9 +393,25 @@ class _AdminPaymentMethodsScreenState
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<PaymentMethodMutationState>(paymentMethodMutationProvider, (
+      _,
+      state,
+    ) {
+      if (state.successMessage != null) {
+        ToastUtils.showSuccess(
+          context: context,
+          message: state.successMessage!,
+        );
+        ref.read(paymentMethodMutationProvider.notifier).resetSuccessMessage();
+      }
+      if (state.errorMessage != null) {
+        ToastUtils.showError(context: context, message: state.errorMessage!);
+        ref.read(paymentMethodMutationProvider.notifier).resetErrorMessage();
+      }
+    });
+
     return GestureDetector(
       onTap: () {
-        // * Cara ini akan menghilangkan fokus dari widget apapun yang sedang fokus
         FocusScopeNode currentFocus = FocusScope.of(context);
         if (!currentFocus.hasPrimaryFocus &&
             currentFocus.focusedChild != null) {
@@ -170,25 +419,18 @@ class _AdminPaymentMethodsScreenState
         }
       },
       child: Scaffold(
-        appBar: const AdminAppBar(),
-        endDrawer: const MyEndDrawer(),
-        floatingActionButton: SafeArea(
-          child: Container(
-            decoration: BoxDecoration(
-              color: context.theme.primaryColor,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: IconButton(
-              onPressed:
-                  () => context.pushRoute(AdminPaymentMethodUpsertRoute()),
-              icon: const Icon(Icons.add),
-            ),
-          ),
+        appBar:
+            _isSelectionMode ? _buildSelectionAppBar() : const AdminAppBar(),
+        endDrawer: _isSelectionMode ? null : const MyEndDrawer(),
+        floatingActionButton: FloatingActionButton(
+          onPressed: _showUtilityBottomSheet,
+          child: const Icon(Icons.more_vert),
+          tooltip: 'Payment Method Utilities',
         ),
         body: MyScreenContainer(
           child: Consumer(
             builder: (context, ref, child) {
-              const int skeletonItemCount = 6;
+              const int skeletonItemCount = 8;
 
               return RefreshIndicator(
                 onRefresh: _refreshData,
@@ -203,7 +445,7 @@ class _AdminPaymentMethodsScreenState
                             controller: _searchController,
                             focusNode: _searchFocusNode,
                             decoration: InputDecoration(
-                              hintText: 'Search paymentMethods...',
+                              hintText: 'Search payment methods...',
                               prefixIcon: Icon(
                                 Icons.search,
                                 color: context.textStyles.bodyMedium?.color,
@@ -252,7 +494,6 @@ class _AdminPaymentMethodsScreenState
                         ),
                       ],
                     ),
-
                     AnimatedContainer(
                       duration: const Duration(milliseconds: 300),
                       height: _showFilters ? null : 0,
@@ -410,7 +651,6 @@ class _AdminPaymentMethodsScreenState
                         ),
                       ),
                     ),
-
                     if (isSearching ||
                         _selectedOrderBy != 'createdAt' ||
                         !_isDescending)
@@ -453,7 +693,6 @@ class _AdminPaymentMethodsScreenState
                           ],
                         ),
                       ),
-
                     if (errorMessage != null)
                       Container(
                         margin: const EdgeInsets.symmetric(
@@ -494,9 +733,7 @@ class _AdminPaymentMethodsScreenState
                           ],
                         ),
                       ),
-
                     const SizedBox(height: 16),
-
                     Expanded(
                       child: _buildPaymentMethodsList(skeletonItemCount),
                     ),
@@ -520,11 +757,7 @@ class _AdminPaymentMethodsScreenState
     if (_selectedOrderBy != 'createdAt' || !_isDescending) {
       String sortOrder = _orderByOptions[_selectedOrderBy] ?? _selectedOrderBy;
       String direction = _isDescending ? "Descending" : "Ascending";
-      if (_selectedOrderBy != 'createdAt' || !_isDescending) {
-        info.add('Sorted by $sortOrder ($direction)');
-      } else if (_selectedOrderBy == 'createdAt' && !_isDescending) {
-        info.add('Sorted by $sortOrder ($direction)');
-      }
+      info.add('Sorted by $sortOrder ($direction)');
     }
 
     return info.join(' • ');
@@ -537,7 +770,7 @@ class _AdminPaymentMethodsScreenState
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              isSearching ? Icons.search_off : Icons.food_bank,
+              isSearching ? Icons.search_off : Icons.payment_outlined,
               size: 64,
               color:
                   context.isDarkMode
@@ -547,8 +780,8 @@ class _AdminPaymentMethodsScreenState
             const SizedBox(height: 16),
             Text(
               isSearching
-                  ? 'No paymentMethods found for "${_searchController.text}"'
-                  : 'No paymentMethods available',
+                  ? 'No payment methods found for "${_searchController.text}"'
+                  : 'No payment methods available',
               style: context.textStyles.titleMedium?.copyWith(
                 color:
                     context.isDarkMode
@@ -578,52 +811,88 @@ class _AdminPaymentMethodsScreenState
 
     return Skeletonizer(
       enabled: isLoading,
-      child: ListView.builder(
+      child: ListView.separated(
         controller: _scrollController,
         itemCount:
             isLoading
                 ? skeletonItemCount
                 : paymentMethods.length + (isLoadingMore ? 1 : 0),
+        separatorBuilder: (_, __) => const SizedBox(height: 8),
         itemBuilder: (context, index) {
           if (!isLoading && index == paymentMethods.length && isLoadingMore) {
-            return Center(
+            return const Center(
               child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(
-                    context.colors.primary,
-                  ),
-                ),
+                padding: EdgeInsets.all(16.0),
+                child: CircularProgressIndicator(),
               ),
             );
           }
 
           final paymentMethod =
-              isLoading
-                  ? PaymentMethodModel(
-                    id: '',
-                    name: 'Loading Payment Method',
-                    description: '',
-                    minimumAmount: 0,
-                    maximumAmount: 0,
-                    paymentMethodType: PaymentMethodType.cash,
-                    createdAt: DateTime.now(),
-                    updatedAt: DateTime.now(),
-                  )
-                  : paymentMethods[index];
+              isLoading ? PaymentMethodModel.dummy() : paymentMethods[index];
+          final isSelected = _selectedPaymentMethodIds.contains(
+            paymentMethod.id,
+          );
 
-          return PaymentMethodTile(
-            paymentMethod: paymentMethod,
-            onTap:
-                isLoading
-                    ? null
-                    : () {
-                      context.router.push(
-                        AdminPaymentMethodUpsertRoute(
-                          paymentMethod: paymentMethod,
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: Stack(
+              children: [
+                PaymentMethodTile(
+                  paymentMethod: paymentMethod,
+                  onTap:
+                      isLoading
+                          ? null
+                          : () {
+                            if (_isSelectionMode) {
+                              _onSelectItem(paymentMethod.id);
+                            } else {
+                              context.router.push(
+                                AdminPaymentMethodUpsertRoute(
+                                  paymentMethod: paymentMethod,
+                                ),
+                              );
+                            }
+                          },
+                  onLongPress:
+                      isLoading
+                          ? null
+                          : () => _enterSelectionMode(paymentMethod.id),
+                ),
+                if (_isSelectionMode)
+                  Positioned.fill(
+                    child: GestureDetector(
+                      onTap: () => _onSelectItem(paymentMethod.id),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                          color:
+                              isSelected
+                                  ? Theme.of(
+                                    context,
+                                  ).primaryColor.withOpacity(0.4)
+                                  : Colors.black.withOpacity(0.2),
                         ),
-                      );
-                    },
+                      ),
+                    ),
+                  ),
+                if (isSelected)
+                  Positioned(
+                    top: 8,
+                    right: 8,
+                    child: Icon(
+                      Icons.check_circle,
+                      color: Colors.white,
+                      shadows: [
+                        Shadow(
+                          color: Colors.black.withOpacity(0.5),
+                          blurRadius: 2,
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
+            ),
           );
         },
       ),

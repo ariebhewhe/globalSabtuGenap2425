@@ -4,8 +4,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:jamal/core/routes/app_router.dart';
 import 'package:jamal/core/theme/app_theme.dart';
 import 'package:jamal/core/utils/enums.dart';
+import 'package:jamal/core/utils/toast_utils.dart';
 import 'package:jamal/data/models/category_model.dart';
 import 'package:jamal/features/category/providers/categories_provider.dart';
+import 'package:jamal/features/category/providers/category_mutation_provider.dart'; // Asumsi provider ini ada
+import 'package:jamal/features/category/providers/category_mutation_state.dart';
 import 'package:jamal/features/category/providers/search_categories_provider.dart';
 import 'package:jamal/features/category/widgets/category_card.dart';
 import 'package:jamal/shared/widgets/admin_app_bar.dart';
@@ -26,6 +29,9 @@ class _AdminCategoriesScreenState extends ConsumerState<AdminCategoriesScreen> {
   final ScrollController _scrollController = ScrollController();
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
+
+  bool _isSelectionMode = false;
+  final Set<String> _selectedCategoryIds = {};
 
   String _selectedSearchBy = 'name';
   final List<String> _searchByOptions = ['name', 'description'];
@@ -112,11 +118,234 @@ class _AdminCategoriesScreenState extends ConsumerState<AdminCategoriesScreen> {
   }
 
   Future<void> _refreshData() async {
+    if (_isSelectionMode) _exitSelectionMode();
+
     if (isSearching) {
-      ref.read(searchCategoriesProvider.notifier).refreshCategories();
+      await ref.read(searchCategoriesProvider.notifier).refreshCategories();
     } else {
-      ref.read(categoriesProvider.notifier).refreshCategories();
+      await ref.read(categoriesProvider.notifier).refreshCategories();
     }
+  }
+
+  void _enterSelectionMode(String categoryId) {
+    if (_isSelectionMode) return;
+    setState(() {
+      _isSelectionMode = true;
+      _selectedCategoryIds.add(categoryId);
+    });
+  }
+
+  void _exitSelectionMode() {
+    setState(() {
+      _isSelectionMode = false;
+      _selectedCategoryIds.clear();
+    });
+  }
+
+  void _onSelectItem(String categoryId) {
+    setState(() {
+      if (_selectedCategoryIds.contains(categoryId)) {
+        _selectedCategoryIds.remove(categoryId);
+      } else {
+        _selectedCategoryIds.add(categoryId);
+      }
+      if (_selectedCategoryIds.isEmpty) {
+        _isSelectionMode = false;
+      }
+    });
+  }
+
+  void _deleteSelectedItems() {
+    showDialog(
+      context: context,
+      builder:
+          (ctx) => AlertDialog(
+            title: const Text('Konfirmasi Hapus'),
+            content: Text(
+              'Anda yakin ingin menghapus ${_selectedCategoryIds.length} kategori yang dipilih?',
+            ),
+            actions: [
+              TextButton(
+                child: const Text('Batal'),
+                onPressed: () => Navigator.of(ctx).pop(),
+              ),
+              FilledButton(
+                child: const Text('Hapus'),
+                style: FilledButton.styleFrom(backgroundColor: Colors.red),
+                onPressed: () {
+                  ref
+                      .read(categoryMutationProvider.notifier)
+                      .batchDeleteCategories(_selectedCategoryIds.toList());
+                  Navigator.of(ctx).pop();
+                  _exitSelectionMode();
+                },
+              ),
+            ],
+          ),
+    );
+  }
+
+  void _deleteAllItems() {
+    final allCategoryIds = categories.map((cat) => cat.id).toList();
+
+    if (allCategoryIds.isEmpty) {
+      ToastUtils.showError(
+        context: context,
+        message: 'Tidak ada kategori untuk dihapus',
+      );
+      return;
+    }
+
+    showDialog(
+      context: context,
+      builder:
+          (ctx) => AlertDialog(
+            title: const Text('Konfirmasi Hapus Semua'),
+            content: Text(
+              'Anda yakin ingin menghapus SEMUA ${allCategoryIds.length} kategori? Menu item yang terkait akan kehilangan kategorinya. Tindakan ini tidak dapat dibatalkan.',
+            ),
+            actions: [
+              TextButton(
+                child: const Text('Batal'),
+                onPressed: () => Navigator.of(ctx).pop(),
+              ),
+              FilledButton(
+                child: const Text('Hapus Semua'),
+                style: FilledButton.styleFrom(backgroundColor: Colors.red),
+                onPressed: () {
+                  ref
+                      .read(categoryMutationProvider.notifier)
+                      .batchDeleteCategories(allCategoryIds);
+                  Navigator.of(ctx).pop();
+                  if (_isSelectionMode) _exitSelectionMode();
+                },
+              ),
+            ],
+          ),
+    );
+  }
+
+  void _showUtilityBottomSheet() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return Container(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 20),
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              Text(
+                'Category Utilities',
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 20),
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).primaryColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(Icons.add, color: Theme.of(context).primaryColor),
+                ),
+                title: const Text('Add Category'),
+                subtitle: const Text('Tambah kategori baru'),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  context.pushRoute(AdminCategoryUpsertRoute());
+                },
+              ),
+              const Divider(),
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color:
+                        _isSelectionMode
+                            ? Colors.orange.withOpacity(0.1)
+                            : Colors.blue.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    _isSelectionMode ? Icons.check_circle : Icons.select_all,
+                    color: _isSelectionMode ? Colors.orange : Colors.blue,
+                  ),
+                ),
+                title: Text(
+                  _isSelectionMode
+                      ? 'Exit Selection Mode'
+                      : 'Select Categories',
+                ),
+                subtitle: Text(
+                  _isSelectionMode
+                      ? 'Keluar dari mode seleksi'
+                      : 'Masuk ke mode seleksi untuk menghapus kategori',
+                ),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  if (_isSelectionMode) {
+                    _exitSelectionMode();
+                  } else {
+                    setState(() {
+                      _isSelectionMode = true;
+                    });
+                  }
+                },
+              ),
+              const Divider(),
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.red.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(Icons.delete_forever, color: Colors.red),
+                ),
+                title: const Text('Delete All Categories'),
+                subtitle: const Text('Hapus semua kategori'),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  _deleteAllItems();
+                },
+              ),
+              const SizedBox(height: 20),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  AppBar _buildSelectionAppBar() {
+    return AppBar(
+      leading: IconButton(
+        icon: const Icon(Icons.close),
+        onPressed: _exitSelectionMode,
+      ),
+      title: Text('${_selectedCategoryIds.length} dipilih'),
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.delete_outline),
+          onPressed:
+              _selectedCategoryIds.isNotEmpty ? _deleteSelectedItems : null,
+        ),
+      ],
+    );
   }
 
   bool get isLoading {
@@ -155,9 +384,22 @@ class _AdminCategoriesScreenState extends ConsumerState<AdminCategoriesScreen> {
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<CategoryMutationState>(categoryMutationProvider, (_, state) {
+      if (state.successMessage != null) {
+        ToastUtils.showSuccess(
+          context: context,
+          message: state.successMessage!,
+        );
+        ref.read(categoryMutationProvider.notifier).resetSuccessMessage();
+      }
+      if (state.errorMessage != null) {
+        ToastUtils.showError(context: context, message: state.errorMessage!);
+        ref.read(categoryMutationProvider.notifier).resetErrorMessage();
+      }
+    });
+
     return GestureDetector(
       onTap: () {
-        // * Cara ini akan menghilangkan fokus dari widget apapun yang sedang fokus
         FocusScopeNode currentFocus = FocusScope.of(context);
         if (!currentFocus.hasPrimaryFocus &&
             currentFocus.focusedChild != null) {
@@ -165,19 +407,13 @@ class _AdminCategoriesScreenState extends ConsumerState<AdminCategoriesScreen> {
         }
       },
       child: Scaffold(
-        appBar: const AdminAppBar(),
-        endDrawer: const MyEndDrawer(),
-        floatingActionButton: SafeArea(
-          child: Container(
-            decoration: BoxDecoration(
-              color: context.theme.primaryColor,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: IconButton(
-              onPressed: () => context.pushRoute(AdminCategoryUpsertRoute()),
-              icon: const Icon(Icons.add),
-            ),
-          ),
+        appBar:
+            _isSelectionMode ? _buildSelectionAppBar() : const AdminAppBar(),
+        endDrawer: _isSelectionMode ? null : const MyEndDrawer(),
+        floatingActionButton: FloatingActionButton(
+          onPressed: _showUtilityBottomSheet,
+          child: const Icon(Icons.more_vert),
+          tooltip: 'Category Utilities',
         ),
         body: MyScreenContainer(
           child: Consumer(
@@ -246,7 +482,6 @@ class _AdminCategoriesScreenState extends ConsumerState<AdminCategoriesScreen> {
                         ),
                       ],
                     ),
-
                     AnimatedContainer(
                       duration: const Duration(milliseconds: 300),
                       height: _showFilters ? null : 0,
@@ -404,7 +639,6 @@ class _AdminCategoriesScreenState extends ConsumerState<AdminCategoriesScreen> {
                         ),
                       ),
                     ),
-
                     if (isSearching ||
                         _selectedOrderBy != 'createdAt' ||
                         !_isDescending)
@@ -447,7 +681,6 @@ class _AdminCategoriesScreenState extends ConsumerState<AdminCategoriesScreen> {
                           ],
                         ),
                       ),
-
                     if (errorMessage != null)
                       Container(
                         margin: const EdgeInsets.symmetric(
@@ -488,9 +721,7 @@ class _AdminCategoriesScreenState extends ConsumerState<AdminCategoriesScreen> {
                           ],
                         ),
                       ),
-
                     const SizedBox(height: 16),
-
                     Expanded(child: _buildCategoriesGrid(skeletonItemCount)),
                   ],
                 ),
@@ -512,11 +743,7 @@ class _AdminCategoriesScreenState extends ConsumerState<AdminCategoriesScreen> {
     if (_selectedOrderBy != 'createdAt' || !_isDescending) {
       String sortOrder = _orderByOptions[_selectedOrderBy] ?? _selectedOrderBy;
       String direction = _isDescending ? "Descending" : "Ascending";
-      if (_selectedOrderBy != 'createdAt' || !_isDescending) {
-        info.add('Sorted by $sortOrder ($direction)');
-      } else if (_selectedOrderBy == 'createdAt' && !_isDescending) {
-        info.add('Sorted by $sortOrder ($direction)');
-      }
+      info.add('Sorted by $sortOrder ($direction)');
     }
 
     return info.join(' • ');
@@ -529,7 +756,7 @@ class _AdminCategoriesScreenState extends ConsumerState<AdminCategoriesScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              isSearching ? Icons.search_off : Icons.food_bank,
+              isSearching ? Icons.search_off : Icons.category_outlined,
               size: 64,
               color:
                   context.isDarkMode
@@ -576,6 +803,7 @@ class _AdminCategoriesScreenState extends ConsumerState<AdminCategoriesScreen> {
           crossAxisCount: 2,
           crossAxisSpacing: 8,
           mainAxisSpacing: 8,
+          childAspectRatio: 1.2, // Adjusted aspect ratio for categories
         ),
         itemCount:
             isLoading
@@ -596,26 +824,53 @@ class _AdminCategoriesScreenState extends ConsumerState<AdminCategoriesScreen> {
           }
 
           final category =
-              isLoading
-                  ? CategoryModel(
-                    id: '',
-                    name: 'Loading Category',
-                    description: '',
-                    createdAt: DateTime.now(),
-                    updatedAt: DateTime.now(),
-                  )
-                  : categories[index];
+              isLoading ? CategoryModel.dummy() : categories[index];
+          final isSelected = _selectedCategoryIds.contains(category.id);
 
-          return CategoryCard(
-            category: category,
-            onTap:
-                isLoading
-                    ? null
-                    : () {
-                      context.router.push(
-                        AdminCategoryUpsertRoute(category: category),
-                      );
-                    },
+          return Stack(
+            fit: StackFit.expand,
+            children: [
+              CategoryCard(
+                category: category,
+                onTap:
+                    isLoading
+                        ? null
+                        : () {
+                          if (_isSelectionMode) {
+                            _onSelectItem(category.id);
+                          } else {
+                            context.router.push(
+                              AdminCategoryUpsertRoute(category: category),
+                            );
+                          }
+                        },
+                onLongPress:
+                    isLoading ? null : () => _enterSelectionMode(category.id),
+              ),
+              if (_isSelectionMode)
+                Positioned.fill(
+                  child: GestureDetector(
+                    onTap: () => _onSelectItem(category.id),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                        color:
+                            isSelected
+                                ? Theme.of(
+                                  context,
+                                ).primaryColor.withOpacity(0.4)
+                                : Colors.black.withOpacity(0.2),
+                      ),
+                    ),
+                  ),
+                ),
+              if (isSelected)
+                const Positioned(
+                  top: 8,
+                  right: 8,
+                  child: Icon(Icons.check_circle, color: Colors.white),
+                ),
+            ],
           );
         },
       ),

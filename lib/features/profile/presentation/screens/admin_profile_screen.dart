@@ -113,8 +113,6 @@ class _AdminProfileScreenState extends ConsumerState<AdminProfileScreen> {
           (previous?.successMessage != next.successMessage)) {
         ToastUtils.showSuccess(context: context, message: next.successMessage!);
         ref.read(userMutationProvider.notifier).resetSuccessMessage();
-
-        context.router.pop();
       }
     });
 

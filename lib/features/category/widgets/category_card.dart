@@ -5,12 +5,19 @@ import 'package:jamal/data/models/category_model.dart';
 class CategoryCard extends StatelessWidget {
   final CategoryModel category;
   final void Function()? onTap;
+  final void Function()? onLongPress;
 
-  const CategoryCard({super.key, required this.category, this.onTap});
+  const CategoryCard({
+    super.key,
+    required this.category,
+    this.onTap,
+    this.onLongPress,
+  });
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
+      onLongPress: onLongPress,
       onTap: onTap,
       child: Card(
         elevation: 4.0,

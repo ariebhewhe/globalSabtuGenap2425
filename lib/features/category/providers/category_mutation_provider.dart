@@ -98,6 +98,50 @@ class CategoryMutationNotifier extends StateNotifier<CategoryMutationState> {
     );
   }
 
+  Future<void> batchAddCategories(List<CreateCategoryDto> dtos) async {
+    state = state.copyWith(isLoading: true);
+    final result = await _categoryRepo.batchAddCategories(dtos);
+    result.match(
+      (error) =>
+          state = state.copyWith(isLoading: false, errorMessage: error.message),
+      (success) {
+        state = state.copyWith(
+          isLoading: false,
+          successMessage: success.message,
+        );
+        _ref.invalidate(categoriesProvider);
+      },
+    );
+  }
+
+  Future<void> batchDeleteCategories(
+    List<String> ids, {
+    bool deleteImages = true,
+  }) async {
+    state = state.copyWith(isLoading: true);
+    final result = await _categoryRepo.batchDeleteCategories(
+      ids,
+      deleteImages: deleteImages,
+    );
+    result.match(
+      (error) =>
+          state = state.copyWith(isLoading: false, errorMessage: error.message),
+      (success) {
+        state = state.copyWith(
+          isLoading: false,
+          successMessage: success.message,
+        );
+        _ref.invalidate(menuItemsProvider);
+        _ref.invalidate(categoriesProvider);
+
+        final activeId = _ref.read(activeCategoryIdProvider);
+        if (activeId != null && ids.contains(activeId)) {
+          _ref.read(activeCategoryIdProvider.notifier).state = null;
+        }
+      },
+    );
+  }
+
   // * Reset pesan sukses - gunakan untuk menghindari snackbar muncul berulang
   void resetSuccessMessage() {
     state = state.copyWith(successMessage: null);

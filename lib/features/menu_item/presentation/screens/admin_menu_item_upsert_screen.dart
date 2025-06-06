@@ -3,11 +3,12 @@ import 'dart:io';
 import 'package:auto_route/auto_route.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:jamal/core/utils/enums.dart';
+import 'package:intl/intl.dart';
 import 'package:jamal/core/utils/toast_utils.dart';
 import 'package:jamal/data/models/menu_item_model.dart';
 import 'package:jamal/features/category/providers/categories_provider.dart';
@@ -65,8 +66,6 @@ class _AdminMenuItemUpsertScreenState
   void _resetForm() {
     _formKey.currentState?.reset();
     _formKey.currentState?.fields['isAvailable']?.didChange(true);
-    _formKey.currentState?.fields['isVegetarian']?.didChange(false);
-    _formKey.currentState?.fields['spiceLevel']?.didChange(0.0);
     setState(() {
       _selectedImageFile = null;
       if (widget.menuItem != null && widget.menuItem!.imageUrl != null) {
@@ -83,7 +82,9 @@ class _AdminMenuItemUpsertScreenState
     final bool isAdding = widget.menuItem == null;
     final bool hasExistingImage = widget.menuItem?.imageUrl != null;
 
-    if (_selectedImageFile == null && !hasExistingImage && !isAdding) {
+    if (_selectedImageFile == null &&
+        hasExistingImage &&
+        _deleteExistingImage) {
       ToastUtils.showWarning(
         context: context,
         message: 'Please select a new image or ensure an existing one is kept.',
@@ -93,6 +94,7 @@ class _AdminMenuItemUpsertScreenState
 
     if (isValid) {
       final formValues = _formKey.currentState!.value;
+      final priceString = (formValues['price'] as String).replaceAll('.', '');
 
       if (isAdding) {
         if (_selectedImageFile == null) {
@@ -106,7 +108,7 @@ class _AdminMenuItemUpsertScreenState
         final createMenuItemDto = CreateMenuItemDto(
           name: formValues['name'] as String,
           description: formValues['description'] as String,
-          price: double.tryParse(formValues['price'].toString()) ?? 0.0,
+          price: double.tryParse(priceString) ?? 0.0,
           categoryId: formValues['categoryId'] as String,
           isAvailable: formValues['isAvailable'] as bool,
           imageFile: _selectedImageFile,
@@ -119,7 +121,7 @@ class _AdminMenuItemUpsertScreenState
         final updateMenuItemDto = UpdateMenuItemDto(
           name: formValues['name'] as String,
           description: formValues['description'] as String,
-          price: double.tryParse(formValues['price'].toString()) ?? 0.0,
+          price: double.tryParse(priceString) ?? 0.0,
           categoryId: formValues['categoryId'] as String,
           isAvailable: formValues['isAvailable'] as bool,
           imageFile: _selectedImageFile,
@@ -170,6 +172,12 @@ class _AdminMenuItemUpsertScreenState
     final hasExistingImage = widget.menuItem?.imageUrl != null;
     final mutationState = ref.watch(menuItemMutationProvider);
 
+    final priceFormat = NumberFormat.decimalPattern('id_ID');
+    final initialPrice =
+        widget.menuItem?.price != null
+            ? priceFormat.format(widget.menuItem!.price)
+            : '';
+
     return Scaffold(
       appBar: const AdminAppBar(),
       endDrawer: const MyEndDrawer(),
@@ -180,8 +188,8 @@ class _AdminMenuItemUpsertScreenState
             initialValue: {
               'name': widget.menuItem?.name ?? '',
               'description': widget.menuItem?.description ?? '',
-              'price': widget.menuItem?.price.toString() ?? '',
-              'categoryId': widget.menuItem?.categoryId ?? '',
+              'price': initialPrice,
+              'categoryId': widget.menuItem?.categoryId,
               'isAvailable': widget.menuItem?.isAvailable ?? true,
               'deleteExistingImage': false,
             },
@@ -202,7 +210,6 @@ class _AdminMenuItemUpsertScreenState
                   ]),
                 ),
                 const SizedBox(height: 16),
-
                 FormBuilderTextField(
                   name: 'description',
                   keyboardType: TextInputType.multiline,
@@ -219,31 +226,52 @@ class _AdminMenuItemUpsertScreenState
                   ]),
                 ),
                 const SizedBox(height: 16),
-
                 FormBuilderTextField(
                   name: 'price',
                   keyboardType: TextInputType.number,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly,
+                    TextInputFormatter.withFunction((oldValue, newValue) {
+                      if (newValue.text.isEmpty) {
+                        return newValue.copyWith(text: '');
+                      }
+                      final num value = num.tryParse(newValue.text) ?? 0;
+                      final String newText = priceFormat.format(value);
+                      return newValue.copyWith(
+                        text: newText,
+                        selection: TextSelection.collapsed(
+                          offset: newText.length,
+                        ),
+                      );
+                    }),
+                  ],
                   decoration: const InputDecoration(
                     border: OutlineInputBorder(),
                     hintText: 'Price',
                     labelText: 'Price',
-                    prefixText: '\$ ',
+                    prefixText: 'Rp ',
                   ),
                   validator: FormBuilderValidators.compose([
                     FormBuilderValidators.required(),
-                    FormBuilderValidators.numeric(),
-                    FormBuilderValidators.min(0.1),
+                    (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Price cannot be empty';
+                      }
+                      final price = int.tryParse(value.replaceAll('.', ''));
+                      if (price == null || price <= 0) {
+                        return 'Price must be greater than 0';
+                      }
+                      return null;
+                    },
                   ]),
                 ),
                 const SizedBox(height: 16),
-
                 categoriesState.isLoading
                     ? const Center(child: CircularProgressIndicator())
                     : categoriesState.errorMessage != null
                     ? Center(
                       child: Text(
                         'Error loading categories: ${categoriesState.errorMessage}',
-                        style: TextStyle(color: context.colors.error),
                       ),
                     )
                     : FormBuilderDropdown<String>(
@@ -291,7 +319,6 @@ class _AdminMenuItemUpsertScreenState
                       ),
                     ),
                 const SizedBox(height: 16),
-
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -303,31 +330,37 @@ class _AdminMenuItemUpsertScreenState
                         width: double.infinity,
                         height: 200,
                         decoration: BoxDecoration(
-                          color: context.colors.secondary,
+                          color: Colors.grey[300],
                           borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: context.colors.secondary),
+                          border: Border.all(color: Colors.grey),
                         ),
                         child:
                             _selectedImageFile != null
-                                ? Image.file(
-                                  _selectedImageFile!,
-                                  fit: BoxFit.cover,
+                                ? ClipRRect(
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: Image.file(
+                                    _selectedImageFile!,
+                                    fit: BoxFit.cover,
+                                  ),
                                 )
-                                : hasExistingImage && !_deleteExistingImage
-                                ? Image.network(
-                                  widget.menuItem!.imageUrl!,
-                                  fit: BoxFit.cover,
-                                  errorBuilder:
-                                      (context, error, stackTrace) => Icon(
-                                        Icons.fastfood,
-                                        size: 50,
-                                        color: context.colors.secondary,
-                                      ),
+                                : (hasExistingImage && !_deleteExistingImage)
+                                ? ClipRRect(
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: CachedNetworkImage(
+                                    imageUrl: widget.menuItem!.imageUrl!,
+                                    fit: BoxFit.cover,
+                                    errorWidget:
+                                        (context, url, error) => const Icon(
+                                          Icons.fastfood,
+                                          size: 50,
+                                          color: Colors.grey,
+                                        ),
+                                  ),
                                 )
-                                : Icon(
+                                : const Icon(
                                   Icons.add_a_photo,
                                   size: 50,
-                                  color: context.colors.secondary,
+                                  color: Colors.grey,
                                 ),
                       ),
                     ),
@@ -339,6 +372,9 @@ class _AdminMenuItemUpsertScreenState
                         onChanged: (value) {
                           setState(() {
                             _deleteExistingImage = value ?? false;
+                            if (value == true) {
+                              _selectedImageFile = null;
+                            }
                           });
                         },
                         decoration: const InputDecoration(
@@ -348,13 +384,11 @@ class _AdminMenuItemUpsertScreenState
                   ],
                 ),
                 const SizedBox(height: 16),
-
                 FormBuilderSwitch(
                   name: 'isAvailable',
                   title: const Text('Available'),
                   decoration: const InputDecoration(border: InputBorder.none),
                 ),
-
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   child: SizedBox(

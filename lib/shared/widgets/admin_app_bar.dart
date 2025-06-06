@@ -1,8 +1,7 @@
-import 'package:flutter/material.dart';
 import 'package:auto_route/auto_route.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:jamal/core/routes/app_router.dart';
-import 'package:jamal/core/utils/enums.dart';
 import 'package:jamal/features/cart/providers/cart_item_aggregate_provider.dart';
 
 class AdminAppBar extends StatelessWidget implements PreferredSizeWidget {
@@ -36,7 +35,12 @@ class AdminAppBar extends StatelessWidget implements PreferredSizeWidget {
 
     final pageName = routeData.name;
     if (pageName.isNotEmpty) {
-      final formattedName = pageName.replaceAll('Route', '');
+      var formattedName = pageName.replaceAll('Route', '');
+
+      if (formattedName.startsWith('Admin')) {
+        formattedName = formattedName.substring(5).trim();
+      }
+
       final titleWords = <String>[];
       final chars = formattedName.characters.toList();
 
@@ -110,11 +114,8 @@ class AdminAppBar extends StatelessWidget implements PreferredSizeWidget {
                         size: 26,
                         color:
                             itemCount > 0
-                                ? context
-                                    .theme
-                                    .colorScheme
-                                    .error // INI PERUBAHANNYA
-                                : context.theme.iconTheme.color,
+                                ? Theme.of(context).colorScheme.error
+                                : Theme.of(context).iconTheme.color,
                       ),
                       tooltip: 'Keranjang Belanja',
                     ),
@@ -135,12 +136,13 @@ class AdminAppBar extends StatelessWidget implements PreferredSizeWidget {
                                 horizontal: 6,
                               ),
                               decoration: BoxDecoration(
-                                color: context.theme.colorScheme.error,
+                                color: Theme.of(context).colorScheme.error,
                                 borderRadius: BorderRadius.circular(10),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: context.theme.colorScheme.error
-                                        .withOpacity(0.3),
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.error.withOpacity(0.3),
                                     blurRadius: 4,
                                     offset: const Offset(0, 2),
                                   ),
@@ -150,7 +152,8 @@ class AdminAppBar extends StatelessWidget implements PreferredSizeWidget {
                                 child: Text(
                                   itemCount > 99 ? '99+' : itemCount.toString(),
                                   style: TextStyle(
-                                    color: context.theme.colorScheme.onError,
+                                    color:
+                                        Theme.of(context).colorScheme.onError,
                                     fontSize: 11,
                                     fontWeight: FontWeight.bold,
                                   ),

@@ -17,6 +17,15 @@ class CategoryModel extends BaseModel {
     this.picture,
   }) : super(id: id, createdAt: createdAt, updatedAt: updatedAt);
 
+  factory CategoryModel.dummy() {
+    return CategoryModel(
+      id: 'dummy',
+      name: 'Category Name',
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+    );
+  }
+
   CategoryModel copyWith({
     String? id,
     String? name,

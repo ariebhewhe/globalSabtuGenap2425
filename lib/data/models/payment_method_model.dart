@@ -25,6 +25,19 @@ class PaymentMethodModel extends BaseModel {
     required this.maximumAmount,
   }) : super(id: id, createdAt: createdAt, updatedAt: updatedAt);
 
+  factory PaymentMethodModel.dummy() {
+    return PaymentMethodModel(
+      id: 'dummy_id',
+      name: 'Loading Item...',
+      description: 'lorem ipsum dolor sit amet consectetur adipiscing elit',
+      minimumAmount: 0,
+      maximumAmount: 0,
+      paymentMethodType: PaymentMethodType.bankTransfer,
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+    );
+  }
+
   PaymentMethodModel copyWith({
     String? id,
     String? name,

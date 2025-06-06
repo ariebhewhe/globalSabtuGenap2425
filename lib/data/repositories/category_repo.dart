@@ -1,6 +1,9 @@
+import 'dart:convert';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
+
 import 'package:jamal/core/helpers/error_response.dart';
 import 'package:jamal/core/helpers/success_response.dart';
 import 'package:jamal/core/utils/logger.dart';
@@ -21,10 +24,48 @@ class CategoryRepo {
   final CloudinaryService _cloudinaryService;
 
   final String _collectionPath = 'categories';
+  final String _menuItemsCollectionPath = 'menuItems'; // Added for aggregation
   final String _cloudinaryFolder = 'categories';
   final AppLogger logger = AppLogger();
 
   CategoryRepo(this._firebaseFirestore, this._cloudinaryService);
+
+  String? _getPublicIdFromUrl(String imageUrl) {
+    try {
+      final uri = Uri.parse(imageUrl);
+      final pathSegments = uri.pathSegments;
+
+      final uploadIndex = pathSegments.indexOf('upload');
+      if (uploadIndex != -1 && uploadIndex < pathSegments.length - 1) {
+        final segments = pathSegments.sublist(uploadIndex + 2); // Skip version
+        String fullPath = segments.join('/');
+        final lastDotIndex = fullPath.lastIndexOf('.');
+        if (lastDotIndex != -1) {
+          return fullPath.substring(0, lastDotIndex);
+        }
+        return fullPath;
+      }
+      return null;
+    } catch (e) {
+      logger.w('Failed to parse public ID from URL: $imageUrl');
+      return null;
+    }
+  }
+
+  Future<void> _deleteImageByUrl(String? imageUrl) async {
+    if (imageUrl == null || imageUrl.isEmpty) return;
+
+    final publicId = _getPublicIdFromUrl(imageUrl);
+    if (publicId != null) {
+      try {
+        await _cloudinaryService.deleteImage(publicId);
+      } catch (e) {
+        logger.e(
+          'Failed to delete image ($publicId) from Cloudinary: ${e.toString()}',
+        );
+      }
+    }
+  }
 
   Future<Either<ErrorResponse, SuccessResponse<CategoryModel>>> addCategory(
     CreateCategoryDto dto,
@@ -36,14 +77,12 @@ class CategoryRepo {
       final docRef = categoriesCollection.doc();
 
       String? picture;
-
       if (dto.pictureFile != null) {
         try {
           final uploadResponse = await _cloudinaryService.uploadImage(
             imageFile: dto.pictureFile!,
             folder: _cloudinaryFolder,
           );
-
           picture = uploadResponse.secureUrl;
         } catch (e) {
           logger.e('Failed to upload image: ${e.toString()}');
@@ -54,11 +93,8 @@ class CategoryRepo {
       }
 
       final categoryData = dto.toMap();
-
       categoryData['id'] = docRef.id;
-      if (picture != null) {
-        categoryData['picture'] = picture;
-      }
+      categoryData['picture'] = picture; // Handles null or new URL
       categoryData['createdAt'] = DateTime.now().millisecondsSinceEpoch;
       categoryData['updatedAt'] = DateTime.now().millisecondsSinceEpoch;
 
@@ -67,12 +103,12 @@ class CategoryRepo {
       final category = CategoryModel.fromMap(categoryData);
 
       return Right(
-        SuccessResponse(data: category, message: 'New categorie added'),
+        SuccessResponse(data: category, message: 'New category added'),
       );
     } catch (e) {
       logger.e(e.toString());
       return Left(
-        ErrorResponse(message: 'Failed to add new menu ${e.toString()}'),
+        ErrorResponse(message: 'Failed to add new category: ${e.toString()}'),
       );
     }
   }
@@ -87,22 +123,20 @@ class CategoryRepo {
       final categoriesCollection = _firebaseFirestore.collection(
         _collectionPath,
       );
-      final now = DateTime.now();
+      final now = DateTime.now().millisecondsSinceEpoch;
       List<CategoryModel> createdCategories = [];
 
       for (final dto in dtos) {
-        final docRef = categoriesCollection.doc(); // ID baru
+        // Note: Batch add does not support image file uploads.
+        final docRef = categoriesCollection.doc();
         final Map<String, dynamic> categoryData = dto.toMap();
 
         categoryData['id'] = docRef.id;
-        // 'picture' sudah ada di dto.toMap() jika disediakan
-        categoryData['createdAt'] = now.millisecondsSinceEpoch;
-        categoryData['updatedAt'] = now.millisecondsSinceEpoch;
+        categoryData['createdAt'] = now;
+        categoryData['updatedAt'] = now;
 
         batch.set(docRef, categoryData);
-        createdCategories.add(
-          CategoryModel.fromMap(categoryData),
-        ); // Buat model dari data yang akan disimpan
+        createdCategories.add(CategoryModel.fromMap(categoryData));
       }
 
       await batch.commit();
@@ -138,14 +172,12 @@ class CategoryRepo {
           .orderBy(orderBy, descending: descending)
           .limit(limit);
 
-      // * Tambahkan startAfter jika disediakan (untuk load more)
       if (startAfter != null) {
         query = query.startAfterDocument(startAfter);
       }
 
       final querySnapshot = await query.get();
 
-      // * Konversi hasil query menjadi model
       final categories =
           querySnapshot.docs
               .map(
@@ -154,14 +186,10 @@ class CategoryRepo {
               )
               .toList();
 
-      // * Cek apakah masih ada data lagi yang bisa dimuat
       final hasMore = querySnapshot.docs.length >= limit;
-
-      // * Simpan dokumen terakhir untuk digunakan sebagai startAfter pada request berikutnya
       final lastDocument =
           querySnapshot.docs.isNotEmpty ? querySnapshot.docs.last : null;
 
-      // * Kembalikan hasil dengan metadata pagination
       return Right(
         SuccessResponse(
           data: PaginatedResult(
@@ -169,7 +197,7 @@ class CategoryRepo {
             hasMore: hasMore,
             lastDocument: lastDocument,
           ),
-          message: 'categories retrieved successfully',
+          message: 'Categories retrieved successfully',
         ),
       );
     } catch (e) {
@@ -233,7 +261,6 @@ class CategoryRepo {
       }
 
       final hasMore = querySnapshot.docs.length >= limit;
-
       final lastDocument =
           querySnapshot.docs.isNotEmpty ? querySnapshot.docs.last : null;
 
@@ -259,19 +286,19 @@ class CategoryRepo {
     String id,
   ) async {
     try {
-      final querySnapshot =
+      final docSnapshot =
           await _firebaseFirestore.collection(_collectionPath).doc(id).get();
 
-      if (!querySnapshot.exists) {
+      if (!docSnapshot.exists) {
         return Left(ErrorResponse(message: "Category not found"));
       }
 
-      final category = CategoryModel.fromMap(querySnapshot.data()!);
+      final category = CategoryModel.fromMap(docSnapshot.data()!);
 
       return Right(SuccessResponse(data: category));
     } catch (e) {
       logger.e(e.toString());
-      return Left(ErrorResponse(message: "Failed to get categorie"));
+      return Left(ErrorResponse(message: "Failed to get category"));
     }
   }
 
@@ -281,46 +308,30 @@ class CategoryRepo {
     bool deleteExistingImage = false,
   }) async {
     try {
-      final paymentMethodResult = await getCategoryById(id);
-      if (paymentMethodResult.isLeft()) {
+      final categoryResult = await getCategoryById(id);
+      if (categoryResult.isLeft()) {
         return Left(ErrorResponse(message: 'Category not found'));
       }
 
-      final existingCategory =
-          paymentMethodResult.getRight().toNullable()!.data;
+      final existingCategory = categoryResult.getRight().toNullable()!.data;
       final updateData = dto.toMap();
       String? finalImageUrl = existingCategory.picture;
 
       if (deleteExistingImage && existingCategory.picture != null) {
-        try {
-          final existingImageUrl = existingCategory.picture!;
-          final uri = Uri.parse(existingImageUrl);
-          final pathSegments = uri.pathSegments;
-
-          final uploadIndex = pathSegments.indexOf('upload');
-          if (uploadIndex != -1 && uploadIndex < pathSegments.length - 1) {
-            final segments = pathSegments.sublist(uploadIndex + 1);
-            String fullPath = segments.join('/');
-            final lastDotIndex = fullPath.lastIndexOf('.');
-            if (lastDotIndex != -1) {
-              fullPath = fullPath.substring(0, lastDotIndex);
-            }
-
-            await _cloudinaryService.deleteImage(fullPath);
-            finalImageUrl = null;
-          }
-        } catch (e) {
-          logger.e('Failed to delete existing image: ${e.toString()}');
-        }
+        await _deleteImageByUrl(existingCategory.picture);
+        finalImageUrl = null;
       }
 
       if (dto.pictureFile != null) {
+        if (finalImageUrl != null && !deleteExistingImage) {
+          await _deleteImageByUrl(finalImageUrl);
+        }
+
         try {
           final uploadResponse = await _cloudinaryService.uploadImage(
             imageFile: dto.pictureFile!,
             folder: _cloudinaryFolder,
           );
-
           finalImageUrl = uploadResponse.secureUrl;
         } catch (e) {
           logger.e('Failed to upload new image: ${e.toString()}');
@@ -332,21 +343,13 @@ class CategoryRepo {
         }
       }
 
-      if (finalImageUrl != null) {
-        updateData['picture'] = finalImageUrl;
-      } else if (deleteExistingImage || dto.pictureFile != null) {
-        updateData['picture'] = null;
-      }
-
+      updateData['picture'] = finalImageUrl;
       updateData['updatedAt'] = DateTime.now().millisecondsSinceEpoch;
 
-      await _firebaseFirestore
-          .collection(_collectionPath)
-          .doc(id)
-          .update(updateData);
+      final docRef = _firebaseFirestore.collection(_collectionPath).doc(id);
+      await docRef.update(updateData);
 
-      final updatedDocSnapshot =
-          await _firebaseFirestore.collection(_collectionPath).doc(id).get();
+      final updatedDocSnapshot = await docRef.get();
       final updatedCategory = CategoryModel.fromMap(updatedDocSnapshot.data()!);
 
       return Right(
@@ -355,7 +358,7 @@ class CategoryRepo {
     } catch (e) {
       logger.e(e.toString());
       return Left(
-        ErrorResponse(message: 'Failed to update category ${e.toString()}'),
+        ErrorResponse(message: 'Failed to update category: ${e.toString()}'),
       );
     }
   }
@@ -365,51 +368,201 @@ class CategoryRepo {
     bool deleteImage = true,
   }) async {
     try {
-      final categoryResult = await getCategoryById(id);
-      if (categoryResult.isLeft()) {
+      final docRef = _firebaseFirestore.collection(_collectionPath).doc(id);
+      final docSnapshot = await docRef.get();
+
+      if (!docSnapshot.exists) {
         return Left(ErrorResponse(message: 'Category not found'));
       }
 
-      final category = categoryResult.getRight().toNullable()!.data;
+      final batch = _firebaseFirestore.batch();
 
-      // * Hapus gambar dari Cloudinary jika ada dan diminta
-      if (deleteImage && category.picture != null) {
-        try {
-          // * Ekstrak public ID dari URL gambar
-          final picture = category.picture!;
-          final uri = Uri.parse(picture);
-          final pathSegments = uri.pathSegments;
+      final menuItemsQuery = _firebaseFirestore
+          .collection(_menuItemsCollectionPath)
+          .where('categoryId', isEqualTo: id);
+      final menuItemsSnapshot = await menuItemsQuery.get();
 
-          // * Cari indeks "upload" dalam path
-          final uploadIndex = pathSegments.indexOf('upload');
-          if (uploadIndex != -1 && uploadIndex < pathSegments.length - 1) {
-            // * Ambil semua segment setelah "upload", kecuali ekstensi file terakhir
-            final segments = pathSegments.sublist(uploadIndex + 1);
-
-            // * Gabungkan segments untuk mendapatkan public ID dengan folder
-            String fullPath = segments.join('/');
-
-            // * Hilangkan ekstensi file (misal .jpg, .png)
-            final lastDotIndex = fullPath.lastIndexOf('.');
-            if (lastDotIndex != -1) {
-              fullPath = fullPath.substring(0, lastDotIndex);
-            }
-
-            await _cloudinaryService.deleteImage(fullPath);
-          }
-        } catch (e) {
-          logger.e('Failed to delete image: ${e.toString()}');
-        }
+      for (final doc in menuItemsSnapshot.docs) {
+        batch.update(doc.reference, {'categoryId': null});
       }
 
-      await _firebaseFirestore.collection(_collectionPath).doc(id).delete();
+      if (deleteImage) {
+        final imageUrl = docSnapshot.data()?['picture'];
+        await _deleteImageByUrl(imageUrl);
+      }
 
-      return Right(SuccessResponse(data: id, message: "Category deleted"));
+      batch.delete(docRef);
+
+      await batch.commit();
+
+      final updatedCount = menuItemsSnapshot.docs.length;
+      logger.i(
+        'Category $id deleted and $updatedCount related menu item(s) updated.',
+      );
+
+      return Right(
+        SuccessResponse(
+          data: id,
+          message:
+              'Category deleted and $updatedCount related menu item(s) updated',
+        ),
+      );
     } catch (e) {
       logger.e(e.toString());
       return Left(
-        ErrorResponse(message: 'Failed to delete menu ${e.toString()}'),
+        ErrorResponse(message: 'Failed to delete category: ${e.toString()}'),
       );
     }
   }
+
+  Future<Either<ErrorResponse, SuccessResponse<void>>> batchDeleteCategories(
+    List<String> ids, {
+    bool deleteImages = true,
+  }) async {
+    if (ids.isEmpty) {
+      return Right(SuccessResponse(data: null, message: 'No items to delete.'));
+    }
+
+    try {
+      final batch = _firebaseFirestore.batch();
+      final collectionRef = _firebaseFirestore.collection(_collectionPath);
+
+      final categoriesSnapshot =
+          await collectionRef.where(FieldPath.documentId, whereIn: ids).get();
+
+      if (categoriesSnapshot.docs.isEmpty) {
+        return Left(ErrorResponse(message: 'No matching categories found.'));
+      }
+
+      if (deleteImages) {
+        final imageUrlsToDelete =
+            categoriesSnapshot.docs
+                .map((doc) => doc.data()['picture'] as String?)
+                .where((url) => url != null && url.isNotEmpty)
+                .toList();
+
+        if (imageUrlsToDelete.isNotEmpty) {
+          await Future.wait(
+            imageUrlsToDelete.map((url) => _deleteImageByUrl(url!)),
+          );
+        }
+      }
+
+      final menuItemsQuery = _firebaseFirestore
+          .collection(_menuItemsCollectionPath)
+          .where('categoryId', whereIn: ids);
+      final menuItemsSnapshot = await menuItemsQuery.get();
+
+      for (final doc in menuItemsSnapshot.docs) {
+        batch.update(doc.reference, {'categoryId': null});
+      }
+
+      for (final doc in categoriesSnapshot.docs) {
+        batch.delete(doc.reference);
+      }
+
+      await batch.commit();
+
+      final deletedCategoriesCount = categoriesSnapshot.docs.length;
+      final updatedMenuItemsCount = menuItemsSnapshot.docs.length;
+      logger.i(
+        '$deletedCategoriesCount category(s) deleted and $updatedMenuItemsCount related menu item(s) updated.',
+      );
+
+      return Right(
+        SuccessResponse(
+          data: null,
+          message:
+              '$deletedCategoriesCount category(s) deleted and $updatedMenuItemsCount related menu item(s) updated.',
+        ),
+      );
+    } catch (e) {
+      logger.e(e.toString());
+      return Left(
+        ErrorResponse(
+          message: 'Failed to batch delete categories: ${e.toString()}',
+        ),
+      );
+    }
+  }
+
+  // * Aggregate
+  Future<Either<ErrorResponse, SuccessResponse<List<CategoryAggregate>>>>
+  getCategoriesAggregate() async {
+    try {
+      final categoriesSnapshot =
+          await _firebaseFirestore.collection(_collectionPath).get();
+
+      final List<CategoryModel> categories =
+          categoriesSnapshot.docs
+              .map((doc) => CategoryModel.fromMap(doc.data()))
+              .toList();
+
+      if (categories.isEmpty) {
+        return Right(
+          SuccessResponse(
+            data: [],
+            message: "No categories found to aggregate.",
+          ),
+        );
+      }
+
+      final List<CategoryAggregate> aggregates = [];
+      for (final category in categories) {
+        final countSnapshot =
+            await _firebaseFirestore
+                .collection(_menuItemsCollectionPath)
+                .where('categoryId', isEqualTo: category.id)
+                .count()
+                .get();
+
+        aggregates.add(
+          CategoryAggregate(
+            category: category,
+            menuItemCount: countSnapshot.count ?? 0,
+          ),
+        );
+      }
+
+      return Right(
+        SuccessResponse(
+          data: aggregates,
+          message: "Category aggregates retrieved successfully",
+        ),
+      );
+    } catch (e) {
+      logger.e(e.toString());
+      return Left(
+        ErrorResponse(
+          message: 'Failed to get category aggregates: ${e.toString()}',
+        ),
+      );
+    }
+  }
+}
+
+class CategoryAggregate {
+  final CategoryModel category;
+  final int menuItemCount;
+
+  CategoryAggregate({required this.category, required this.menuItemCount});
+
+  Map<String, dynamic> toMap() {
+    return <String, dynamic>{
+      'category': category.toMap(),
+      'menuItemCount': menuItemCount,
+    };
+  }
+
+  factory CategoryAggregate.fromMap(Map<String, dynamic> map) {
+    return CategoryAggregate(
+      category: CategoryModel.fromMap(map['category'] as Map<String, dynamic>),
+      menuItemCount: map['menuItemCount'] as int,
+    );
+  }
+
+  String toJson() => json.encode(toMap());
+
+  factory CategoryAggregate.fromJson(String source) =>
+      CategoryAggregate.fromMap(json.decode(source) as Map<String, dynamic>);
 }

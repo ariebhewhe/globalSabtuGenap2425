@@ -28,6 +28,43 @@ class PaymentMethodRepo {
 
   PaymentMethodRepo(this._firebaseFirestore, this._cloudinaryService);
 
+  String? _getPublicIdFromUrl(String imageUrl) {
+    try {
+      final uri = Uri.parse(imageUrl);
+      final pathSegments = uri.pathSegments;
+
+      final uploadIndex = pathSegments.indexOf('upload');
+      if (uploadIndex != -1 && uploadIndex < pathSegments.length - 1) {
+        final segments = pathSegments.sublist(uploadIndex + 2); // Skip version
+        String fullPath = segments.join('/');
+        final lastDotIndex = fullPath.lastIndexOf('.');
+        if (lastDotIndex != -1) {
+          return fullPath.substring(0, lastDotIndex);
+        }
+        return fullPath;
+      }
+      return null;
+    } catch (e) {
+      logger.w('Failed to parse public ID from URL: $imageUrl');
+      return null;
+    }
+  }
+
+  Future<void> _deleteImageByUrl(String? imageUrl) async {
+    if (imageUrl == null || imageUrl.isEmpty) return;
+
+    final publicId = _getPublicIdFromUrl(imageUrl);
+    if (publicId != null) {
+      try {
+        await _cloudinaryService.deleteImage(publicId);
+      } catch (e) {
+        logger.e(
+          'Failed to delete image ($publicId) from Cloudinary: ${e.toString()}',
+        );
+      }
+    }
+  }
+
   Future<Either<ErrorResponse, SuccessResponse<PaymentMethodModel>>>
   addPaymentMethod(CreatePaymentMethodDto dto) async {
     try {
@@ -37,14 +74,12 @@ class PaymentMethodRepo {
       final docRef = paymentMethodsCollection.doc();
 
       String? logoUrl;
-
       if (dto.logoFile != null) {
         try {
           final uploadResponse = await _cloudinaryService.uploadImage(
             imageFile: dto.logoFile!,
             folder: _cloudinaryFolder,
           );
-
           logoUrl = uploadResponse.secureUrl;
         } catch (e) {
           logger.e('Failed to upload image: ${e.toString()}');
@@ -55,11 +90,8 @@ class PaymentMethodRepo {
       }
 
       final paymentMethodData = dto.toMap();
-
       paymentMethodData['id'] = docRef.id;
-      if (logoUrl != null) {
-        paymentMethodData['logoUrl'] = logoUrl;
-      }
+      paymentMethodData['logo'] = logoUrl; // Standardized to 'logo'
       paymentMethodData['createdAt'] = DateTime.now().millisecondsSinceEpoch;
       paymentMethodData['updatedAt'] = DateTime.now().millisecondsSinceEpoch;
 
@@ -70,36 +102,59 @@ class PaymentMethodRepo {
       return Right(
         SuccessResponse(
           data: paymentMethod,
-          message: 'New payment method item added',
+          message: 'New payment method added',
         ),
       );
     } catch (e) {
       logger.e(e.toString());
       return Left(
         ErrorResponse(
-          message: 'Failed to add new payment method ${e.toString()}',
+          message: 'Failed to add new payment method: ${e.toString()}',
         ),
       );
     }
   }
 
-  Future<Either<ErrorResponse, SuccessResponse<List<PaymentMethodModel>>>>
-  getAllPaymentMethod() async {
+  Future<Either<ErrorResponse, SuccessResponse<void>>> batchAddPaymentMethods(
+    List<CreatePaymentMethodDto> dtos,
+  ) async {
+    if (dtos.isEmpty) {
+      return Right(
+        SuccessResponse(data: null, message: 'No payment methods to add.'),
+      );
+    }
+
     try {
-      final querySnapshot =
-          await _firebaseFirestore.collection(_collectionPath).get();
+      final batch = _firebaseFirestore.batch();
+      final collectionRef = _firebaseFirestore.collection(_collectionPath);
+      final now = DateTime.now().millisecondsSinceEpoch;
 
-      final paymentMethods =
-          querySnapshot.docs
-              .map((doc) => PaymentMethodModel.fromMap(doc.data()))
-              .toList();
+      for (final dto in dtos) {
+        // Batch add does not support image file uploads. 'logo' must be a URL.
+        final docRef = collectionRef.doc();
+        final Map<String, dynamic> data = dto.toMap();
 
-      return Right(SuccessResponse(data: paymentMethods));
+        data['id'] = docRef.id;
+        data['createdAt'] = now;
+        data['updatedAt'] = now;
+
+        batch.set(docRef, data);
+      }
+
+      await batch.commit();
+      logger.i('${dtos.length} payment methods successfully added in batch.');
+      return Right(
+        SuccessResponse(
+          data: null,
+          message:
+              '${dtos.length} payment methods added successfully in batch.',
+        ),
+      );
     } catch (e) {
-      logger.e(e.toString());
+      logger.e('Failed to batch add payment methods: ${e.toString()}');
       return Left(
         ErrorResponse(
-          message: 'Failed to get all payment method items ${e.toString()}',
+          message: 'Failed to batch add payment methods: ${e.toString()}',
         ),
       );
     }
@@ -120,14 +175,12 @@ class PaymentMethodRepo {
           .orderBy(orderBy, descending: descending)
           .limit(limit);
 
-      // * Tambahkan startAfter jika disediakan (untuk load more)
       if (startAfter != null) {
         query = query.startAfterDocument(startAfter);
       }
 
       final querySnapshot = await query.get();
 
-      // * Konversi hasil query menjadi model
       final paymentMethods =
           querySnapshot.docs
               .map(
@@ -137,14 +190,10 @@ class PaymentMethodRepo {
               )
               .toList();
 
-      // * Cek apakah masih ada data lagi yang bisa dimuat
       final hasMore = querySnapshot.docs.length >= limit;
-
-      // * Simpan dokumen terakhir untuk digunakan sebagai startAfter pada request berikutnya
       final lastDocument =
           querySnapshot.docs.isNotEmpty ? querySnapshot.docs.last : null;
 
-      // * Kembalikan hasil dengan metadata pagination
       return Right(
         SuccessResponse(
           data: PaginatedResult(
@@ -159,8 +208,7 @@ class PaymentMethodRepo {
       logger.e(e.toString());
       return Left(
         ErrorResponse(
-          message:
-              'Failed to get paginated payment method items: ${e.toString()}',
+          message: 'Failed to get paginated payment methods: ${e.toString()}',
         ),
       );
     }
@@ -193,7 +241,7 @@ class PaymentMethodRepo {
 
       final querySnapshot = await query.get();
 
-      final paymentMethods =
+      List<PaymentMethodModel> paymentMethods =
           querySnapshot.docs
               .map(
                 (doc) => PaymentMethodModel.fromMap(
@@ -204,7 +252,6 @@ class PaymentMethodRepo {
 
       if (searchQuery != null && searchQuery.isNotEmpty) {
         final lowercaseQuery = searchQuery.toLowerCase();
-
         paymentMethods.retainWhere((paymentMethod) {
           switch (searchBy) {
             case 'name':
@@ -216,7 +263,6 @@ class PaymentMethodRepo {
       }
 
       final hasMore = querySnapshot.docs.length >= limit;
-
       final lastDocument =
           querySnapshot.docs.isNotEmpty ? querySnapshot.docs.last : null;
 
@@ -227,14 +273,14 @@ class PaymentMethodRepo {
             hasMore: hasMore,
             lastDocument: lastDocument,
           ),
-          message: 'PaymentMethods retrieved successfully',
+          message: 'Payment Methods retrieved successfully',
         ),
       );
     } catch (e) {
       logger.e(e.toString());
       return Left(
         ErrorResponse(
-          message: 'Failed to search paymentMethods: ${e.toString()}',
+          message: 'Failed to search payment methods: ${e.toString()}',
         ),
       );
     }
@@ -243,19 +289,19 @@ class PaymentMethodRepo {
   Future<Either<ErrorResponse, SuccessResponse<PaymentMethodModel>>>
   getPaymentMethodById(String id) async {
     try {
-      final querySnapshot =
+      final docSnapshot =
           await _firebaseFirestore.collection(_collectionPath).doc(id).get();
 
-      if (!querySnapshot.exists) {
+      if (!docSnapshot.exists) {
         return Left(ErrorResponse(message: "Payment method not found"));
       }
 
-      final paymentMethod = PaymentMethodModel.fromMap(querySnapshot.data()!);
+      final paymentMethod = PaymentMethodModel.fromMap(docSnapshot.data()!);
 
       return Right(SuccessResponse(data: paymentMethod));
     } catch (e) {
       logger.e(e.toString());
-      return Left(ErrorResponse(message: "Failed to get payment method item"));
+      return Left(ErrorResponse(message: "Failed to get payment method"));
     }
   }
 
@@ -277,35 +323,20 @@ class PaymentMethodRepo {
       String? finalImageUrl = existingPaymentMethod.logo;
 
       if (deleteExistingImage && existingPaymentMethod.logo != null) {
-        try {
-          final existingImageUrl = existingPaymentMethod.logo!;
-          final uri = Uri.parse(existingImageUrl);
-          final pathSegments = uri.pathSegments;
-
-          final uploadIndex = pathSegments.indexOf('upload');
-          if (uploadIndex != -1 && uploadIndex < pathSegments.length - 1) {
-            final segments = pathSegments.sublist(uploadIndex + 1);
-            String fullPath = segments.join('/');
-            final lastDotIndex = fullPath.lastIndexOf('.');
-            if (lastDotIndex != -1) {
-              fullPath = fullPath.substring(0, lastDotIndex);
-            }
-
-            await _cloudinaryService.deleteImage(fullPath);
-            finalImageUrl = null;
-          }
-        } catch (e) {
-          logger.e('Failed to delete existing image: ${e.toString()}');
-        }
+        await _deleteImageByUrl(existingPaymentMethod.logo);
+        finalImageUrl = null;
       }
 
       if (dto.logoFile != null) {
+        if (finalImageUrl != null && !deleteExistingImage) {
+          await _deleteImageByUrl(finalImageUrl);
+        }
+
         try {
           final uploadResponse = await _cloudinaryService.uploadImage(
             imageFile: dto.logoFile!,
             folder: _cloudinaryFolder,
           );
-
           finalImageUrl = uploadResponse.secureUrl;
         } catch (e) {
           logger.e('Failed to upload new image: ${e.toString()}');
@@ -317,21 +348,13 @@ class PaymentMethodRepo {
         }
       }
 
-      if (finalImageUrl != null) {
-        updateData['logo'] = finalImageUrl;
-      } else if (deleteExistingImage || dto.logoFile != null) {
-        updateData['logo'] = null;
-      }
-
+      updateData['logo'] = finalImageUrl;
       updateData['updatedAt'] = DateTime.now().millisecondsSinceEpoch;
 
-      await _firebaseFirestore
-          .collection(_collectionPath)
-          .doc(id)
-          .update(updateData);
+      final docRef = _firebaseFirestore.collection(_collectionPath).doc(id);
+      await docRef.update(updateData);
 
-      final updatedDocSnapshot =
-          await _firebaseFirestore.collection(_collectionPath).doc(id).get();
+      final updatedDocSnapshot = await docRef.get();
       final updatedPaymentMethod = PaymentMethodModel.fromMap(
         updatedDocSnapshot.data()!,
       );
@@ -345,7 +368,9 @@ class PaymentMethodRepo {
     } catch (e) {
       logger.e(e.toString());
       return Left(
-        ErrorResponse(message: 'Failed to update menu ${e.toString()}'),
+        ErrorResponse(
+          message: 'Failed to update payment method: ${e.toString()}',
+        ),
       );
     }
   }
@@ -355,44 +380,19 @@ class PaymentMethodRepo {
     bool deleteImage = true,
   }) async {
     try {
-      final paymentMethodResult = await getPaymentMethodById(id);
-      if (paymentMethodResult.isLeft()) {
+      final docRef = _firebaseFirestore.collection(_collectionPath).doc(id);
+      final docSnapshot = await docRef.get();
+
+      if (!docSnapshot.exists) {
         return Left(ErrorResponse(message: 'Payment method not found'));
       }
 
-      final paymentMethod = paymentMethodResult.getRight().toNullable()!.data;
-
-      // * Hapus gambar dari Cloudinary jika ada dan diminta
-      if (deleteImage && paymentMethod.logo != null) {
-        try {
-          // * Ekstrak public ID dari URL gambar
-          final logo = paymentMethod.logo!;
-          final uri = Uri.parse(logo);
-          final pathSegments = uri.pathSegments;
-
-          // * Cari indeks "upload" dalam path
-          final uploadIndex = pathSegments.indexOf('upload');
-          if (uploadIndex != -1 && uploadIndex < pathSegments.length - 1) {
-            // * Ambil semua segment setelah "upload", kecuali ekstensi file terakhir
-            final segments = pathSegments.sublist(uploadIndex + 1);
-
-            // * Gabungkan segments untuk mendapatkan public ID dengan folder
-            String fullPath = segments.join('/');
-
-            // * Hilangkan ekstensi file (misal .jpg, .png)
-            final lastDotIndex = fullPath.lastIndexOf('.');
-            if (lastDotIndex != -1) {
-              fullPath = fullPath.substring(0, lastDotIndex);
-            }
-
-            await _cloudinaryService.deleteImage(fullPath);
-          }
-        } catch (e) {
-          logger.e('Failed to delete image: ${e.toString()}');
-        }
+      if (deleteImage) {
+        final imageUrl = docSnapshot.data()?['logo'];
+        await _deleteImageByUrl(imageUrl);
       }
 
-      await _firebaseFirestore.collection(_collectionPath).doc(id).delete();
+      await docRef.delete();
 
       return Right(
         SuccessResponse(data: id, message: "Payment method deleted"),
@@ -401,7 +401,66 @@ class PaymentMethodRepo {
       logger.e(e.toString());
       return Left(
         ErrorResponse(
-          message: 'Failed to delete payment method ${e.toString()}',
+          message: 'Failed to delete payment method: ${e.toString()}',
+        ),
+      );
+    }
+  }
+
+  Future<Either<ErrorResponse, SuccessResponse<void>>>
+  batchDeletePaymentMethods(
+    List<String> ids, {
+    bool deleteImages = true,
+  }) async {
+    if (ids.isEmpty) {
+      return Right(SuccessResponse(data: null, message: 'No items to delete.'));
+    }
+
+    try {
+      final collectionRef = _firebaseFirestore.collection(_collectionPath);
+      final paymentMethodsSnapshot =
+          await collectionRef.where(FieldPath.documentId, whereIn: ids).get();
+
+      if (paymentMethodsSnapshot.docs.isEmpty) {
+        return Left(
+          ErrorResponse(message: 'No matching payment methods found.'),
+        );
+      }
+
+      if (deleteImages) {
+        final imageUrlsToDelete =
+            paymentMethodsSnapshot.docs
+                .map((doc) => doc.data()['logo'] as String?)
+                .where((url) => url != null && url.isNotEmpty)
+                .toList();
+
+        if (imageUrlsToDelete.isNotEmpty) {
+          await Future.wait(
+            imageUrlsToDelete.map((url) => _deleteImageByUrl(url!)),
+          );
+        }
+      }
+
+      final batch = _firebaseFirestore.batch();
+      for (final doc in paymentMethodsSnapshot.docs) {
+        batch.delete(doc.reference);
+      }
+      await batch.commit();
+
+      final deletedCount = paymentMethodsSnapshot.docs.length;
+      logger.i('$deletedCount payment method(s) deleted.');
+
+      return Right(
+        SuccessResponse(
+          data: null,
+          message: '$deletedCount payment method(s) deleted successfully.',
+        ),
+      );
+    } catch (e) {
+      logger.e(e.toString());
+      return Left(
+        ErrorResponse(
+          message: 'Failed to batch delete payment methods: ${e.toString()}',
         ),
       );
     }

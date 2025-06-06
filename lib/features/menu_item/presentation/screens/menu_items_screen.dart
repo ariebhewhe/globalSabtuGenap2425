@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:jamal/core/routes/app_router.dart';
 import 'package:jamal/data/models/menu_item_model.dart';
-import 'package:jamal/features/menu_item/presentation/widgets/menu_items_card.dart';
+import 'package:jamal/features/menu_item/presentation/widgets/menu_item_card.dart';
 import 'package:jamal/features/menu_item/providers/menu_items_provider.dart';
 import 'package:jamal/shared/widgets/user_app_bar.dart';
 import 'package:jamal/shared/widgets/my_screen_container.dart';

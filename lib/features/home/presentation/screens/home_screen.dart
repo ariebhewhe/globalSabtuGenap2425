@@ -6,7 +6,7 @@ import 'package:jamal/core/utils/enums.dart';
 import 'package:jamal/data/models/menu_item_model.dart';
 import 'package:jamal/data/models/category_model.dart';
 import 'package:jamal/features/category/providers/categories_provider.dart';
-import 'package:jamal/features/menu_item/presentation/widgets/menu_items_card.dart';
+import 'package:jamal/features/menu_item/presentation/widgets/menu_item_card.dart';
 import 'package:jamal/features/menu_item/providers/menu_items_provider.dart';
 
 import 'package:jamal/shared/widgets/my_screen_container.dart';
