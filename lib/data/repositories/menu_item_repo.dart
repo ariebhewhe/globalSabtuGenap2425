@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
@@ -29,21 +27,20 @@ class MenuItemRepo {
   MenuItemRepo(this._firebaseFirestore, this._cloudinaryService);
 
   Future<Either<ErrorResponse, SuccessResponse<MenuItemModel>>> addMenuItem(
-    CreateMenuItemDto dto, {
-    File? imageFile,
-  }) async {
+    CreateMenuItemDto dto,
+  ) async {
     try {
       final menuItemsCollection = _firebaseFirestore.collection(
         _collectionPath,
       );
       final docRef = menuItemsCollection.doc();
 
-      String? imageUrl = dto.imageUrl;
+      String? imageUrl;
 
-      if (imageFile != null) {
+      if (dto.imageFile != null) {
         try {
           final uploadResponse = await _cloudinaryService.uploadImage(
-            imageFile: imageFile,
+            imageFile: dto.imageFile!,
             folder: _cloudinaryFolder,
           );
 
@@ -273,7 +270,6 @@ class MenuItemRepo {
   Future<Either<ErrorResponse, SuccessResponse<MenuItemModel>>> updateMenuItem(
     String id,
     UpdateMenuItemDto dto, {
-    File? imageFile,
     bool deleteExistingImage = false,
   }) async {
     try {
@@ -309,10 +305,10 @@ class MenuItemRepo {
         }
       }
 
-      if (imageFile != null) {
+      if (dto.imageFile != null) {
         try {
           final uploadResponse = await _cloudinaryService.uploadImage(
-            imageFile: imageFile,
+            imageFile: dto.imageFile!,
             folder: _cloudinaryFolder,
           );
 
@@ -329,7 +325,7 @@ class MenuItemRepo {
 
       if (finalImageUrl != null) {
         updateData['imageUrl'] = finalImageUrl;
-      } else if (deleteExistingImage || imageFile != null) {
+      } else if (deleteExistingImage || dto.imageFile != null) {
         updateData['imageUrl'] = null;
       }
 

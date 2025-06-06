@@ -28,12 +28,32 @@ class _AdminPaymentMethodUpsertScreenState
   final _formKey = GlobalKey<FormBuilderState>();
   File? _selectedImageFile;
   final ImagePicker _picker = ImagePicker();
+  bool _deleteExistingImage = false;
+
+  @override
+  void initState() {
+    super.initState();
+
+    if (widget.paymentMethod != null && widget.paymentMethod!.logo != null) {
+      _deleteExistingImage = false;
+    } else {
+      _deleteExistingImage = true;
+    }
+  }
 
   Future<void> _pickImage() async {
     final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
     if (pickedFile != null) {
       setState(() {
         _selectedImageFile = File(pickedFile.path);
+
+        if (widget.paymentMethod != null &&
+            widget.paymentMethod!.logo != null) {
+          _formKey.currentState?.fields['deleteExistingImage']?.didChange(
+            false,
+          );
+          _deleteExistingImage = false;
+        }
       });
     }
   }
@@ -42,31 +62,37 @@ class _AdminPaymentMethodUpsertScreenState
     _formKey.currentState?.reset();
     setState(() {
       _selectedImageFile = null;
+      if (widget.paymentMethod != null && widget.paymentMethod!.logo != null) {
+        _deleteExistingImage = false;
+      } else {
+        _deleteExistingImage = true;
+      }
     });
   }
 
   void _submitForm() async {
     final isValid = _formKey.currentState?.saveAndValidate() ?? false;
 
-    if (widget.paymentMethod == null && _selectedImageFile == null) {
+    final bool isAdding = widget.paymentMethod == null;
+    final bool hasExistingImage = widget.paymentMethod?.logo != null;
+
+    if (_selectedImageFile == null && !hasExistingImage && !isAdding) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please select a logo image.'),
-          backgroundColor: Colors.red,
+        SnackBar(
+          content: const Text(
+            'Please select a new image or ensure an existing one is kept.',
+          ),
+          backgroundColor: context.colors.error,
         ),
       );
       return;
     }
 
-    if (widget.paymentMethod != null &&
-        widget.paymentMethod!.logo == null &&
-        _selectedImageFile == null) {
+    if (isAdding && _selectedImageFile == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Please select a logo image or ensure an existing one exists.',
-          ),
-          backgroundColor: Colors.red,
+        SnackBar(
+          content: const Text('Please select an image.'),
+          backgroundColor: context.colors.error,
         ),
       );
       return;
@@ -75,32 +101,46 @@ class _AdminPaymentMethodUpsertScreenState
     if (isValid) {
       final formValues = _formKey.currentState!.value;
 
-      final paymentMethod = PaymentMethodModel(
-        id: widget.paymentMethod?.id ?? '',
-        name: formValues['name'] as String,
-        description: formValues['description'] as String?,
-        minimumAmount:
-            double.tryParse(formValues['minimumAmount'].toString()) ?? 0.0,
-        maximumAmount:
-            double.tryParse(formValues['maximumAmount'].toString()) ?? 0.0,
-        paymentMethodType: formValues['paymentMethodType'] as PaymentMethodType,
-        logo: widget.paymentMethod?.logo,
-        createdAt: widget.paymentMethod?.createdAt ?? DateTime.now(),
-        updatedAt: widget.paymentMethod?.updatedAt ?? DateTime.now(),
-      );
+      if (isAdding) {
+        final createPaymentMethodDto = CreatePaymentMethodDto(
+          name: formValues['name'] as String,
+          description: formValues['description'] as String?,
+          minimumAmount:
+              double.tryParse(formValues['minimumAmount'].toString()) ?? 0.0,
+          maximumAmount:
+              double.tryParse(formValues['maximumAmount'].toString()) ?? 0.0,
+          paymentMethodType:
+              formValues['paymentMethodType'] as PaymentMethodType,
+          logoFile: _selectedImageFile,
+        );
 
-      if (widget.paymentMethod != null) {
+        await ref
+            .read(paymentMethodMutationProvider.notifier)
+            .addPaymentMethod(createPaymentMethodDto);
+      } else {
+        final updatePaymentMethodDto = UpdatePaymentMethodDto(
+          name: formValues['name'] as String,
+          description: formValues['description'] as String?,
+          minimumAmount:
+              double.tryParse(formValues['minimumAmount'].toString()) ?? 0.0,
+          maximumAmount:
+              double.tryParse(formValues['maximumAmount'].toString()) ?? 0.0,
+          paymentMethodType:
+              formValues['paymentMethodType'] as PaymentMethodType,
+          logoFile: _selectedImageFile,
+        );
+
+        final bool deleteImage =
+            _formKey.currentState?.fields['deleteExistingImage']?.value ??
+            false;
+
         await ref
             .read(paymentMethodMutationProvider.notifier)
             .updatePaymentMethod(
               widget.paymentMethod!.id,
-              paymentMethod,
-              imageFile: _selectedImageFile,
+              updatePaymentMethodDto,
+              deleteExistingImage: deleteImage,
             );
-      } else {
-        await ref
-            .read(paymentMethodMutationProvider.notifier)
-            .addPaymentMethod(paymentMethod, imageFile: _selectedImageFile);
       }
 
       if (ref.read(paymentMethodMutationProvider).successMessage != null) {
@@ -111,6 +151,9 @@ class _AdminPaymentMethodUpsertScreenState
 
   @override
   Widget build(BuildContext context) {
+    final isAdding = widget.paymentMethod == null;
+    final hasExistingImage = widget.paymentMethod?.logo != null;
+
     return Scaffold(
       appBar: const AdminAppBar(),
       endDrawer: const MyEndDrawer(),
@@ -300,25 +343,44 @@ class _AdminPaymentMethodUpsertScreenState
                                           _selectedImageFile!,
                                           fit: BoxFit.cover,
                                         )
-                                        : (widget.paymentMethod?.logo != null
-                                            ? Image.network(
-                                              widget.paymentMethod!.logo!,
-                                              fit: BoxFit.cover,
-                                              errorBuilder:
-                                                  (
-                                                    context,
-                                                    error,
-                                                    stackTrace,
-                                                  ) => const Icon(Icons.error),
-                                            )
-                                            : const Icon(
-                                              Icons.camera_alt,
-                                              size: 40,
-                                              color: Colors.grey,
-                                            )),
+                                        : hasExistingImage &&
+                                            !_deleteExistingImage
+                                        ? Image.network(
+                                          widget.paymentMethod!.logo!,
+                                          fit: BoxFit.cover,
+                                          errorBuilder:
+                                              (
+                                                context,
+                                                error,
+                                                stackTrace,
+                                              ) => Icon(
+                                                Icons.fastfood,
+                                                size: 50,
+                                                color: context.colors.secondary,
+                                              ),
+                                        )
+                                        : Icon(
+                                          Icons.add_a_photo,
+                                          size: 50,
+                                          color: context.colors.secondary,
+                                        ),
                               ),
                             ),
                           ),
+                          if (!isAdding && hasExistingImage)
+                            FormBuilderSwitch(
+                              name: 'deleteExistingImage',
+                              title: const Text('Delete Existing Image'),
+                              initialValue: _deleteExistingImage,
+                              onChanged: (value) {
+                                setState(() {
+                                  _deleteExistingImage = value ?? false;
+                                });
+                              },
+                              decoration: const InputDecoration(
+                                border: InputBorder.none,
+                              ),
+                            ),
                         ],
                       ),
                       const SizedBox(height: 16),
@@ -332,15 +394,12 @@ class _AdminPaymentMethodUpsertScreenState
                             child: Padding(
                               padding: const EdgeInsets.symmetric(vertical: 12),
                               child:
-                                  isSubmitting
-                                      ? const CircularProgressIndicator(
-                                        color: Colors.white,
-                                      )
+                                  mutationState.isLoading
+                                      ? const CircularProgressIndicator()
                                       : Text(
-                                        widget.paymentMethod != null
-                                            ? 'Update'
-                                            : 'Submit',
-                                        style: TextStyle(fontSize: 18),
+                                        isAdding
+                                            ? 'Add Payment Method'
+                                            : 'Update Payment Method',
                                       ),
                             ),
                           ),

@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:jamal/data/models/menu_item_model.dart';
 import 'package:jamal/data/repositories/menu_item_repo.dart';
@@ -14,16 +12,10 @@ class MenuItemMutationNotifier extends StateNotifier<MenuItemMutationState> {
   MenuItemMutationNotifier(this._menuItemRepo, this._ref)
     : super(MenuItemMutationState());
 
-  Future<void> addMenuItem(
-    CreateMenuItemDto newMenuItem, {
-    File? imageFile,
-  }) async {
+  Future<void> addMenuItem(CreateMenuItemDto newMenuItem) async {
     state = state.copyWith(isLoading: true);
 
-    final result = await _menuItemRepo.addMenuItem(
-      newMenuItem,
-      imageFile: imageFile,
-    );
+    final result = await _menuItemRepo.addMenuItem(newMenuItem);
 
     result.match(
       (error) =>
@@ -43,7 +35,6 @@ class MenuItemMutationNotifier extends StateNotifier<MenuItemMutationState> {
   Future<void> updateMenuItem(
     String id,
     UpdateMenuItemDto updatedMenuItem, {
-    File? imageFile,
     bool deleteExistingImage = false,
   }) async {
     state = state.copyWith(isLoading: true);
@@ -51,7 +42,6 @@ class MenuItemMutationNotifier extends StateNotifier<MenuItemMutationState> {
     final result = await _menuItemRepo.updateMenuItem(
       id,
       updatedMenuItem,
-      imageFile: imageFile,
       deleteExistingImage: deleteExistingImage,
     );
 

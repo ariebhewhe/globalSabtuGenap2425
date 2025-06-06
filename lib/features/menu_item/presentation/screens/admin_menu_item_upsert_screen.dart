@@ -115,12 +115,12 @@ class _AdminMenuItemUpsertScreenState
           isAvailable: formValues['isAvailable'] as bool,
           isVegetarian: formValues['isVegetarian'] as bool,
           spiceLevel: (formValues['spiceLevel'] as int).round(),
-          imageUrl: null,
+          imageFile: _selectedImageFile,
         );
 
         await ref
             .read(menuItemMutationProvider.notifier)
-            .addMenuItem(createMenuItemDto, imageFile: _selectedImageFile);
+            .addMenuItem(createMenuItemDto);
       } else {
         final updateMenuItemDto = UpdateMenuItemDto(
           name: formValues['name'] as String,
@@ -129,7 +129,8 @@ class _AdminMenuItemUpsertScreenState
           categoryId: formValues['categoryId'] as String,
           isAvailable: formValues['isAvailable'] as bool,
           isVegetarian: formValues['isVegetarian'] as bool,
-          spiceLevel: (formValues['spiceLevel'] as double).round(),
+          spiceLevel: (formValues['spiceLevel'] as int).round(),
+          imageFile: _selectedImageFile,
         );
 
         final bool deleteImage =
@@ -141,7 +142,6 @@ class _AdminMenuItemUpsertScreenState
             .updateMenuItem(
               widget.menuItem!.id,
               updateMenuItemDto,
-              imageFile: _selectedImageFile,
               deleteExistingImage: deleteImage,
             );
       }

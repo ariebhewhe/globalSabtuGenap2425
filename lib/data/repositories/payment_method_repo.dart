@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
@@ -31,26 +29,23 @@ class PaymentMethodRepo {
   PaymentMethodRepo(this._firebaseFirestore, this._cloudinaryService);
 
   Future<Either<ErrorResponse, SuccessResponse<PaymentMethodModel>>>
-  addPaymentMethod(
-    PaymentMethodModel newPaymentMethod, {
-    File? imageFile,
-  }) async {
+  addPaymentMethod(CreatePaymentMethodDto dto) async {
     try {
       final paymentMethodsCollection = _firebaseFirestore.collection(
         _collectionPath,
       );
       final docRef = paymentMethodsCollection.doc();
 
-      String? logo = newPaymentMethod.logo;
+      String? logoUrl;
 
-      if (imageFile != null) {
+      if (dto.logoFile != null) {
         try {
           final uploadResponse = await _cloudinaryService.uploadImage(
-            imageFile: imageFile,
+            imageFile: dto.logoFile!,
             folder: _cloudinaryFolder,
           );
 
-          logo = uploadResponse.secureUrl;
+          logoUrl = uploadResponse.secureUrl;
         } catch (e) {
           logger.e('Failed to upload image: ${e.toString()}');
           return Left(
@@ -59,18 +54,22 @@ class PaymentMethodRepo {
         }
       }
 
-      final paymentMethodWithId = newPaymentMethod.copyWith(
-        id: docRef.id,
-        logo: logo,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      );
+      final paymentMethodData = dto.toMap();
 
-      await docRef.set(paymentMethodWithId.toMap());
+      paymentMethodData['id'] = docRef.id;
+      if (logoUrl != null) {
+        paymentMethodData['logoUrl'] = logoUrl;
+      }
+      paymentMethodData['createdAt'] = DateTime.now().millisecondsSinceEpoch;
+      paymentMethodData['updatedAt'] = DateTime.now().millisecondsSinceEpoch;
+
+      await docRef.set(paymentMethodData);
+
+      final paymentMethod = PaymentMethodModel.fromMap(paymentMethodData);
 
       return Right(
         SuccessResponse(
-          data: paymentMethodWithId,
+          data: paymentMethod,
           message: 'New payment method item added',
         ),
       );
@@ -263,8 +262,7 @@ class PaymentMethodRepo {
   Future<Either<ErrorResponse, SuccessResponse<PaymentMethodModel>>>
   updatePaymentMethod(
     String id,
-    PaymentMethodModel updatedPaymentMethod, {
-    File? imageFile,
+    UpdatePaymentMethodDto dto, {
     bool deleteExistingImage = false,
   }) async {
     try {
@@ -275,78 +273,79 @@ class PaymentMethodRepo {
 
       final existingPaymentMethod =
           paymentMethodResult.getRight().toNullable()!.data;
-      String? logo = updatedPaymentMethod.logo ?? existingPaymentMethod.logo;
+      final updateData = dto.toMap();
+      String? finalImageUrl = existingPaymentMethod.logo;
 
-      // * Hapus gambar yang ada di Cloudinary jika diminta
       if (deleteExistingImage && existingPaymentMethod.logo != null) {
         try {
-          // * Ekstrak public ID dari URL gambar yang ada
           final existingImageUrl = existingPaymentMethod.logo!;
           final uri = Uri.parse(existingImageUrl);
           final pathSegments = uri.pathSegments;
 
-          // * Format: https:// *res.cloudinary.com/{cloud_name}/image/upload/{transformations}/{public_id}.{format}
-          // * Cari indeks "upload" dalam path
           final uploadIndex = pathSegments.indexOf('upload');
           if (uploadIndex != -1 && uploadIndex < pathSegments.length - 1) {
-            // * Ambil semua segment setelah "upload", kecuali ekstensi file terakhir
             final segments = pathSegments.sublist(uploadIndex + 1);
-
-            // * Gabungkan segments untuk mendapatkan public ID dengan folder
             String fullPath = segments.join('/');
-
-            // * Hilangkan ekstensi file (misal .jpg, .png)
             final lastDotIndex = fullPath.lastIndexOf('.');
             if (lastDotIndex != -1) {
               fullPath = fullPath.substring(0, lastDotIndex);
             }
 
             await _cloudinaryService.deleteImage(fullPath);
-            logo = null;
+            finalImageUrl = null;
           }
         } catch (e) {
           logger.e('Failed to delete existing image: ${e.toString()}');
         }
       }
 
-      if (imageFile != null) {
+      if (dto.logoFile != null) {
         try {
           final uploadResponse = await _cloudinaryService.uploadImage(
-            imageFile: imageFile,
+            imageFile: dto.logoFile!,
             folder: _cloudinaryFolder,
           );
 
-          logo = uploadResponse.secureUrl;
+          finalImageUrl = uploadResponse.secureUrl;
         } catch (e) {
-          logger.e('Failed to upload image: ${e.toString()}');
+          logger.e('Failed to upload new image: ${e.toString()}');
           return Left(
-            ErrorResponse(message: 'Failed to upload image: ${e.toString()}'),
+            ErrorResponse(
+              message: 'Failed to upload new image: ${e.toString()}',
+            ),
           );
         }
       }
 
-      final paymentMethodWithUpdatedTimestamp = updatedPaymentMethod.copyWith(
-        logo: logo,
-        updatedAt: DateTime.now(),
-      );
+      if (finalImageUrl != null) {
+        updateData['logo'] = finalImageUrl;
+      } else if (deleteExistingImage || dto.logoFile != null) {
+        updateData['logo'] = null;
+      }
+
+      updateData['updatedAt'] = DateTime.now().millisecondsSinceEpoch;
 
       await _firebaseFirestore
           .collection(_collectionPath)
           .doc(id)
-          .update(paymentMethodWithUpdatedTimestamp.toMap());
+          .update(updateData);
+
+      final updatedDocSnapshot =
+          await _firebaseFirestore.collection(_collectionPath).doc(id).get();
+      final updatedPaymentMethod = PaymentMethodModel.fromMap(
+        updatedDocSnapshot.data()!,
+      );
 
       return Right(
         SuccessResponse(
-          data: paymentMethodWithUpdatedTimestamp,
+          data: updatedPaymentMethod,
           message: "Payment method updated",
         ),
       );
     } catch (e) {
       logger.e(e.toString());
       return Left(
-        ErrorResponse(
-          message: 'Failed to update payment method ${e.toString()}',
-        ),
+        ErrorResponse(message: 'Failed to update menu ${e.toString()}'),
       );
     }
   }

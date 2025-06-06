@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:jamal/core/abstractions/base_model.dart';
 
@@ -138,7 +139,7 @@ class CreateMenuItemDto {
   final String description;
   final double price;
   final String categoryId;
-  final String? imageUrl;
+  File? imageFile;
   final bool isAvailable;
   final bool isVegetarian;
   final int spiceLevel;
@@ -148,7 +149,7 @@ class CreateMenuItemDto {
     required this.description,
     required this.price,
     required this.categoryId,
-    this.imageUrl,
+    this.imageFile,
     required this.isAvailable,
     required this.isVegetarian,
     required this.spiceLevel,
@@ -160,7 +161,6 @@ class CreateMenuItemDto {
       'description': description,
       'price': price,
       'categoryId': categoryId,
-      'imageUrl': imageUrl,
       'isAvailable': isAvailable,
       'isVegetarian': isVegetarian,
       'spiceLevel': spiceLevel,
@@ -175,7 +175,7 @@ class UpdateMenuItemDto {
   final String? description;
   final double? price;
   final String? categoryId;
-  final String? imageUrl;
+  File? imageFile;
   final bool? isAvailable;
   final bool? isVegetarian;
   final int? spiceLevel;
@@ -185,7 +185,7 @@ class UpdateMenuItemDto {
     this.description,
     this.price,
     this.categoryId,
-    this.imageUrl,
+    this.imageFile,
     this.isAvailable,
     this.isVegetarian,
     this.spiceLevel,
@@ -197,7 +197,6 @@ class UpdateMenuItemDto {
     if (description != null) map['description'] = description;
     if (price != null) map['price'] = price;
     if (categoryId != null) map['categoryId'] = categoryId;
-    if (imageUrl != null) map['imageUrl'] = imageUrl;
     if (isAvailable != null) map['isAvailable'] = isAvailable;
     if (isVegetarian != null) map['isVegetarian'] = isVegetarian;
     if (spiceLevel != null) map['spiceLevel'] = spiceLevel;

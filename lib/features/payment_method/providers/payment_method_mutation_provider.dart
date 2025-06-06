@@ -15,16 +15,10 @@ class PaymentMethodMutationNotifier
   PaymentMethodMutationNotifier(this._paymentMethodRepo, this._ref)
     : super(PaymentMethodMutationState());
 
-  Future<void> addPaymentMethod(
-    PaymentMethodModel newPaymentMethod, {
-    File? imageFile,
-  }) async {
+  Future<void> addPaymentMethod(CreatePaymentMethodDto newPaymentMethod) async {
     state = state.copyWith(isLoading: true);
 
-    final result = await _paymentMethodRepo.addPaymentMethod(
-      newPaymentMethod,
-      imageFile: imageFile,
-    );
+    final result = await _paymentMethodRepo.addPaymentMethod(newPaymentMethod);
 
     result.match(
       (error) =>
@@ -43,8 +37,7 @@ class PaymentMethodMutationNotifier
 
   Future<void> updatePaymentMethod(
     String id,
-    PaymentMethodModel updatedPaymentMethod, {
-    File? imageFile,
+    UpdatePaymentMethodDto updatedPaymentMethod, {
     bool deleteExistingImage = false,
   }) async {
     state = state.copyWith(isLoading: true);
@@ -52,7 +45,6 @@ class PaymentMethodMutationNotifier
     final result = await _paymentMethodRepo.updatePaymentMethod(
       id,
       updatedPaymentMethod,
-      imageFile: imageFile,
       deleteExistingImage: deleteExistingImage,
     );
 

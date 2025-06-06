@@ -1,4 +1,6 @@
+// ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:jamal/core/abstractions/base_model.dart';
 import 'package:jamal/core/utils/enums.dart';
@@ -119,4 +121,64 @@ class PaymentMethodModel extends BaseModel {
         createdAt.hashCode ^
         updatedAt.hashCode;
   }
+}
+
+class CreatePaymentMethodDto {
+  final String name;
+  final String? description;
+  final File? logoFile;
+  final PaymentMethodType paymentMethodType;
+  final double minimumAmount;
+  final double maximumAmount;
+
+  CreatePaymentMethodDto({
+    required this.name,
+    required this.description,
+    this.logoFile,
+    required this.paymentMethodType,
+    required this.minimumAmount,
+    required this.maximumAmount,
+  });
+
+  Map<String, dynamic> toMap() {
+    return <String, dynamic>{
+      'name': name,
+      'description': description,
+      'paymentMethodType': paymentMethodType.toMap(),
+      'minimumAmount': minimumAmount,
+      'maximumAmount': maximumAmount,
+    };
+  }
+}
+
+class UpdatePaymentMethodDto {
+  final String? name;
+  final String? description;
+  final File? logoFile;
+  final PaymentMethodType? paymentMethodType;
+  final double? minimumAmount;
+  final double? maximumAmount;
+
+  UpdatePaymentMethodDto({
+    this.name,
+    this.description,
+    this.logoFile,
+    this.paymentMethodType,
+    this.minimumAmount,
+    this.maximumAmount,
+  });
+
+  Map<String, dynamic> toMap() {
+    final map = <String, dynamic>{};
+    if (name != null) map['name'] = name;
+    if (description != null) map['description'] = description;
+    if (paymentMethodType != null) {
+      map['paymentMethodType'] = paymentMethodType!.toMap();
+    }
+    if (minimumAmount != null) map['minimumAmount'] = minimumAmount;
+    if (maximumAmount != null) map['maximumAmount'] = maximumAmount;
+    return map;
+  }
+
+  String toJson() => json.encode(toMap());
 }
