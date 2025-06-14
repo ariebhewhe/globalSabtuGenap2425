@@ -1,0 +1,67 @@
+{
+  "project_info": {
+    "project_number": "91828601681",
+    "project_id": "perpus-glo",
+    "storage_bucket": "perpus-glo.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:91828601681:android:66080079687ee20bc34970",
+        "android_client_info": {
+          "package_name": "com.mif.perpus_glo"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBjzbfKetS77Ir7s0twEv774eE2FXTIY10"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:91828601681:android:bceb76f6f9686ffec34970",
+        "android_client_info": {
+          "package_name": "com.mif.perpusglo"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBjzbfKetS77Ir7s0twEv774eE2FXTIY10"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:91828601681:android:fb7daf830ea1626ec34970",
+        "android_client_info": {
+          "package_name": "com.mift.perpus_glo"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBjzbfKetS77Ir7s0twEv774eE2FXTIY10"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
