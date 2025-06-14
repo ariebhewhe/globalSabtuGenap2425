@@ -202,7 +202,7 @@ class _AdminMenuItemDetailScreenState
               ),
               const SizedBox(height: 16.0),
               Text(
-                'Kategori: ${widget.menuItem.categoryId}',
+                'Kategori: ${widget.menuItem.category?.name ?? "category"}',
                 style: context.textStyles.bodyMedium,
               ),
               const SizedBox(height: 12.0),
