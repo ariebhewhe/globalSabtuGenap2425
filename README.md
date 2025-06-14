@@ -1,16 +1,10 @@
-# jamal
-
-A new Flutter project.
-
-## Getting Started
-
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+<<<<<<< HEAD
+ini branch baru Rizqiansyah Ramadhan
+=======
+## Aplikasi Pos Order Makanan
+**kelompok**
+- Rizqiansyah Ramadhan (1122140051)
+- Fendi Andriyanto (1122140055)
+- Andreas Ronaldo (1122140098)
+- Lukman Hakim (1122140088)
+>>>>>>> d324d814b9c2bdade93338ea42db4884382cedcb
