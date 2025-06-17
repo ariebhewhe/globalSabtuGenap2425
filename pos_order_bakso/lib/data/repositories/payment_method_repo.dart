@@ -5,6 +5,7 @@ import 'package:jamal/core/helpers/error_response.dart';
 import 'package:jamal/core/helpers/success_response.dart';
 import 'package:jamal/core/utils/logger.dart';
 import 'package:jamal/data/models/payment_method_model.dart';
+import 'package:jamal/data/seeders/payment_method_seeder.dart';
 import 'package:jamal/providers.dart';
 import 'package:jamal/shared/models/paginated_result.dart';
 import 'package:jamal/shared/services/cloudinary_service.dart';
@@ -82,16 +83,37 @@ class PaymentMethodRepo {
           );
           logoUrl = uploadResponse.secureUrl;
         } catch (e) {
-          logger.e('Failed to upload image: ${e.toString()}');
+          logger.e('Failed to upload logo image: ${e.toString()}');
           return Left(
-            ErrorResponse(message: 'Failed to upload image: ${e.toString()}'),
+            ErrorResponse(
+              message: 'Failed to upload logo image: ${e.toString()}',
+            ),
+          );
+        }
+      }
+
+      String? adminQrCodeUrl;
+      if (dto.adminPaymentQrCodeFile != null) {
+        try {
+          final uploadResponse = await _cloudinaryService.uploadImage(
+            imageFile: dto.adminPaymentQrCodeFile!,
+            folder: _cloudinaryFolder,
+          );
+          adminQrCodeUrl = uploadResponse.secureUrl;
+        } catch (e) {
+          logger.e('Failed to upload admin QR code image: ${e.toString()}');
+          return Left(
+            ErrorResponse(
+              message: 'Failed to upload admin QR code image: ${e.toString()}',
+            ),
           );
         }
       }
 
       final paymentMethodData = dto.toMap();
       paymentMethodData['id'] = docRef.id;
-      paymentMethodData['logo'] = logoUrl; // Standardized to 'logo'
+      paymentMethodData['logo'] = logoUrl;
+      paymentMethodData['adminPaymentQrCodePicture'] = adminQrCodeUrl;
       paymentMethodData['createdAt'] = DateTime.now().millisecondsSinceEpoch;
       paymentMethodData['updatedAt'] = DateTime.now().millisecondsSinceEpoch;
 
@@ -130,7 +152,7 @@ class PaymentMethodRepo {
       final now = DateTime.now().millisecondsSinceEpoch;
 
       for (final dto in dtos) {
-        // Batch add does not support image file uploads. 'logo' must be a URL.
+        // Batch add does not support image file uploads. 'logo' and 'adminPaymentQrCodePicture' must be URLs if needed.
         final docRef = collectionRef.doc();
         final Map<String, dynamic> data = dto.toMap();
 
@@ -309,7 +331,8 @@ class PaymentMethodRepo {
   updatePaymentMethod(
     String id,
     UpdatePaymentMethodDto dto, {
-    bool deleteExistingImage = false,
+    bool deleteExistingLogo = false, // Rename for clarity
+    bool deleteExistingQrCode = false, // New parameter for QR code
   }) async {
     try {
       final paymentMethodResult = await getPaymentMethodById(id);
@@ -320,35 +343,67 @@ class PaymentMethodRepo {
       final existingPaymentMethod =
           paymentMethodResult.getRight().toNullable()!.data;
       final updateData = dto.toMap();
-      String? finalImageUrl = existingPaymentMethod.logo;
 
-      if (deleteExistingImage && existingPaymentMethod.logo != null) {
+      String? finalLogoUrl = existingPaymentMethod.logo;
+      String? finalAdminQrCodeUrl =
+          existingPaymentMethod.adminPaymentQrCodePicture;
+
+      // Handle logo deletion and upload
+      if (deleteExistingLogo && existingPaymentMethod.logo != null) {
         await _deleteImageByUrl(existingPaymentMethod.logo);
-        finalImageUrl = null;
+        finalLogoUrl = null;
       }
-
       if (dto.logoFile != null) {
-        if (finalImageUrl != null && !deleteExistingImage) {
-          await _deleteImageByUrl(finalImageUrl);
+        if (finalLogoUrl != null && !deleteExistingLogo) {
+          await _deleteImageByUrl(finalLogoUrl);
         }
-
         try {
           final uploadResponse = await _cloudinaryService.uploadImage(
             imageFile: dto.logoFile!,
             folder: _cloudinaryFolder,
           );
-          finalImageUrl = uploadResponse.secureUrl;
+          finalLogoUrl = uploadResponse.secureUrl;
         } catch (e) {
-          logger.e('Failed to upload new image: ${e.toString()}');
+          logger.e('Failed to upload new logo image: ${e.toString()}');
           return Left(
             ErrorResponse(
-              message: 'Failed to upload new image: ${e.toString()}',
+              message: 'Failed to upload new logo image: ${e.toString()}',
             ),
           );
         }
       }
 
-      updateData['logo'] = finalImageUrl;
+      // Handle admin QR code deletion and upload
+      if (deleteExistingQrCode &&
+          existingPaymentMethod.adminPaymentQrCodePicture != null) {
+        await _deleteImageByUrl(
+          existingPaymentMethod.adminPaymentQrCodePicture,
+        );
+        finalAdminQrCodeUrl = null;
+      }
+      if (dto.adminPaymentQrCodeFile != null) {
+        if (finalAdminQrCodeUrl != null && !deleteExistingQrCode) {
+          await _deleteImageByUrl(finalAdminQrCodeUrl);
+        }
+        try {
+          final uploadResponse = await _cloudinaryService.uploadImage(
+            imageFile: dto.adminPaymentQrCodeFile!,
+            folder: _cloudinaryFolder,
+          );
+          finalAdminQrCodeUrl = uploadResponse.secureUrl;
+        } catch (e) {
+          logger.e('Failed to upload new admin QR code image: ${e.toString()}');
+          return Left(
+            ErrorResponse(
+              message:
+                  'Failed to upload new admin QR code image: ${e.toString()}',
+            ),
+          );
+        }
+      }
+
+      updateData['logo'] = finalLogoUrl;
+      updateData['adminPaymentQrCodePicture'] = finalAdminQrCodeUrl;
       updateData['updatedAt'] = DateTime.now().millisecondsSinceEpoch;
 
       final docRef = _firebaseFirestore.collection(_collectionPath).doc(id);
@@ -377,7 +432,7 @@ class PaymentMethodRepo {
 
   Future<Either<ErrorResponse, SuccessResponse<String>>> deletePaymentMethod(
     String id, {
-    bool deleteImage = true,
+    bool deleteImages = true, // Unified parameter for all images
   }) async {
     try {
       final docRef = _firebaseFirestore.collection(_collectionPath).doc(id);
@@ -387,9 +442,12 @@ class PaymentMethodRepo {
         return Left(ErrorResponse(message: 'Payment method not found'));
       }
 
-      if (deleteImage) {
-        final imageUrl = docSnapshot.data()?['logo'];
-        await _deleteImageByUrl(imageUrl);
+      if (deleteImages) {
+        final logoUrl = docSnapshot.data()?['logo'] as String?;
+        final qrCodeUrl =
+            docSnapshot.data()?['adminPaymentQrCodePicture'] as String?;
+        await _deleteImageByUrl(logoUrl);
+        await _deleteImageByUrl(qrCodeUrl);
       }
 
       await docRef.delete();
@@ -428,15 +486,21 @@ class PaymentMethodRepo {
       }
 
       if (deleteImages) {
-        final imageUrlsToDelete =
-            paymentMethodsSnapshot.docs
-                .map((doc) => doc.data()['logo'] as String?)
-                .where((url) => url != null && url.isNotEmpty)
-                .toList();
+        final List<String> imageUrlsToDelete = [];
+        for (final doc in paymentMethodsSnapshot.docs) {
+          final logoUrl = doc.data()['logo'] as String?;
+          final qrCodeUrl = doc.data()['adminPaymentQrCodePicture'] as String?;
+          if (logoUrl != null && logoUrl.isNotEmpty) {
+            imageUrlsToDelete.add(logoUrl);
+          }
+          if (qrCodeUrl != null && qrCodeUrl.isNotEmpty) {
+            imageUrlsToDelete.add(qrCodeUrl);
+          }
+        }
 
         if (imageUrlsToDelete.isNotEmpty) {
           await Future.wait(
-            imageUrlsToDelete.map((url) => _deleteImageByUrl(url!)),
+            imageUrlsToDelete.map((url) => _deleteImageByUrl(url)),
           );
         }
       }
@@ -461,6 +525,125 @@ class PaymentMethodRepo {
       return Left(
         ErrorResponse(
           message: 'Failed to batch delete payment methods: ${e.toString()}',
+        ),
+      );
+    }
+  }
+
+  Future<Either<ErrorResponse, SuccessResponse<void>>>
+  deleteAllPaymentMethods() async {
+    try {
+      final collectionRef = _firebaseFirestore.collection(_collectionPath);
+      final allDocsSnapshot = await collectionRef.limit(500).get();
+
+      if (allDocsSnapshot.docs.isEmpty) {
+        logger.i('No payment methods to delete.');
+        return Right(
+          SuccessResponse(data: null, message: 'No items to delete.'),
+        );
+      }
+
+      final List<String> imageUrlsToDelete = [];
+      for (final doc in allDocsSnapshot.docs) {
+        final data = doc.data();
+        final logoUrl = data['logo'] as String?;
+        final qrCodeUrl = data['adminPaymentQrCodePicture'] as String?;
+        if (logoUrl != null && logoUrl.isNotEmpty) {
+          imageUrlsToDelete.add(logoUrl);
+        }
+        if (qrCodeUrl != null && qrCodeUrl.isNotEmpty) {
+          imageUrlsToDelete.add(qrCodeUrl);
+        }
+      }
+
+      if (imageUrlsToDelete.isNotEmpty) {
+        logger.i(
+          'Deleting ${imageUrlsToDelete.length} images from Cloudinary...',
+        );
+        await Future.wait(
+          imageUrlsToDelete.map((url) => _deleteImageByUrl(url)),
+        );
+        logger.i('Cloudinary images deleted.');
+      }
+
+      logger.i(
+        'Deleting ${allDocsSnapshot.docs.length} documents from Firestore...',
+      );
+      final batch = _firebaseFirestore.batch();
+      for (final doc in allDocsSnapshot.docs) {
+        batch.delete(doc.reference);
+      }
+      await batch.commit();
+
+      if (allDocsSnapshot.docs.length >= 500) {
+        return deleteAllPaymentMethods();
+      }
+
+      logger.i('All payment methods have been deleted successfully.');
+      return Right(
+        SuccessResponse(
+          data: null,
+          message: 'All payment methods deleted successfully.',
+        ),
+      );
+    } catch (e) {
+      logger.e('Failed to delete all payment methods: ${e.toString()}');
+      return Left(
+        ErrorResponse(
+          message: 'Failed to delete all payment methods: ${e.toString()}',
+        ),
+      );
+    }
+  }
+
+  Future<Either<ErrorResponse, SuccessResponse<void>>>
+  seedPaymentMethods() async {
+    try {
+      logger.i('Seeding process started. First, deleting all existing data...');
+      final deleteResult = await deleteAllPaymentMethods();
+      if (deleteResult.isLeft()) {
+        logger.e('Failed to clear existing data before seeding.');
+        return Left(
+          ErrorResponse(
+            message: 'Failed to clear existing data before seeding.',
+          ),
+        );
+      }
+      logger.i('Existing data cleared successfully.');
+
+      final seedData = paymentMethodSeeder;
+
+      if (seedData.isEmpty) {
+        logger.w("Seed data is empty. No new payment methods will be added.");
+        return Right(
+          SuccessResponse(data: null, message: 'Seed data was empty.'),
+        );
+      }
+
+      logger.i('Starting to seed ${seedData.length} new payment methods...');
+      final batch = _firebaseFirestore.batch();
+      final collectionRef = _firebaseFirestore.collection(_collectionPath);
+
+      for (final jsonData in seedData) {
+        final docRef = collectionRef.doc();
+        jsonData['id'] = docRef.id; // Firestore-generated ID
+        batch.set(docRef, jsonData);
+      }
+
+      await batch.commit();
+
+      logger.i('Successfully seeded ${seedData.length} payment methods.');
+      return Right(
+        SuccessResponse(
+          data: null,
+          message: 'Successfully seeded ${seedData.length} payment methods.',
+        ),
+      );
+    } catch (e) {
+      logger.e('Failed to seed payment methods: ${e.toString()}');
+      return Left(
+        ErrorResponse(
+          message: 'Failed to seed payment methods: ${e.toString()}',
         ),
       );
     }

@@ -6,7 +6,7 @@ import 'package:jamal/core/theme/app_theme.dart';
 import 'package:jamal/core/utils/enums.dart';
 import 'package:jamal/core/utils/toast_utils.dart';
 import 'package:jamal/data/models/payment_method_model.dart';
-import 'package:jamal/features/payment_method/providers/payment_method_mutation_provider.dart'; // Asumsi provider ini ada
+import 'package:jamal/features/payment_method/providers/payment_method_mutation_provider.dart';
 import 'package:jamal/features/payment_method/providers/payment_method_mutation_state.dart';
 import 'package:jamal/features/payment_method/providers/payment_methods_provider.dart';
 import 'package:jamal/features/payment_method/providers/search_payment_methods_provider.dart';
@@ -161,7 +161,11 @@ class _AdminPaymentMethodsScreenState
     });
   }
 
+  // --- MODIFIED & NEW METHODS ---
+
   void _deleteSelectedItems() {
+    if (_selectedPaymentMethodIds.isEmpty) return;
+
     showDialog(
       context: context,
       builder:
@@ -194,23 +198,13 @@ class _AdminPaymentMethodsScreenState
   }
 
   void _deleteAllItems() {
-    final allItemIds = paymentMethods.map((item) => item.id).toList();
-
-    if (allItemIds.isEmpty) {
-      ToastUtils.showError(
-        context: context,
-        message: 'Tidak ada item untuk dihapus',
-      );
-      return;
-    }
-
     showDialog(
       context: context,
       builder:
           (ctx) => AlertDialog(
             title: const Text('Konfirmasi Hapus Semua'),
-            content: Text(
-              'Anda yakin ingin menghapus SEMUA ${allItemIds.length} metode pembayaran? Tindakan ini tidak dapat dibatalkan.',
+            content: const Text(
+              'Anda yakin ingin menghapus SEMUA metode pembayaran? Tindakan ini tidak dapat dibatalkan.',
             ),
             actions: [
               TextButton(
@@ -221,9 +215,41 @@ class _AdminPaymentMethodsScreenState
                 child: const Text('Hapus Semua'),
                 style: FilledButton.styleFrom(backgroundColor: Colors.red),
                 onPressed: () {
+                  // Menggunakan method deleteAllPaymentMethods dari notifier
                   ref
                       .read(paymentMethodMutationProvider.notifier)
-                      .batchDeletePaymentMethods(allItemIds);
+                      .deleteAllPaymentMethods();
+                  Navigator.of(ctx).pop();
+                  if (_isSelectionMode) _exitSelectionMode();
+                },
+              ),
+            ],
+          ),
+    );
+  }
+
+  void _seedData() {
+    showDialog(
+      context: context,
+      builder:
+          (ctx) => AlertDialog(
+            title: const Text('Konfirmasi Seed Data'),
+            content: const Text(
+              'Tindakan ini akan MENGHAPUS SEMUA data yang ada dan menggantinya dengan data awal (default). Yakin ingin melanjutkan?',
+            ),
+            actions: [
+              TextButton(
+                child: const Text('Batal'),
+                onPressed: () => Navigator.of(ctx).pop(),
+              ),
+              FilledButton(
+                child: const Text('Lanjutkan & Seed'),
+                style: FilledButton.styleFrom(backgroundColor: Colors.orange),
+                onPressed: () {
+                  // Menggunakan method seedPaymentMethods dari notifier
+                  ref
+                      .read(paymentMethodMutationProvider.notifier)
+                      .seedPaymentMethods();
                   Navigator.of(ctx).pop();
                   if (_isSelectionMode) _exitSelectionMode();
                 },
@@ -289,7 +315,9 @@ class _AdminPaymentMethodsScreenState
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(
-                    _isSelectionMode ? Icons.check_circle : Icons.select_all,
+                    _isSelectionMode
+                        ? Icons.cancel_outlined
+                        : Icons.check_box_outlined,
                     color: _isSelectionMode ? Colors.orange : Colors.blue,
                   ),
                 ),
@@ -299,7 +327,7 @@ class _AdminPaymentMethodsScreenState
                 subtitle: Text(
                   _isSelectionMode
                       ? 'Keluar dari mode seleksi'
-                      : 'Masuk ke mode seleksi untuk menghapus item',
+                      : 'Pilih item untuk dihapus',
                 ),
                 onTap: () {
                   Navigator.of(context).pop();
@@ -317,10 +345,33 @@ class _AdminPaymentMethodsScreenState
                 leading: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
+                    color: Colors.green.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(
+                    Icons.data_usage_outlined,
+                    color: Colors.green,
+                  ),
+                ),
+                title: const Text('Seed Initial Data'),
+                subtitle: const Text('Hapus semua & isi dengan data default'),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  _seedData();
+                },
+              ),
+              const Divider(),
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
                     color: Colors.red.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: const Icon(Icons.delete_forever, color: Colors.red),
+                  child: const Icon(
+                    Icons.delete_sweep_outlined,
+                    color: Colors.red,
+                  ),
                 ),
                 title: const Text('Delete All Items'),
                 subtitle: const Text('Hapus semua metode pembayaran'),
@@ -336,6 +387,8 @@ class _AdminPaymentMethodsScreenState
       },
     );
   }
+
+  // --- Sisa widget build dan method lainnya tidak berubah ---
 
   AppBar _buildSelectionAppBar() {
     return AppBar(

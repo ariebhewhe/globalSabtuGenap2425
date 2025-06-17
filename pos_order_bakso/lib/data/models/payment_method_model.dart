@@ -11,6 +11,7 @@ class PaymentMethodModel extends BaseModel {
   final PaymentMethodType paymentMethodType;
   final double minimumAmount;
   final double maximumAmount;
+  final String? midtransIdentifier; // Properti baru
   final String? adminPaymentCode;
   final String? adminPaymentQrCodePicture;
 
@@ -19,11 +20,12 @@ class PaymentMethodModel extends BaseModel {
     required DateTime createdAt,
     required DateTime updatedAt,
     required this.name,
-    this.description, // Tetap String? di constructor
+    this.description,
     this.logo,
     required this.paymentMethodType,
     required this.minimumAmount,
     required this.maximumAmount,
+    this.midtransIdentifier, // Ditambahkan ke constructor
     this.adminPaymentCode,
     this.adminPaymentQrCodePicture,
   }) : super(id: id, createdAt: createdAt, updatedAt: updatedAt);
@@ -49,6 +51,7 @@ class PaymentMethodModel extends BaseModel {
     PaymentMethodType? paymentMethodType,
     double? minimumAmount,
     double? maximumAmount,
+    String? midtransIdentifier, // Ditambahkan ke copyWith
     String? adminPaymentCode,
     String? adminPaymentQrCodePicture,
     DateTime? createdAt,
@@ -62,6 +65,8 @@ class PaymentMethodModel extends BaseModel {
       paymentMethodType: paymentMethodType ?? this.paymentMethodType,
       minimumAmount: minimumAmount ?? this.minimumAmount,
       maximumAmount: maximumAmount ?? this.maximumAmount,
+      midtransIdentifier:
+          midtransIdentifier ?? this.midtransIdentifier, // Ditambahkan
       adminPaymentCode: adminPaymentCode ?? this.adminPaymentCode,
       adminPaymentQrCodePicture:
           adminPaymentQrCodePicture ?? this.adminPaymentQrCodePicture,
@@ -80,6 +85,7 @@ class PaymentMethodModel extends BaseModel {
       'paymentMethodType': paymentMethodType.toMap(),
       'minimumAmount': minimumAmount,
       'maximumAmount': maximumAmount,
+      'midtransIdentifier': midtransIdentifier, // Ditambahkan ke toMap
       'adminPaymentCode': adminPaymentCode,
       'adminPaymentQrCodePicture': adminPaymentQrCodePicture,
       'createdAt': createdAt.millisecondsSinceEpoch,
@@ -100,6 +106,11 @@ class PaymentMethodModel extends BaseModel {
       ),
       minimumAmount: map['minimumAmount'] as double,
       maximumAmount: map['maximumAmount'] as double,
+      midtransIdentifier:
+          map['midtransIdentifier'] !=
+                  null // Ditambahkan ke fromMap
+              ? map['midtransIdentifier'] as String
+              : null,
       adminPaymentCode:
           map['adminPaymentCode'] != null
               ? map['adminPaymentCode'] as String
@@ -122,7 +133,7 @@ class PaymentMethodModel extends BaseModel {
 
   @override
   String toString() {
-    return 'PaymentMethodModel(id: $id, name: $name, description: $description, logo: $logo, paymentMethodType: $paymentMethodType, minimumAmount: $minimumAmount, maximumAmount: $maximumAmount, adminPaymentCode: $adminPaymentCode, adminPaymentQrCodePicture: $adminPaymentQrCodePicture, createdAt: $createdAt, updatedAt: $updatedAt)';
+    return 'PaymentMethodModel(id: $id, name: $name, description: $description, logo: $logo, paymentMethodType: $paymentMethodType, minimumAmount: $minimumAmount, maximumAmount: $maximumAmount, midtransIdentifier: $midtransIdentifier, adminPaymentCode: $adminPaymentCode, adminPaymentQrCodePicture: $adminPaymentQrCodePicture, createdAt: $createdAt, updatedAt: $updatedAt)';
   }
 
   @override
@@ -136,6 +147,8 @@ class PaymentMethodModel extends BaseModel {
         other.paymentMethodType == paymentMethodType &&
         other.minimumAmount == minimumAmount &&
         other.maximumAmount == maximumAmount &&
+        other.midtransIdentifier ==
+            midtransIdentifier && // Ditambahkan ke operator ==
         other.adminPaymentCode == adminPaymentCode &&
         other.adminPaymentQrCodePicture == adminPaymentQrCodePicture &&
         other.createdAt == createdAt &&
@@ -151,6 +164,7 @@ class PaymentMethodModel extends BaseModel {
         paymentMethodType.hashCode ^
         minimumAmount.hashCode ^
         maximumAmount.hashCode ^
+        midtransIdentifier.hashCode ^ // Ditambahkan ke hashCode
         adminPaymentCode.hashCode ^
         adminPaymentQrCodePicture.hashCode ^
         createdAt.hashCode ^
@@ -165,6 +179,7 @@ class CreatePaymentMethodDto {
   final PaymentMethodType paymentMethodType;
   final double minimumAmount;
   final double maximumAmount;
+  final String? midtransIdentifier; // Ditambahkan ke Create DTO
   final String? adminPaymentCode;
   final File? adminPaymentQrCodeFile;
 
@@ -175,6 +190,7 @@ class CreatePaymentMethodDto {
     required this.paymentMethodType,
     required this.minimumAmount,
     required this.maximumAmount,
+    this.midtransIdentifier, // Ditambahkan
     this.adminPaymentCode,
     this.adminPaymentQrCodeFile,
   });
@@ -186,6 +202,7 @@ class CreatePaymentMethodDto {
       'paymentMethodType': paymentMethodType.toMap(),
       'minimumAmount': minimumAmount,
       'maximumAmount': maximumAmount,
+      'midtransIdentifier': midtransIdentifier, // Ditambahkan ke toMap
       'adminPaymentCode': adminPaymentCode,
     };
   }
@@ -198,6 +215,7 @@ class UpdatePaymentMethodDto {
   final PaymentMethodType? paymentMethodType;
   final double? minimumAmount;
   final double? maximumAmount;
+  final String? midtransIdentifier; // Ditambahkan ke Update DTO
   final String? adminPaymentCode;
   final File? adminPaymentQrCodeFile;
 
@@ -208,6 +226,7 @@ class UpdatePaymentMethodDto {
     this.paymentMethodType,
     this.minimumAmount,
     this.maximumAmount,
+    this.midtransIdentifier, // Ditambahkan
     this.adminPaymentCode,
     this.adminPaymentQrCodeFile,
   });
@@ -221,6 +240,9 @@ class UpdatePaymentMethodDto {
     }
     if (minimumAmount != null) map['minimumAmount'] = minimumAmount;
     if (maximumAmount != null) map['maximumAmount'] = maximumAmount;
+    if (midtransIdentifier != null) {
+      map['midtransIdentifier'] = midtransIdentifier; // Ditambahkan ke toMap
+    }
     if (adminPaymentCode != null) map['adminPaymentCode'] = adminPaymentCode;
     return map;
   }

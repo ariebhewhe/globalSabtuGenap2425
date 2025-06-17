@@ -28,33 +28,58 @@ class AdminPaymentMethodUpsertScreen extends ConsumerStatefulWidget {
 class _AdminPaymentMethodUpsertScreenState
     extends ConsumerState<AdminPaymentMethodUpsertScreen> {
   final _formKey = GlobalKey<FormBuilderState>();
-  File? _selectedImageFile;
+  File? _selectedLogoFile;
+  File? _selectedQrCodeFile;
   final ImagePicker _picker = ImagePicker();
-  bool _deleteExistingImage = false;
+  bool _deleteExistingLogo = false;
+  bool _deleteExistingQrCode = false;
 
   @override
   void initState() {
     super.initState();
 
-    if (widget.paymentMethod != null && widget.paymentMethod!.logo != null) {
-      _deleteExistingImage = false;
-    } else {
-      _deleteExistingImage = true;
+    if (widget.paymentMethod != null) {
+      if (widget.paymentMethod!.logo != null) {
+        _deleteExistingLogo = false;
+      } else {
+        _deleteExistingLogo = true;
+      }
+
+      if (widget.paymentMethod!.adminPaymentQrCodePicture != null) {
+        _deleteExistingQrCode = false;
+      } else {
+        _deleteExistingQrCode = true;
+      }
     }
   }
 
-  Future<void> _pickImage() async {
+  Future<void> _pickLogoImage() async {
     final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
     if (pickedFile != null) {
       setState(() {
-        _selectedImageFile = File(pickedFile.path);
+        _selectedLogoFile = File(pickedFile.path);
 
         if (widget.paymentMethod != null &&
             widget.paymentMethod!.logo != null) {
-          _formKey.currentState?.fields['deleteExistingImage']?.didChange(
+          _formKey.currentState?.fields['deleteExistingLogo']?.didChange(false);
+          _deleteExistingLogo = false;
+        }
+      });
+    }
+  }
+
+  Future<void> _pickQrCodeImage() async {
+    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      setState(() {
+        _selectedQrCodeFile = File(pickedFile.path);
+
+        if (widget.paymentMethod != null &&
+            widget.paymentMethod!.adminPaymentQrCodePicture != null) {
+          _formKey.currentState?.fields['deleteExistingQrCode']?.didChange(
             false,
           );
-          _deleteExistingImage = false;
+          _deleteExistingQrCode = false;
         }
       });
     }
@@ -63,11 +88,24 @@ class _AdminPaymentMethodUpsertScreenState
   void _resetForm() {
     _formKey.currentState?.reset();
     setState(() {
-      _selectedImageFile = null;
-      if (widget.paymentMethod != null && widget.paymentMethod!.logo != null) {
-        _deleteExistingImage = false;
+      _selectedLogoFile = null;
+      _selectedQrCodeFile = null;
+
+      if (widget.paymentMethod != null) {
+        if (widget.paymentMethod!.logo != null) {
+          _deleteExistingLogo = false;
+        } else {
+          _deleteExistingLogo = true;
+        }
+
+        if (widget.paymentMethod!.adminPaymentQrCodePicture != null) {
+          _deleteExistingQrCode = false;
+        } else {
+          _deleteExistingQrCode = true;
+        }
       } else {
-        _deleteExistingImage = true;
+        _deleteExistingLogo = true;
+        _deleteExistingQrCode = true;
       }
     });
   }
@@ -76,12 +114,15 @@ class _AdminPaymentMethodUpsertScreenState
     final isValid = _formKey.currentState?.saveAndValidate() ?? false;
 
     final bool isAdding = widget.paymentMethod == null;
-    final bool hasExistingImage = widget.paymentMethod?.logo != null;
+    final bool hasExistingLogo = widget.paymentMethod?.logo != null;
+    final bool hasExistingQrCode =
+        widget.paymentMethod?.adminPaymentQrCodePicture != null;
 
-    if (_selectedImageFile == null && !hasExistingImage && !isAdding) {
+    if (_selectedLogoFile == null && !hasExistingLogo && !isAdding) {
       ToastUtils.showWarning(
         context: context,
-        message: 'Please select a new image or ensure an existing one is kept.',
+        message:
+            'Please select a new logo image or ensure an existing one is kept.',
       );
       return;
     }
@@ -90,10 +131,10 @@ class _AdminPaymentMethodUpsertScreenState
       final formValues = _formKey.currentState!.value;
 
       if (isAdding) {
-        if (_selectedImageFile == null) {
+        if (_selectedLogoFile == null) {
           ToastUtils.showWarning(
             context: context,
-            message: 'Please select an image.',
+            message: 'Please select a logo image.',
           );
           return;
         }
@@ -107,7 +148,9 @@ class _AdminPaymentMethodUpsertScreenState
               double.tryParse(formValues['maximumAmount'].toString()) ?? 0.0,
           paymentMethodType:
               formValues['paymentMethodType'] as PaymentMethodType,
-          logoFile: _selectedImageFile,
+          logoFile: _selectedLogoFile,
+          adminPaymentCode: formValues['adminPaymentCode'] as String?,
+          adminPaymentQrCodeFile: _selectedQrCodeFile,
         );
 
         await ref
@@ -115,19 +158,25 @@ class _AdminPaymentMethodUpsertScreenState
             .addPaymentMethod(createPaymentMethodDto);
       } else {
         final updatePaymentMethodDto = UpdatePaymentMethodDto(
-          name: formValues['name'] as String,
+          name: formValues['name'] as String?,
           description: formValues['description'] as String?,
-          minimumAmount:
-              double.tryParse(formValues['minimumAmount'].toString()) ?? 0.0,
-          maximumAmount:
-              double.tryParse(formValues['maximumAmount'].toString()) ?? 0.0,
+          minimumAmount: double.tryParse(
+            formValues['minimumAmount'].toString(),
+          ),
+          maximumAmount: double.tryParse(
+            formValues['maximumAmount'].toString(),
+          ),
           paymentMethodType:
-              formValues['paymentMethodType'] as PaymentMethodType,
-          logoFile: _selectedImageFile,
+              formValues['paymentMethodType'] as PaymentMethodType?,
+          logoFile: _selectedLogoFile,
+          adminPaymentCode: formValues['adminPaymentCode'] as String?,
+          adminPaymentQrCodeFile: _selectedQrCodeFile,
         );
 
-        final bool deleteImage =
-            _formKey.currentState?.fields['deleteExistingImage']?.value ??
+        final bool deleteLogo =
+            _formKey.currentState?.fields['deleteExistingLogo']?.value ?? false;
+        final bool deleteQrCode =
+            _formKey.currentState?.fields['deleteExistingQrCode']?.value ??
             false;
 
         await ref
@@ -135,7 +184,8 @@ class _AdminPaymentMethodUpsertScreenState
             .updatePaymentMethod(
               widget.paymentMethod!.id,
               updatePaymentMethodDto,
-              deleteExistingImage: deleteImage,
+              deleteExistingLogo: deleteLogo,
+              deleteExistingQrCode: deleteQrCode,
             );
       }
 
@@ -148,7 +198,9 @@ class _AdminPaymentMethodUpsertScreenState
   @override
   Widget build(BuildContext context) {
     final isAdding = widget.paymentMethod == null;
-    final hasExistingImage = widget.paymentMethod?.logo != null;
+    final hasExistingLogo = widget.paymentMethod?.logo != null;
+    final hasExistingQrCode =
+        widget.paymentMethod?.adminPaymentQrCodePicture != null;
 
     ref.listen<PaymentMethodMutationState>(paymentMethodMutationProvider, (
       previous,
@@ -183,17 +235,17 @@ class _AdminPaymentMethodUpsertScreenState
                 absorbing: isSubmitting,
                 child: FormBuilder(
                   key: _formKey,
-
                   initialValue: {
                     'name': widget.paymentMethod?.name ?? '',
                     'description': widget.paymentMethod?.description ?? '',
                     'minimumAmount':
-                        widget.paymentMethod?.minimumAmount.toString() ?? '',
+                        widget.paymentMethod?.minimumAmount.toString() ?? '0.0',
                     'maximumAmount':
-                        widget.paymentMethod?.maximumAmount.toString() ?? '',
-
+                        widget.paymentMethod?.maximumAmount.toString() ?? '0.0',
                     'paymentMethodType':
                         widget.paymentMethod?.paymentMethodType,
+                    'adminPaymentCode':
+                        widget.paymentMethod?.adminPaymentCode ?? '',
                   },
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -212,7 +264,6 @@ class _AdminPaymentMethodUpsertScreenState
                         ]),
                       ),
                       const SizedBox(height: 16),
-
                       FormBuilderTextField(
                         name: 'description',
                         keyboardType: TextInputType.multiline,
@@ -229,7 +280,6 @@ class _AdminPaymentMethodUpsertScreenState
                         ]),
                       ),
                       const SizedBox(height: 16),
-
                       FormBuilderTextField(
                         name: 'minimumAmount',
                         keyboardType: TextInputType.number,
@@ -246,7 +296,6 @@ class _AdminPaymentMethodUpsertScreenState
                         ]),
                       ),
                       const SizedBox(height: 16),
-
                       FormBuilderTextField(
                         name: 'maximumAmount',
                         keyboardType: TextInputType.number,
@@ -260,7 +309,6 @@ class _AdminPaymentMethodUpsertScreenState
                           FormBuilderValidators.required(),
                           FormBuilderValidators.numeric(),
                           FormBuilderValidators.min(0.1),
-
                           (val) {
                             final minAmount =
                                 double.tryParse(
@@ -283,7 +331,6 @@ class _AdminPaymentMethodUpsertScreenState
                         ]),
                       ),
                       const SizedBox(height: 16),
-
                       FormBuilderDropdown<PaymentMethodType>(
                         name: 'paymentMethodType',
                         decoration: const InputDecoration(
@@ -305,6 +352,22 @@ class _AdminPaymentMethodUpsertScreenState
                       ),
                       const SizedBox(height: 16),
 
+                      // Input for Admin Payment Code
+                      FormBuilderTextField(
+                        name: 'adminPaymentCode',
+                        decoration: const InputDecoration(
+                          border: OutlineInputBorder(),
+                          hintText:
+                              'Admin Payment Code (e.g., Virtual Account No.)',
+                          labelText: 'Admin Payment Code',
+                        ),
+                        validator: FormBuilderValidators.compose([
+                          // Make this required if needed, or leave optional
+                        ]),
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Logo Section
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -317,7 +380,7 @@ class _AdminPaymentMethodUpsertScreenState
                           ),
                           const SizedBox(height: 8),
                           GestureDetector(
-                            onTap: isSubmitting ? null : _pickImage,
+                            onTap: isSubmitting ? null : _pickLogoImage,
                             child: Container(
                               width: 100,
                               height: 100,
@@ -327,13 +390,13 @@ class _AdminPaymentMethodUpsertScreenState
                               ),
                               child: Center(
                                 child:
-                                    _selectedImageFile != null
+                                    _selectedLogoFile != null
                                         ? Image.file(
-                                          _selectedImageFile!,
+                                          _selectedLogoFile!,
                                           fit: BoxFit.cover,
                                         )
-                                        : hasExistingImage &&
-                                            !_deleteExistingImage
+                                        : hasExistingLogo &&
+                                            !_deleteExistingLogo
                                         ? Image.network(
                                           widget.paymentMethod!.logo!,
                                           fit: BoxFit.cover,
@@ -343,27 +406,102 @@ class _AdminPaymentMethodUpsertScreenState
                                                 error,
                                                 stackTrace,
                                               ) => Icon(
-                                                Icons.fastfood,
+                                                Icons.broken_image,
                                                 size: 50,
-                                                color: context.colors.secondary,
+                                                color:
+                                                    context
+                                                        .colors
+                                                        .error, // Assuming context.colors is available
                                               ),
                                         )
                                         : Icon(
                                           Icons.add_a_photo,
+                                          size: 50,
+                                          color:
+                                              context
+                                                  .colors
+                                                  .secondary, // Assuming context.colors is available
+                                        ),
+                              ),
+                            ),
+                          ),
+                          if (!isAdding && hasExistingLogo)
+                            FormBuilderSwitch(
+                              name: 'deleteExistingLogo',
+                              title: const Text('Delete Existing Logo'),
+                              initialValue: _deleteExistingLogo,
+                              onChanged: (value) {
+                                setState(() {
+                                  _deleteExistingLogo = value ?? false;
+                                });
+                              },
+                              decoration: const InputDecoration(
+                                border: InputBorder.none,
+                              ),
+                            ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Admin QR Code Picture Section
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Admin QR Code Picture',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          GestureDetector(
+                            onTap: isSubmitting ? null : _pickQrCodeImage,
+                            child: Container(
+                              width: 100,
+                              height: 100,
+                              decoration: BoxDecoration(
+                                border: Border.all(color: Colors.grey),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Center(
+                                child:
+                                    _selectedQrCodeFile != null
+                                        ? Image.file(
+                                          _selectedQrCodeFile!,
+                                          fit: BoxFit.cover,
+                                        )
+                                        : hasExistingQrCode &&
+                                            !_deleteExistingQrCode
+                                        ? Image.network(
+                                          widget
+                                              .paymentMethod!
+                                              .adminPaymentQrCodePicture!,
+                                          fit: BoxFit.cover,
+                                          errorBuilder:
+                                              (context, error, stackTrace) =>
+                                                  Icon(
+                                                    Icons.broken_image,
+                                                    size: 50,
+                                                    color: context.colors.error,
+                                                  ),
+                                        )
+                                        : Icon(
+                                          Icons.qr_code, // Icon for QR code
                                           size: 50,
                                           color: context.colors.secondary,
                                         ),
                               ),
                             ),
                           ),
-                          if (!isAdding && hasExistingImage)
+                          if (!isAdding && hasExistingQrCode)
                             FormBuilderSwitch(
-                              name: 'deleteExistingImage',
-                              title: const Text('Delete Existing Image'),
-                              initialValue: _deleteExistingImage,
+                              name: 'deleteExistingQrCode',
+                              title: const Text('Delete Existing QR Code'),
+                              initialValue: _deleteExistingQrCode,
                               onChanged: (value) {
                                 setState(() {
-                                  _deleteExistingImage = value ?? false;
+                                  _deleteExistingQrCode = value ?? false;
                                 });
                               },
                               decoration: const InputDecoration(

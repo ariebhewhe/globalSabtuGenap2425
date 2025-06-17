@@ -141,27 +141,22 @@ class PaymentMethodTile extends StatelessWidget {
                       ),
                     ],
                     const SizedBox(height: 8),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        _buildAmountInfo(
-                          context,
-                          'Min:',
-                          _formatCurrency(paymentMethod.minimumAmount),
-                          isDarkMode
-                              ? AppTheme.textSecondaryDark
-                              : AppTheme.textSecondaryLight,
-                        ),
-                        const SizedBox(width: 8),
-                        _buildAmountInfo(
-                          context,
-                          'Max:',
-                          _formatCurrency(paymentMethod.maximumAmount),
-                          isDarkMode
-                              ? AppTheme.textSecondaryDark
-                              : AppTheme.textSecondaryLight,
-                        ),
-                      ],
+                    _buildAmountInfo(
+                      context,
+                      'Min:',
+                      _formatCurrency(paymentMethod.minimumAmount),
+                      isDarkMode
+                          ? AppTheme.textSecondaryDark
+                          : AppTheme.textSecondaryLight,
+                    ),
+                    const SizedBox(width: 8),
+                    _buildAmountInfo(
+                      context,
+                      'Max:',
+                      _formatCurrency(paymentMethod.maximumAmount),
+                      isDarkMode
+                          ? AppTheme.textSecondaryDark
+                          : AppTheme.textSecondaryLight,
                     ),
                     const SizedBox(height: 4),
                     Text(

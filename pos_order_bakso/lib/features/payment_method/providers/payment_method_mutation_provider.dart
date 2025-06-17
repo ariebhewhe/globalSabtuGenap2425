@@ -26,8 +26,6 @@ class PaymentMethodMutationNotifier
           isLoading: false,
           successMessage: success.message,
         );
-
-        // * Refresh menu items list
         _ref.read(paymentMethodsProvider.notifier).refreshPaymentMethods();
       },
     );
@@ -36,14 +34,16 @@ class PaymentMethodMutationNotifier
   Future<void> updatePaymentMethod(
     String id,
     UpdatePaymentMethodDto updatedPaymentMethod, {
-    bool deleteExistingImage = false,
+    bool deleteExistingLogo = false,
+    bool deleteExistingQrCode = false,
   }) async {
     state = state.copyWith(isLoading: true);
 
     final result = await _paymentMethodRepo.updatePaymentMethod(
       id,
       updatedPaymentMethod,
-      deleteExistingImage: deleteExistingImage,
+      deleteExistingLogo: deleteExistingLogo,
+      deleteExistingQrCode: deleteExistingQrCode,
     );
 
     result.match(
@@ -54,8 +54,6 @@ class PaymentMethodMutationNotifier
           isLoading: false,
           successMessage: success.message,
         );
-
-        // * Refresh menu items dan menu items
         _ref.read(paymentMethodsProvider.notifier).refreshPaymentMethods();
 
         final activeId = _ref.read(activePaymentMethodIdProvider);
@@ -68,12 +66,15 @@ class PaymentMethodMutationNotifier
     );
   }
 
-  Future<void> deletePaymentMethod(String id, {bool deleteImage = true}) async {
+  Future<void> deletePaymentMethod(
+    String id, {
+    bool deleteImages = true,
+  }) async {
     state = state.copyWith(isLoading: true);
 
     final result = await _paymentMethodRepo.deletePaymentMethod(
       id,
-      deleteImage: deleteImage,
+      deleteImages: deleteImages,
     );
 
     result.match(
@@ -84,11 +85,7 @@ class PaymentMethodMutationNotifier
           isLoading: false,
           successMessage: success.message,
         );
-
-        // * Refresh menu items
         _ref.read(paymentMethodsProvider.notifier).refreshPaymentMethods();
-
-        // * Kalo delete clear active item id
         final activeId = _ref.read(activePaymentMethodIdProvider);
         if (activeId == id) {
           _ref.read(activePaymentMethodIdProvider.notifier).state = null;
@@ -140,12 +137,47 @@ class PaymentMethodMutationNotifier
     );
   }
 
-  // * Reset pesan sukses - gunakan untuk menghindari snackbar muncul berulang
+  Future<void> deleteAllPaymentMethods() async {
+    state = state.copyWith(isLoading: true);
+    final result = await _paymentMethodRepo.deleteAllPaymentMethods();
+    result.match(
+      (error) =>
+          state = state.copyWith(isLoading: false, errorMessage: error.message),
+      (success) {
+        state = state.copyWith(
+          isLoading: false,
+          successMessage: success.message,
+        );
+        _ref.invalidate(paymentMethodsProvider);
+        _ref.read(activePaymentMethodIdProvider.notifier).state = null;
+      },
+    );
+  }
+
+  Future<void> seedPaymentMethods() async {
+    state = state.copyWith(isLoading: true);
+    final result = await _paymentMethodRepo.seedPaymentMethods();
+    result.match(
+      (error) =>
+          state = state.copyWith(isLoading: false, errorMessage: error.message),
+      (success) {
+        state = state.copyWith(
+          isLoading: false,
+          successMessage: success.message,
+        );
+
+        // Invalidate list provider dan reset ID aktif
+        // karena semua data lama telah dihapus.
+        _ref.invalidate(paymentMethodsProvider);
+        _ref.read(activePaymentMethodIdProvider.notifier).state = null;
+      },
+    );
+  }
+
   void resetSuccessMessage() {
     state = state.copyWith(successMessage: null);
   }
 
-  // * Reset pesan error - gunakan untuk menghindari snackbar muncul berulang
   void resetErrorMessage() {
     state = state.copyWith(errorMessage: null);
   }
