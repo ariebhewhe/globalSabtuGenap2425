@@ -85,7 +85,16 @@ extension OrderStatusExtension on OrderStatus {
 }
 
 // * Payment Method Enum
-enum PaymentMethodType { cash, creditCard, debitCard, eWallet, bankTransfer }
+enum PaymentMethodType {
+  cash,
+  card,
+  directDebit,
+  overTheCounter,
+  qrCode,
+  virtualAccount,
+  eWallet,
+  echannel,
+}
 
 extension PaymentMethodTypeExtension on PaymentMethodType {
   String toMap() {
@@ -101,7 +110,7 @@ extension PaymentMethodTypeExtension on PaymentMethodType {
 }
 
 // * Payment Status Enum
-enum PaymentStatus { unpaid, paid }
+enum PaymentStatus { challenge, success, deny, failure, pending }
 
 extension PaymentStatusExtension on PaymentStatus {
   String toMap() {
@@ -111,7 +120,7 @@ extension PaymentStatusExtension on PaymentStatus {
   static PaymentStatus fromMap(String paymentStatus) {
     return PaymentStatus.values.firstWhere(
       (e) => e.toString().split('.').last == paymentStatus,
-      orElse: () => PaymentStatus.unpaid, // * Default value if not found
+      orElse: () => PaymentStatus.pending, // * Default value if not found
     );
   }
 }

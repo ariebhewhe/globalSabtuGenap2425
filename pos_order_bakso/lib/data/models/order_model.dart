@@ -20,6 +20,9 @@ class OrderModel extends BaseModel {
   final String? specialInstructions;
   final List<OrderItemModel>? orderItems;
   final String? paymentProof;
+  final String? paymentCode;
+  final String? paymentDisplayURL;
+  final DateTime? paymentExpiry;
 
   OrderModel({
     required String id,
@@ -30,12 +33,15 @@ class OrderModel extends BaseModel {
     required this.orderType,
     this.status = OrderStatus.pending,
     required this.totalAmount,
-    this.paymentStatus = PaymentStatus.unpaid,
+    this.paymentStatus = PaymentStatus.pending,
     required this.orderDate,
     this.estimatedReadyTime,
     this.specialInstructions,
     this.orderItems,
-    this.paymentProof, // Ditambahkan ke constructor
+    this.paymentProof,
+    this.paymentCode,
+    this.paymentDisplayURL,
+    this.paymentExpiry,
   }) : super(id: id, createdAt: createdAt, updatedAt: updatedAt);
 
   OrderModel copyWith({
@@ -45,13 +51,15 @@ class OrderModel extends BaseModel {
     OrderType? orderType,
     OrderStatus? status,
     double? totalAmount,
-    // PaymentMethodType? paymentMethodType, // This was in the original user code but not used in constructor or fields
     PaymentStatus? paymentStatus,
     DateTime? orderDate,
     DateTime? estimatedReadyTime,
     String? specialInstructions,
     List<OrderItemModel>? orderItems,
-    String? paymentProof, // Ditambahkan ke copyWith
+    String? paymentProof,
+    String? paymentCode,
+    String? paymentDisplayURL,
+    DateTime? paymentExpiry,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -67,7 +75,10 @@ class OrderModel extends BaseModel {
       estimatedReadyTime: estimatedReadyTime ?? this.estimatedReadyTime,
       specialInstructions: specialInstructions ?? this.specialInstructions,
       orderItems: orderItems ?? this.orderItems,
-      paymentProof: paymentProof ?? this.paymentProof, // Ditambahkan
+      paymentProof: paymentProof ?? this.paymentProof,
+      paymentCode: paymentCode ?? this.paymentCode,
+      paymentDisplayURL: paymentDisplayURL ?? this.paymentDisplayURL,
+      paymentExpiry: paymentExpiry ?? this.paymentExpiry,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -76,8 +87,7 @@ class OrderModel extends BaseModel {
   @override
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
-      'id':
-          id, // BaseModel fields should also be in toMap for proper serialization
+      'id': id,
       'createdAt': createdAt.millisecondsSinceEpoch,
       'updatedAt': updatedAt.millisecondsSinceEpoch,
       'userId': userId,
@@ -90,7 +100,10 @@ class OrderModel extends BaseModel {
       'estimatedReadyTime': estimatedReadyTime?.millisecondsSinceEpoch,
       'specialInstructions': specialInstructions,
       'orderItems': orderItems?.map((x) => x.toMap()).toList(),
-      'paymentProof': paymentProof, // Ditambahkan ke toMap
+      'paymentProof': paymentProof,
+      'paymentCode': paymentCode,
+      'paymentDisplayURL': paymentDisplayURL,
+      'paymentExpiry': paymentExpiry?.millisecondsSinceEpoch,
     };
   }
 
@@ -123,15 +136,22 @@ class OrderModel extends BaseModel {
           map['orderItems'] != null
               ? List<OrderItemModel>.from(
                 (map['orderItems'] as List<dynamic>).map<OrderItemModel>(
-                  // Assuming OrderItemModel has fromMap and toMap
                   (x) => OrderItemModel.fromMap(x as Map<String, dynamic>),
                 ),
               )
               : null,
       paymentProof:
-          map['paymentProof'] != null
-              ? map['paymentProof'] as String
-              : null, // Ditambahkan ke fromMap
+          map['paymentProof'] != null ? map['paymentProof'] as String : null,
+      paymentCode:
+          map['paymentCode'] != null ? map['paymentCode'] as String : null,
+      paymentDisplayURL:
+          map['paymentDisplayURL'] != null
+              ? map['paymentDisplayURL'] as String
+              : null,
+      paymentExpiry:
+          map['paymentExpiry'] != null
+              ? DateTime.fromMillisecondsSinceEpoch(map['paymentExpiry'] as int)
+              : null,
       createdAt: DateTime.fromMillisecondsSinceEpoch(map['createdAt'] as int),
       updatedAt: DateTime.fromMillisecondsSinceEpoch(map['updatedAt'] as int),
     );
@@ -145,15 +165,14 @@ class OrderModel extends BaseModel {
 
   @override
   String toString() {
-    return 'OrderModel(id: $id, createdAt: $createdAt, updatedAt: $updatedAt, userId: $userId, paymentMethodId: $paymentMethodId, orderType: $orderType, status: $status, totalAmount: $totalAmount, paymentStatus: $paymentStatus, orderDate: $orderDate, estimatedReadyTime: $estimatedReadyTime, specialInstructions: $specialInstructions, orderItems: $orderItems, paymentProof: $paymentProof)'; // Ditambahkan ke toString
+    return 'OrderModel(id: $id, createdAt: $createdAt, updatedAt: $updatedAt, userId: $userId, paymentMethodId: $paymentMethodId, orderType: $orderType, status: $status, totalAmount: $totalAmount, paymentStatus: $paymentStatus, orderDate: $orderDate, estimatedReadyTime: $estimatedReadyTime, specialInstructions: $specialInstructions, orderItems: $orderItems, paymentProof: $paymentProof, paymentCode: $paymentCode, paymentDisplayURL: $paymentDisplayURL, paymentExpiry: $paymentExpiry)';
   }
 
   @override
   bool operator ==(covariant OrderModel other) {
     if (identical(this, other)) return true;
 
-    return other.id ==
-            id && // BaseModel fields should be part of equality check
+    return other.id == id &&
         other.createdAt == createdAt &&
         other.updatedAt == updatedAt &&
         other.userId == userId &&
@@ -166,12 +185,15 @@ class OrderModel extends BaseModel {
         other.estimatedReadyTime == estimatedReadyTime &&
         other.specialInstructions == specialInstructions &&
         listEquals(other.orderItems, orderItems) &&
-        other.paymentProof == paymentProof; // Ditambahkan ke operator ==
+        other.paymentProof == paymentProof &&
+        other.paymentCode == paymentCode &&
+        other.paymentDisplayURL == paymentDisplayURL &&
+        other.paymentExpiry == paymentExpiry;
   }
 
   @override
   int get hashCode {
-    return id.hashCode ^ // BaseModel fields should be part of hashCode
+    return id.hashCode ^
         createdAt.hashCode ^
         updatedAt.hashCode ^
         userId.hashCode ^
@@ -184,7 +206,10 @@ class OrderModel extends BaseModel {
         estimatedReadyTime.hashCode ^
         specialInstructions.hashCode ^
         orderItems.hashCode ^
-        paymentProof.hashCode; // Ditambahkan ke hashCode
+        paymentProof.hashCode ^
+        paymentCode.hashCode ^
+        paymentDisplayURL.hashCode ^
+        paymentExpiry.hashCode;
   }
 }
 
@@ -195,7 +220,7 @@ class CreateOrderDto {
   final String? specialInstructions;
   final CreateTableReservationDto? tableReservation;
   final List<OrderItemModel> orderItems;
-  final File? transferProofFile; // Field baru untuk bukti transfer
+  final File? transferProofFile;
 
   CreateOrderDto({
     required this.paymentMethodId,
@@ -204,7 +229,7 @@ class CreateOrderDto {
     this.specialInstructions,
     this.tableReservation,
     required this.orderItems,
-    this.transferProofFile, // Tambahkan di constructor
+    this.transferProofFile,
   });
 
   Map<String, dynamic> toMap() {
@@ -224,12 +249,18 @@ class UpdateOrderDto {
   final OrderStatus? status;
   final PaymentStatus? paymentStatus;
   final DateTime? estimatedReadyTime;
+  final String? paymentCode;
+  final String? paymentDisplayURL;
+  final DateTime? paymentExpiry;
 
   UpdateOrderDto({
     this.orderType,
     this.status,
     this.paymentStatus,
     this.estimatedReadyTime,
+    this.paymentCode,
+    this.paymentDisplayURL,
+    this.paymentExpiry,
   });
 
   Map<String, dynamic> toMap() {
@@ -246,6 +277,15 @@ class UpdateOrderDto {
     }
     if (estimatedReadyTime != null) {
       map['estimatedReadyTime'] = estimatedReadyTime!.millisecondsSinceEpoch;
+    }
+    if (paymentCode != null) {
+      map['paymentCode'] = paymentCode;
+    }
+    if (paymentDisplayURL != null) {
+      map['paymentDisplayURL'] = paymentDisplayURL;
+    }
+    if (paymentExpiry != null) {
+      map['paymentExpiry'] = paymentExpiry!.millisecondsSinceEpoch;
     }
 
     return map;

@@ -24,18 +24,18 @@ class AdminHomeScreen extends ConsumerWidget {
         backgroundColor: context.colors.surface.withOpacity(0.95),
         body: SingleChildScrollView(
           padding: const EdgeInsets.all(20.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildHeader(context),
-              const SizedBox(height: 32),
-              _buildRevenueSection(context, ref),
-              const SizedBox(height: 24),
-              _buildOrderStatusSection(context, ref),
-              const SizedBox(height: 24),
-              _buildUserAndProductSection(context, ref),
-            ],
-          ),
+          // child: Column(
+          //   crossAxisAlignment: CrossAxisAlignment.start,
+          //   children: [
+          //     _buildHeader(context),
+          //     const SizedBox(height: 32),
+          //     _buildRevenueSection(context, ref),
+          //     const SizedBox(height: 24),
+          //     _buildOrderStatusSection(context, ref),
+          //     const SizedBox(height: 24),
+          //     _buildUserAndProductSection(context, ref),
+          //   ],
+          // ),
         ),
       ),
     );

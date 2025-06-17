@@ -35,11 +35,11 @@ class AdminCreateOrderScreen extends ConsumerStatefulWidget {
 class _AdminCreateOrderScreenState
     extends ConsumerState<AdminCreateOrderScreen> {
   final _formKey = GlobalKey<FormBuilderState>();
-  final ImagePicker _picker = ImagePicker();
+  // final ImagePicker _picker = ImagePicker();
 
   List<OrderItemModel> _orderItems = [];
   OrderType _selectedOrderType = OrderType.dineIn;
-  File? _selectedTransferProofFile;
+  // File? _selectedTransferProofFile;
 
   @override
   void initState() {
@@ -77,20 +77,20 @@ class _AdminCreateOrderScreenState
     return _orderItems.fold(0, (total, item) => total + item.total);
   }
 
-  Future<void> _pickTransferProofImage() async {
-    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
-    if (pickedFile != null) {
-      setState(() {
-        _selectedTransferProofFile = File(pickedFile.path);
-      });
-    }
-  }
+  // Future<void> _pickTransferProofImage() async {
+  //   final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+  //   if (pickedFile != null) {
+  //     setState(() {
+  //       _selectedTransferProofFile = File(pickedFile.path);
+  //     });
+  //   }
+  // }
 
   void _resetForm() {
     _formKey.currentState?.reset();
     setState(() {
       _selectedOrderType = OrderType.dineIn;
-      _selectedTransferProofFile = null;
+      // _selectedTransferProofFile = null;
       _convertCartItemsToOrderItems();
     });
   }
@@ -110,15 +110,15 @@ class _AdminCreateOrderScreenState
             .firstWhere((pm) => pm.id == selectedPaymentMethodId);
       }
 
-      if (selectedPaymentMethod?.paymentMethodType ==
-              PaymentMethodType.bankTransfer &&
-          _selectedTransferProofFile == null) {
-        ToastUtils.showWarning(
-          context: context,
-          message: 'Untuk metode Bank Transfer, mohon unggah bukti transfer.',
-        );
-        return;
-      }
+      // if (selectedPaymentMethod?.paymentMethodType ==
+      //         PaymentMethodType.bankTransfer &&
+      //     _selectedTransferProofFile == null) {
+      //   ToastUtils.showWarning(
+      //     context: context,
+      //     message: 'Untuk metode Bank Transfer, mohon unggah bukti transfer.',
+      //   );
+      //   return;
+      // }
 
       CreateTableReservationDto? tableReservation;
       if (_selectedOrderType == OrderType.dineIn) {
@@ -147,7 +147,7 @@ class _AdminCreateOrderScreenState
         specialInstructions: formValues['specialInstructions'] as String?,
         tableReservation: tableReservation,
         orderItems: _orderItems,
-        transferProofFile: _selectedTransferProofFile,
+        // transferProofFile: _selectedTransferProofFile,
       );
 
       await ref.read(orderMutationProvider.notifier).addOrder(newOrder);
@@ -268,71 +268,71 @@ class _AdminCreateOrderScreenState
     );
   }
 
-  Widget _buildTransferProofPicker() {
-    final orderMutationState = ref.watch(orderMutationProvider);
-    final formValues = _formKey.currentState?.value;
-    final selectedPaymentMethodId = formValues?['paymentMethodId'] as String?;
-    PaymentMethodModel? selectedPaymentMethod;
+  // Widget _buildTransferProofPicker() {
+  //   final orderMutationState = ref.watch(orderMutationProvider);
+  //   final formValues = _formKey.currentState?.value;
+  //   final selectedPaymentMethodId = formValues?['paymentMethodId'] as String?;
+  //   PaymentMethodModel? selectedPaymentMethod;
 
-    if (selectedPaymentMethodId != null) {
-      final paymentMethods = ref.read(paymentMethodsProvider).paymentMethods;
-      selectedPaymentMethod = paymentMethods.firstWhere(
-        (pm) => pm.id == selectedPaymentMethodId,
-      );
-    }
+  //   if (selectedPaymentMethodId != null) {
+  //     final paymentMethods = ref.read(paymentMethodsProvider).paymentMethods;
+  //     selectedPaymentMethod = paymentMethods.firstWhere(
+  //       (pm) => pm.id == selectedPaymentMethodId,
+  //     );
+  //   }
 
-    if (selectedPaymentMethod?.paymentMethodType !=
-        PaymentMethodType.bankTransfer) {
-      return const SizedBox.shrink();
-    }
+  //   if (selectedPaymentMethod?.paymentMethodType !=
+  //       PaymentMethodType.bankTransfer) {
+  //     return const SizedBox.shrink();
+  //   }
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Unggah Bukti Transfer',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 8),
-        GestureDetector(
-          onTap: orderMutationState.isLoading ? null : _pickTransferProofImage,
-          child: Container(
-            width: double.infinity,
-            height: 150,
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Center(
-              child:
-                  _selectedTransferProofFile != null
-                      ? Image.file(
-                        _selectedTransferProofFile!,
-                        fit: BoxFit.contain,
-                        height: 140,
-                      )
-                      : Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.cloud_upload_outlined,
-                            size: 50,
-                            color: Colors.grey[600],
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Ketuk untuk memilih gambar',
-                            style: TextStyle(color: Colors.grey[700]),
-                          ),
-                        ],
-                      ),
-            ),
-          ),
-        ),
-        const SizedBox(height: 16),
-      ],
-    );
-  }
+  //   return Column(
+  //     crossAxisAlignment: CrossAxisAlignment.start,
+  //     children: [
+  //       const Text(
+  //         'Unggah Bukti Transfer',
+  //         style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+  //       ),
+  //       const SizedBox(height: 8),
+  //       GestureDetector(
+  //         onTap: orderMutationState.isLoading ? null : _pickTransferProofImage,
+  //         child: Container(
+  //           width: double.infinity,
+  //           height: 150,
+  //           decoration: BoxDecoration(
+  //             border: Border.all(color: Colors.grey),
+  //             borderRadius: BorderRadius.circular(8),
+  //           ),
+  //           child: Center(
+  //             child:
+  //                 _selectedTransferProofFile != null
+  //                     ? Image.file(
+  //                         _selectedTransferProofFile!,
+  //                         fit: BoxFit.contain,
+  //                         height: 140,
+  //                       )
+  //                     : Column(
+  //                         mainAxisAlignment: MainAxisAlignment.center,
+  //                         children: [
+  //                           Icon(
+  //                             Icons.cloud_upload_outlined,
+  //                             size: 50,
+  //                             color: Colors.grey[600],
+  //                           ),
+  //                           const SizedBox(height: 8),
+  //                           Text(
+  //                             'Ketuk untuk memilih gambar',
+  //                             style: TextStyle(color: Colors.grey[700]),
+  //                           ),
+  //                         ],
+  //                       ),
+  //           ),
+  //         ),
+  //       ),
+  //       const SizedBox(height: 16),
+  //     ],
+  //   );
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -449,8 +449,7 @@ class _AdminCreateOrderScreenState
                 _buildPaymentMethodDropdown(),
                 const SizedBox(height: 16),
 
-                _buildTransferProofPicker(),
-
+                // _buildTransferProofPicker(),
                 FormBuilderTextField(
                   name: 'specialInstructions',
                   decoration: const InputDecoration(

@@ -1,4 +1,3 @@
-// ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:convert';
 import 'dart:io';
 
@@ -12,17 +11,21 @@ class PaymentMethodModel extends BaseModel {
   final PaymentMethodType paymentMethodType;
   final double minimumAmount;
   final double maximumAmount;
+  final String? adminPaymentCode;
+  final String? adminPaymentQrCodePicture;
 
   PaymentMethodModel({
     required String id,
     required DateTime createdAt,
     required DateTime updatedAt,
     required this.name,
-    required this.description,
+    this.description, // Tetap String? di constructor
     this.logo,
     required this.paymentMethodType,
     required this.minimumAmount,
     required this.maximumAmount,
+    this.adminPaymentCode,
+    this.adminPaymentQrCodePicture,
   }) : super(id: id, createdAt: createdAt, updatedAt: updatedAt);
 
   factory PaymentMethodModel.dummy() {
@@ -32,7 +35,7 @@ class PaymentMethodModel extends BaseModel {
       description: 'lorem ipsum dolor sit amet consectetur adipiscing elit',
       minimumAmount: 0,
       maximumAmount: 0,
-      paymentMethodType: PaymentMethodType.bankTransfer,
+      paymentMethodType: PaymentMethodType.cash,
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
     );
@@ -46,6 +49,8 @@ class PaymentMethodModel extends BaseModel {
     PaymentMethodType? paymentMethodType,
     double? minimumAmount,
     double? maximumAmount,
+    String? adminPaymentCode,
+    String? adminPaymentQrCodePicture,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -57,6 +62,9 @@ class PaymentMethodModel extends BaseModel {
       paymentMethodType: paymentMethodType ?? this.paymentMethodType,
       minimumAmount: minimumAmount ?? this.minimumAmount,
       maximumAmount: maximumAmount ?? this.maximumAmount,
+      adminPaymentCode: adminPaymentCode ?? this.adminPaymentCode,
+      adminPaymentQrCodePicture:
+          adminPaymentQrCodePicture ?? this.adminPaymentQrCodePicture,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -72,6 +80,8 @@ class PaymentMethodModel extends BaseModel {
       'paymentMethodType': paymentMethodType.toMap(),
       'minimumAmount': minimumAmount,
       'maximumAmount': maximumAmount,
+      'adminPaymentCode': adminPaymentCode,
+      'adminPaymentQrCodePicture': adminPaymentQrCodePicture,
       'createdAt': createdAt.millisecondsSinceEpoch,
       'updatedAt': updatedAt.millisecondsSinceEpoch,
     };
@@ -90,6 +100,14 @@ class PaymentMethodModel extends BaseModel {
       ),
       minimumAmount: map['minimumAmount'] as double,
       maximumAmount: map['maximumAmount'] as double,
+      adminPaymentCode:
+          map['adminPaymentCode'] != null
+              ? map['adminPaymentCode'] as String
+              : null,
+      adminPaymentQrCodePicture:
+          map['adminPaymentQrCodePicture'] != null
+              ? map['adminPaymentQrCodePicture'] as String
+              : null,
       createdAt: DateTime.fromMillisecondsSinceEpoch(map['createdAt'] as int),
       updatedAt: DateTime.fromMillisecondsSinceEpoch(map['updatedAt'] as int),
     );
@@ -104,7 +122,7 @@ class PaymentMethodModel extends BaseModel {
 
   @override
   String toString() {
-    return 'PaymentMethodModel(id: $id, name: $name, description: $description, logo: $logo, paymentMethodType: $paymentMethodType, minimumAmount: $minimumAmount, maximumAmount: $maximumAmount, createdAt: $createdAt, updatedAt: $updatedAt)';
+    return 'PaymentMethodModel(id: $id, name: $name, description: $description, logo: $logo, paymentMethodType: $paymentMethodType, minimumAmount: $minimumAmount, maximumAmount: $maximumAmount, adminPaymentCode: $adminPaymentCode, adminPaymentQrCodePicture: $adminPaymentQrCodePicture, createdAt: $createdAt, updatedAt: $updatedAt)';
   }
 
   @override
@@ -118,6 +136,8 @@ class PaymentMethodModel extends BaseModel {
         other.paymentMethodType == paymentMethodType &&
         other.minimumAmount == minimumAmount &&
         other.maximumAmount == maximumAmount &&
+        other.adminPaymentCode == adminPaymentCode &&
+        other.adminPaymentQrCodePicture == adminPaymentQrCodePicture &&
         other.createdAt == createdAt &&
         other.updatedAt == updatedAt;
   }
@@ -131,6 +151,8 @@ class PaymentMethodModel extends BaseModel {
         paymentMethodType.hashCode ^
         minimumAmount.hashCode ^
         maximumAmount.hashCode ^
+        adminPaymentCode.hashCode ^
+        adminPaymentQrCodePicture.hashCode ^
         createdAt.hashCode ^
         updatedAt.hashCode;
   }
@@ -143,14 +165,18 @@ class CreatePaymentMethodDto {
   final PaymentMethodType paymentMethodType;
   final double minimumAmount;
   final double maximumAmount;
+  final String? adminPaymentCode;
+  final File? adminPaymentQrCodeFile;
 
   CreatePaymentMethodDto({
     required this.name,
-    required this.description,
+    this.description,
     this.logoFile,
     required this.paymentMethodType,
     required this.minimumAmount,
     required this.maximumAmount,
+    this.adminPaymentCode,
+    this.adminPaymentQrCodeFile,
   });
 
   Map<String, dynamic> toMap() {
@@ -160,6 +186,7 @@ class CreatePaymentMethodDto {
       'paymentMethodType': paymentMethodType.toMap(),
       'minimumAmount': minimumAmount,
       'maximumAmount': maximumAmount,
+      'adminPaymentCode': adminPaymentCode,
     };
   }
 }
@@ -171,6 +198,8 @@ class UpdatePaymentMethodDto {
   final PaymentMethodType? paymentMethodType;
   final double? minimumAmount;
   final double? maximumAmount;
+  final String? adminPaymentCode;
+  final File? adminPaymentQrCodeFile;
 
   UpdatePaymentMethodDto({
     this.name,
@@ -179,6 +208,8 @@ class UpdatePaymentMethodDto {
     this.paymentMethodType,
     this.minimumAmount,
     this.maximumAmount,
+    this.adminPaymentCode,
+    this.adminPaymentQrCodeFile,
   });
 
   Map<String, dynamic> toMap() {
@@ -190,6 +221,7 @@ class UpdatePaymentMethodDto {
     }
     if (minimumAmount != null) map['minimumAmount'] = minimumAmount;
     if (maximumAmount != null) map['maximumAmount'] = maximumAmount;
+    if (adminPaymentCode != null) map['adminPaymentCode'] = adminPaymentCode;
     return map;
   }
 

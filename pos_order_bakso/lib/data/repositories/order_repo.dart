@@ -109,7 +109,7 @@ class OrderRepo {
         'orderType': orderDataMap['orderType'],
         'status': OrderStatus.pending.toMap(),
         'totalAmount': totalAmount,
-        'paymentStatus': PaymentStatus.unpaid.toMap(),
+        'paymentStatus': PaymentStatus.pending.toMap(),
         'orderDate': DateTime.now().millisecondsSinceEpoch,
         'estimatedReadyTime': orderDataMap['estimatedReadyTime'],
         'specialInstructions': orderDataMap['specialInstructions'],
@@ -476,7 +476,7 @@ class OrderRepo {
       // SOLUSI: Gunakan OrderModel.fromMap untuk konversi yang aman
       for (var doc in querySnapshot.docs) {
         // Ubah data mentah menjadi objek OrderModel yang sudah jelas tipenya
-        final order = OrderModel.fromMap(doc.data() as Map<String, dynamic>);
+        final order = OrderModel.fromMap(doc.data());
 
         // Akses properti langsung dari objek, ini jauh lebih aman
         final double amount = order.totalAmount;

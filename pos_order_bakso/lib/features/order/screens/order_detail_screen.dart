@@ -45,7 +45,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     String lowerStatus = statusText.toLowerCase();
 
     if (lowerStatus == OrderStatus.completed.toMap().toLowerCase() ||
-        lowerStatus == PaymentStatus.paid.toMap().toLowerCase() ||
+        lowerStatus == PaymentStatus.success.toMap().toLowerCase() ||
         lowerStatus == OrderStatus.confirmed.toMap().toLowerCase() ||
         lowerStatus == OrderStatus.ready.toMap().toLowerCase()) {
       chipBackgroundColor = context.colors.primary.withOpacity(0.15);
@@ -56,7 +56,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       }
     } else if (lowerStatus == OrderStatus.pending.toMap().toLowerCase() ||
         lowerStatus == OrderStatus.preparing.toMap().toLowerCase() ||
-        lowerStatus == PaymentStatus.unpaid.toMap().toLowerCase()) {
+        lowerStatus == PaymentStatus.pending.toMap().toLowerCase()) {
       chipBackgroundColor = Colors.orange.withOpacity(0.15);
       chipTextColor = Colors.orange.shade700;
       chipIcon = Icons.hourglass_empty;
