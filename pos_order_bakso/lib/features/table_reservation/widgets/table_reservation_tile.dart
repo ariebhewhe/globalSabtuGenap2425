@@ -6,11 +6,13 @@ import 'package:jamal/data/models/table_reservation_model.dart';
 class TableReservationTile extends StatelessWidget {
   final TableReservationModel tableReservation;
   final VoidCallback? onTap;
+  final void Function()? onLongPress;
 
   const TableReservationTile({
     Key? key,
     required this.tableReservation,
     this.onTap,
+    this.onLongPress,
   }) : super(key: key);
 
   @override
@@ -28,6 +30,7 @@ class TableReservationTile extends StatelessWidget {
       ),
       child: InkWell(
         onTap: onTap,
+        onLongPress: onLongPress,
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(

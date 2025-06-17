@@ -516,6 +516,89 @@ class OrderRepo {
       );
     }
   }
+
+  Future<Either<ErrorResponse, SuccessResponse<void>>> batchDeleteOrders(
+    List<String> ids,
+  ) async {
+    if (ids.isEmpty) {
+      return Right(SuccessResponse(data: null, message: 'No items to delete.'));
+    }
+
+    try {
+      final collectionRef = _firebaseFirestore.collection(_collectionPath);
+      final ordersSnapshot =
+          await collectionRef.where(FieldPath.documentId, whereIn: ids).get();
+
+      if (ordersSnapshot.docs.isEmpty) {
+        return Left(ErrorResponse(message: 'No matching orders found.'));
+      }
+
+      final batch = _firebaseFirestore.batch();
+      for (final doc in ordersSnapshot.docs) {
+        batch.delete(doc.reference);
+      }
+      await batch.commit();
+
+      final deletedCount = ordersSnapshot.docs.length;
+      logger.i('$deletedCount payment method(s) deleted.');
+
+      return Right(
+        SuccessResponse(
+          data: null,
+          message: '$deletedCount payment method(s) deleted successfully.',
+        ),
+      );
+    } catch (e) {
+      logger.e(e.toString());
+      return Left(
+        ErrorResponse(
+          message: 'Failed to batch delete orders: ${e.toString()}',
+        ),
+      );
+    }
+  }
+
+  Future<Either<ErrorResponse, SuccessResponse<void>>> deleteAllOrders() async {
+    try {
+      final collectionRef = _firebaseFirestore.collection(_collectionPath);
+      final allDocsSnapshot = await collectionRef.limit(500).get();
+
+      if (allDocsSnapshot.docs.isEmpty) {
+        logger.i('No orders to delete.');
+        return Right(
+          SuccessResponse(data: null, message: 'No items to delete.'),
+        );
+      }
+
+      logger.i(
+        'Deleting ${allDocsSnapshot.docs.length} documents from Firestore...',
+      );
+
+      final batch = _firebaseFirestore.batch();
+
+      for (final doc in allDocsSnapshot.docs) {
+        batch.delete(doc.reference);
+      }
+      await batch.commit();
+
+      if (allDocsSnapshot.docs.length >= 500) {
+        return deleteAllOrders();
+      }
+
+      logger.i('All orders have been deleted successfully.');
+      return Right(
+        SuccessResponse(
+          data: null,
+          message: 'All orders deleted successfully.',
+        ),
+      );
+    } catch (e) {
+      logger.e('Failed to delete all orders: ${e.toString()}');
+      return Left(
+        ErrorResponse(message: 'Failed to delete all orders: ${e.toString()}'),
+      );
+    }
+  }
 }
 
 class OrdersCountAggregate {

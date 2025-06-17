@@ -12,6 +12,19 @@ class TableReservationModel extends BaseModel {
   final ReservationStatus status;
   final RestaurantTableModel? table; // * Populated kalo perlu
 
+  factory TableReservationModel.dummy() {
+    return TableReservationModel(
+      id: 'id',
+      userId: 'userId',
+      tableId: 'tableId',
+      orderId: 'orderId',
+      reservationTime: DateTime.now(),
+      status: ReservationStatus.reserved,
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+    );
+  }
+
   TableReservationModel({
     required String id,
     required this.userId,

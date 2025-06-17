@@ -288,4 +288,91 @@ class TableReservationRepo {
     }
     return user.id;
   }
+
+  Future<Either<ErrorResponse, SuccessResponse<void>>>
+  batchDeleteTableReservations(List<String> ids) async {
+    if (ids.isEmpty) {
+      return Right(SuccessResponse(data: null, message: 'No items to delete.'));
+    }
+
+    try {
+      final collectionRef = _firebaseFirestore.collection(_collectionPath);
+      final tableReservationsSnapshot =
+          await collectionRef.where(FieldPath.documentId, whereIn: ids).get();
+
+      if (tableReservationsSnapshot.docs.isEmpty) {
+        return Left(
+          ErrorResponse(message: 'No matching tableReservations found.'),
+        );
+      }
+
+      final batch = _firebaseFirestore.batch();
+      for (final doc in tableReservationsSnapshot.docs) {
+        batch.delete(doc.reference);
+      }
+      await batch.commit();
+
+      final deletedCount = tableReservationsSnapshot.docs.length;
+      logger.i('$deletedCount payment method(s) deleted.');
+
+      return Right(
+        SuccessResponse(
+          data: null,
+          message: '$deletedCount payment method(s) deleted successfully.',
+        ),
+      );
+    } catch (e) {
+      logger.e(e.toString());
+      return Left(
+        ErrorResponse(
+          message: 'Failed to batch delete tableReservations: ${e.toString()}',
+        ),
+      );
+    }
+  }
+
+  Future<Either<ErrorResponse, SuccessResponse<void>>>
+  deleteAllTableReservations() async {
+    try {
+      final collectionRef = _firebaseFirestore.collection(_collectionPath);
+      final allDocsSnapshot = await collectionRef.limit(500).get();
+
+      if (allDocsSnapshot.docs.isEmpty) {
+        logger.i('No tableReservations to delete.');
+        return Right(
+          SuccessResponse(data: null, message: 'No items to delete.'),
+        );
+      }
+
+      logger.i(
+        'Deleting ${allDocsSnapshot.docs.length} documents from Firestore...',
+      );
+
+      final batch = _firebaseFirestore.batch();
+
+      for (final doc in allDocsSnapshot.docs) {
+        batch.delete(doc.reference);
+      }
+      await batch.commit();
+
+      if (allDocsSnapshot.docs.length >= 500) {
+        return deleteAllTableReservations();
+      }
+
+      logger.i('All tableReservations have been deleted successfully.');
+      return Right(
+        SuccessResponse(
+          data: null,
+          message: 'All tableReservations deleted successfully.',
+        ),
+      );
+    } catch (e) {
+      logger.e('Failed to delete all tableReservations: ${e.toString()}');
+      return Left(
+        ErrorResponse(
+          message: 'Failed to delete all tableReservations: ${e.toString()}',
+        ),
+      );
+    }
+  }
 }

@@ -92,6 +92,47 @@ class OrderMutationNotifier extends StateNotifier<OrderMutationState> {
     );
   }
 
+  Future<void> batchDeleteOrders(
+    List<String> ids, {
+    bool deleteImages = true,
+  }) async {
+    state = state.copyWith(isLoading: true);
+    final result = await _orderRepo.batchDeleteOrders(ids);
+    result.match(
+      (error) =>
+          state = state.copyWith(isLoading: false, errorMessage: error.message),
+      (success) {
+        state = state.copyWith(
+          isLoading: false,
+          successMessage: success.message,
+        );
+        _ref.invalidate(ordersProvider);
+
+        final activeId = _ref.read(activeOrderIdProvider);
+        if (activeId != null && ids.contains(activeId)) {
+          _ref.read(activeOrderIdProvider.notifier).state = null;
+        }
+      },
+    );
+  }
+
+  Future<void> deleteAllOrders() async {
+    state = state.copyWith(isLoading: true);
+    final result = await _orderRepo.deleteAllOrders();
+    result.match(
+      (error) =>
+          state = state.copyWith(isLoading: false, errorMessage: error.message),
+      (success) {
+        state = state.copyWith(
+          isLoading: false,
+          successMessage: success.message,
+        );
+        _ref.invalidate(ordersProvider);
+        _ref.read(activeOrderIdProvider.notifier).state = null;
+      },
+    );
+  }
+
   // * Reset pesan sukses - gunakan untuk menghindari snackbar muncul berulang
   void resetSuccessMessage() {
     state = state.copyWith(successMessage: null);

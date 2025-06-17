@@ -88,6 +88,49 @@ class TableReservationMutationNotifier
   void resetErrorMessage() {
     state = state.copyWith(errorMessage: null);
   }
+
+  Future<void> batchDeleteTableReservations(
+    List<String> ids, {
+    bool deleteImages = true,
+  }) async {
+    state = state.copyWith(isLoading: true);
+    final result = await _tableReservationRepo.batchDeleteTableReservations(
+      ids,
+    );
+    result.match(
+      (error) =>
+          state = state.copyWith(isLoading: false, errorMessage: error.message),
+      (success) {
+        state = state.copyWith(
+          isLoading: false,
+          successMessage: success.message,
+        );
+        _ref.invalidate(tableReservationsProvider);
+
+        final activeId = _ref.read(activeTableReservationIdProvider);
+        if (activeId != null && ids.contains(activeId)) {
+          _ref.read(activeTableReservationIdProvider.notifier).state = null;
+        }
+      },
+    );
+  }
+
+  Future<void> deleteAllTableReservations() async {
+    state = state.copyWith(isLoading: true);
+    final result = await _tableReservationRepo.deleteAllTableReservations();
+    result.match(
+      (error) =>
+          state = state.copyWith(isLoading: false, errorMessage: error.message),
+      (success) {
+        state = state.copyWith(
+          isLoading: false,
+          successMessage: success.message,
+        );
+        _ref.invalidate(tableReservationsProvider);
+        _ref.read(activeTableReservationIdProvider.notifier).state = null;
+      },
+    );
+  }
 }
 
 final tableReservationMutationProvider = StateNotifierProvider<

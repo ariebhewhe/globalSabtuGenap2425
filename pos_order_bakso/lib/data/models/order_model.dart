@@ -44,6 +44,32 @@ class OrderModel extends BaseModel {
     this.paymentExpiry,
   }) : super(id: id, createdAt: createdAt, updatedAt: updatedAt);
 
+  factory OrderModel.dummy() {
+    final now = DateTime.now();
+    return OrderModel(
+      id: 'order-123',
+      userId: 'user-001',
+      paymentMethodId: 'pm-qris-123',
+      orderType: OrderType.dineIn,
+      status: OrderStatus.confirmed,
+      totalAmount: 150000,
+      paymentStatus: PaymentStatus.deny,
+      orderDate: now,
+      estimatedReadyTime: now.add(const Duration(minutes: 20)),
+      specialInstructions: 'Tolong jangan pakai bawang, alergi.',
+      orderItems: [
+        // OrderItemModel.dummy(),
+        // OrderItemModel.dummy().copyWith(id: 'item-457', quantity: 2),
+      ],
+      paymentProof: 'https://example.com/proof.jpg',
+      paymentCode: 'QRIS123456ABC',
+      paymentDisplayURL: 'https://qris.example.com/display/12345',
+      paymentExpiry: now.add(const Duration(hours: 1)),
+      createdAt: now.subtract(const Duration(minutes: 5)),
+      updatedAt: now,
+    );
+  }
+
   OrderModel copyWith({
     String? id,
     String? userId,

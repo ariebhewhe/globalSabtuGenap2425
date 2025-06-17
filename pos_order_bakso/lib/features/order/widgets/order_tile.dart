@@ -6,8 +6,9 @@ import 'package:jamal/data/models/order_model.dart';
 class OrderTile extends StatelessWidget {
   final OrderModel order;
   final VoidCallback? onTap;
+  final void Function()? onLongPress;
 
-  const OrderTile({Key? key, required this.order, this.onTap})
+  const OrderTile({Key? key, required this.order, this.onTap, this.onLongPress})
     : super(key: key);
 
   @override
@@ -31,6 +32,7 @@ class OrderTile extends StatelessWidget {
       ),
       child: InkWell(
         onTap: onTap,
+        onLongPress: onLongPress,
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
@@ -91,7 +93,6 @@ class OrderTile extends StatelessWidget {
   }
 
   Widget _buildOrderTypeChip(BuildContext context, OrderType orderType) {
-    final theme = Theme.of(context);
     IconData icon;
     String label;
 
@@ -121,7 +122,6 @@ class OrderTile extends StatelessWidget {
   }
 
   Widget _buildStatusChip(BuildContext context, OrderStatus status) {
-    final theme = Theme.of(context);
     Color backgroundColor;
     Color textColor;
     String label;
@@ -175,7 +175,6 @@ class OrderTile extends StatelessWidget {
   }
 
   Widget _buildPaymentStatusChip(BuildContext context, PaymentStatus status) {
-    final theme = Theme.of(context);
     Color backgroundColor;
     Color textColor;
     String label;

@@ -35,22 +35,16 @@ class PaymentMethodTile extends StatelessWidget {
     Widget logoWidget;
     if (paymentMethod.logo != null && paymentMethod.logo!.isNotEmpty) {
       logoWidget = CachedNetworkImage(
-        // Ganti Image.network menjadi CachedNetworkImage
         imageUrl: paymentMethod.logo!,
         width: 50,
         height: 50,
         fit: BoxFit.contain,
         placeholder:
             (context, url) => Center(
-              // Ganti loadingBuilder menjadi placeholder
               child: CircularProgressIndicator(
                 valueColor: AlwaysStoppedAnimation<Color>(
                   isDarkMode ? AppTheme.primaryDark : AppTheme.primaryLight,
                 ),
-                // Tidak perlu value untuk placeholder di CachedNetworkImage versi terbaru,
-                // tapi jika menggunakan versi lama atau ingin menampilkan progress yang lebih detail,
-                // Anda bisa menggunakan progressIndicatorBuilder.
-                // Untuk contoh ini, CircularProgressIndicator sederhana sudah cukup.
               ),
             ),
         errorWidget:
