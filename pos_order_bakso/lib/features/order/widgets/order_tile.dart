@@ -108,7 +108,7 @@ class OrderTile extends StatelessWidget {
     }
 
     return Chip(
-      backgroundColor: context.theme.colorScheme.primary.withOpacity(0.1),
+      backgroundColor: context.theme.colorScheme.primary.withValues(alpha: 0.1),
       labelPadding: const EdgeInsets.symmetric(horizontal: 4.0),
       visualDensity: VisualDensity.compact,
       avatar: Icon(icon, size: 16, color: context.theme.colorScheme.primary),
@@ -128,34 +128,44 @@ class OrderTile extends StatelessWidget {
 
     switch (status) {
       case OrderStatus.pending:
-        backgroundColor = context.theme.colorScheme.tertiary.withOpacity(0.1);
+        backgroundColor = context.theme.colorScheme.tertiary.withValues(
+          alpha: 0.1,
+        );
         textColor = context.theme.colorScheme.tertiary;
         label = 'Pending';
         break;
       case OrderStatus.confirmed:
-        backgroundColor = context.theme.colorScheme.primary.withOpacity(0.1);
+        backgroundColor = context.theme.colorScheme.primary.withValues(
+          alpha: 0.1,
+        );
         textColor = context.theme.colorScheme.primary;
         label = 'Confirmed';
         break;
       case OrderStatus.preparing:
-        backgroundColor = context.theme.colorScheme.secondary.withOpacity(0.1);
+        backgroundColor = context.theme.colorScheme.secondary.withValues(
+          alpha: 0.1,
+        );
         textColor = context.theme.colorScheme.secondary;
         label = 'Preparing';
         break;
       case OrderStatus.ready:
-        backgroundColor = context.theme.colorScheme.primary.withOpacity(0.2);
+        backgroundColor = context.theme.colorScheme.primary.withValues(
+          alpha: 0.2,
+        );
         textColor = context.theme.colorScheme.primary;
         label = 'Ready';
         break;
       case OrderStatus.completed:
-        backgroundColor = context.theme.colorScheme.secondary.withOpacity(0.2);
+        backgroundColor = context.theme.colorScheme.secondary.withValues(
+          alpha: 0.2,
+        );
         textColor = context.theme.colorScheme.secondary;
         label = 'Completed';
         break;
       case OrderStatus.cancelled:
         backgroundColor = (context.theme.textTheme.bodySmall?.color ??
                 context.theme.colorScheme.onSurface)
-            .withOpacity(0.1);
+            .withValues(alpha: 0.1);
         textColor =
             context.theme.textTheme.bodySmall?.color ??
             context.theme.colorScheme.onSurface;
@@ -183,14 +193,18 @@ class OrderTile extends StatelessWidget {
     switch (status) {
       case PaymentStatus.pending:
       case PaymentStatus.challenge:
-        backgroundColor = context.theme.colorScheme.tertiary.withOpacity(0.1);
+        backgroundColor = context.theme.colorScheme.tertiary.withValues(
+          alpha: 0.1,
+        );
         textColor =
             context.theme.colorScheme.tertiary; // Warna oranye dari theme
         label = 'Pending';
         icon = Icons.hourglass_empty_rounded;
         break;
       case PaymentStatus.success:
-        backgroundColor = context.theme.colorScheme.primary.withOpacity(0.1);
+        backgroundColor = context.theme.colorScheme.primary.withValues(
+          alpha: 0.1,
+        );
         textColor =
             context
                 .theme
@@ -201,7 +215,9 @@ class OrderTile extends StatelessWidget {
         break;
       case PaymentStatus.deny:
       case PaymentStatus.failure:
-        backgroundColor = context.theme.colorScheme.error.withOpacity(0.1);
+        backgroundColor = context.theme.colorScheme.error.withValues(
+          alpha: 0.1,
+        );
         textColor =
             context.theme.colorScheme.error; // Warna merah/aksen untuk error
         label = 'Failed';

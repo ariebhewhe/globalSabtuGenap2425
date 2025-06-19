@@ -246,7 +246,9 @@ class _AdminRestaurantTablesScreenState
                             color:
                                 _showFilters
                                     ? context.colors.primary
-                                    : context.colors.onSurface.withOpacity(0.6),
+                                    : context.colors.onSurface.withValues(
+                                      alpha: 0.6,
+                                    ),
                           ),
                           onPressed: () {
                             setState(() {
@@ -372,7 +374,9 @@ class _AdminRestaurantTablesScreenState
                                                   !_isDescending
                                                       ? context.colors.primary
                                                       : context.colors.onSurface
-                                                          .withOpacity(0.6),
+                                                          .withValues(
+                                                            alpha: 0.6,
+                                                          ),
                                             ),
                                             onPressed: () {
                                               if (_isDescending) {
@@ -391,7 +395,9 @@ class _AdminRestaurantTablesScreenState
                                                   _isDescending
                                                       ? context.colors.primary
                                                       : context.colors.onSurface
-                                                          .withOpacity(0.6),
+                                                          .withValues(
+                                                            alpha: 0.6,
+                                                          ),
                                             ),
                                             onPressed: () {
                                               if (!_isDescending) {
@@ -468,10 +474,10 @@ class _AdminRestaurantTablesScreenState
                         ),
                         padding: const EdgeInsets.all(12.0),
                         decoration: BoxDecoration(
-                          color: context.colors.error.withOpacity(0.1),
+                          color: context.colors.error.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(
-                            color: context.colors.error.withOpacity(0.3),
+                            color: context.colors.error.withValues(alpha: 0.3),
                           ),
                         ),
                         width: double.infinity,

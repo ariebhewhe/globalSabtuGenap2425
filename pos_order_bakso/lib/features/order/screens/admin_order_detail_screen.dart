@@ -1,49 +1,41 @@
 import 'dart:typed_data';
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:jamal/core/routes/app_router.dart';
+import 'package:jamal/core/utils/currency_utils.dart';
+import 'package:jamal/core/utils/date_convention.dart';
 import 'package:jamal/core/utils/enums.dart';
-import 'package:jamal/core/utils/toast_utils.dart'; // Import ToastUtils
+import 'package:jamal/core/utils/toast_utils.dart';
 import 'package:jamal/data/models/order_model.dart';
 import 'package:jamal/features/order/providers/order_mutation_provider.dart';
+import 'package:jamal/features/payment_method/providers/payment_method_provider.dart';
 import 'package:jamal/main.dart';
 import 'package:jamal/shared/widgets/admin_app_bar.dart';
 import 'package:jamal/shared/widgets/my_end_drawer.dart';
 import 'package:jamal/shared/widgets/my_screen_container.dart';
-import 'package:jamal/shared/widgets/user_app_bar.dart';
 
 import 'package:screenshot/screenshot.dart';
 import 'package:file_saver/file_saver.dart';
 
 @RoutePage()
-class AdminOrderDetailScreen extends StatefulWidget {
+class AdminOrderDetailScreen extends ConsumerStatefulWidget {
   final OrderModel order;
 
   const AdminOrderDetailScreen({Key? key, required this.order})
     : super(key: key);
 
   @override
-  State<AdminOrderDetailScreen> createState() => _AdminOrderDetailScreenState();
+  ConsumerState<AdminOrderDetailScreen> createState() =>
+      _AdminOrderDetailScreenState();
 }
 
-class _AdminOrderDetailScreenState extends State<AdminOrderDetailScreen> {
+class _AdminOrderDetailScreenState
+    extends ConsumerState<AdminOrderDetailScreen> {
   final ScreenshotController _screenshotController = ScreenshotController();
   bool _isSavingInvoice = false;
-
-  String _formatDateTime(DateTime? dateTime) {
-    if (dateTime == null) return 'N/A';
-    return DateFormat('dd MMM yyyy, HH:mm', 'id_ID').format(dateTime);
-  }
-
-  String _formatCurrency(double amount) {
-    return NumberFormat.currency(
-      locale: 'id_ID',
-      symbol: 'Rp ',
-      decimalDigits: 0,
-    ).format(amount);
-  }
 
   Widget _buildStatusChip(BuildContext context, String statusText) {
     Color chipBackgroundColor;
@@ -55,7 +47,7 @@ class _AdminOrderDetailScreenState extends State<AdminOrderDetailScreen> {
         lowerStatus == PaymentStatus.success.toMap().toLowerCase() ||
         lowerStatus == OrderStatus.confirmed.toMap().toLowerCase() ||
         lowerStatus == OrderStatus.ready.toMap().toLowerCase()) {
-      chipBackgroundColor = context.colors.primary.withOpacity(0.15);
+      chipBackgroundColor = context.colors.primary.withValues(alpha: 0.15);
       chipTextColor = context.colors.primary;
       chipIcon = Icons.check_circle;
       if (lowerStatus == OrderStatus.ready.toMap().toLowerCase()) {
@@ -64,18 +56,18 @@ class _AdminOrderDetailScreenState extends State<AdminOrderDetailScreen> {
     } else if (lowerStatus == OrderStatus.pending.toMap().toLowerCase() ||
         lowerStatus == OrderStatus.preparing.toMap().toLowerCase() ||
         lowerStatus == PaymentStatus.pending.toMap().toLowerCase()) {
-      chipBackgroundColor = Colors.orange.withOpacity(0.15);
+      chipBackgroundColor = Colors.orange.withValues(alpha: 0.15);
       chipTextColor = Colors.orange.shade700;
       chipIcon = Icons.hourglass_empty;
       if (lowerStatus == OrderStatus.preparing.toMap().toLowerCase()) {
         chipIcon = Icons.soup_kitchen_outlined;
       }
     } else if (lowerStatus == OrderStatus.cancelled.toMap().toLowerCase()) {
-      chipBackgroundColor = context.colors.error.withOpacity(0.15);
+      chipBackgroundColor = context.colors.error.withValues(alpha: 0.15);
       chipTextColor = context.colors.error;
       chipIcon = Icons.cancel;
     } else {
-      chipBackgroundColor = context.colors.secondary.withOpacity(0.15);
+      chipBackgroundColor = context.colors.secondary.withValues(alpha: 0.15);
       chipTextColor = context.colors.secondary;
       chipIcon = Icons.info_outline;
     }
@@ -114,7 +106,7 @@ class _AdminOrderDetailScreenState extends State<AdminOrderDetailScreen> {
             Icon(
               icon,
               size: 18,
-              color: context.colors.secondary.withOpacity(0.8),
+              color: context.colors.secondary.withValues(alpha: 0.8),
             ),
             const SizedBox(width: 10),
           ] else ...[
@@ -160,7 +152,7 @@ class _AdminOrderDetailScreenState extends State<AdminOrderDetailScreen> {
             Icon(
               icon,
               size: 18,
-              color: context.colors.secondary.withOpacity(0.8),
+              color: context.colors.secondary.withValues(alpha: 0.8),
             ),
             const SizedBox(width: 10),
           ] else ...[
@@ -183,6 +175,190 @@ class _AdminOrderDetailScreenState extends State<AdminOrderDetailScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  // WIDGET BARU: Section khusus untuk detail pembayaran
+  Widget _buildPaymentDetailsSection() {
+    final paymentMethodId = widget.order.paymentMethodId;
+    if (paymentMethodId == null) {
+      return const SizedBox.shrink();
+    }
+
+    final paymentMethodState = ref.watch(
+      paymentMethodProvider(paymentMethodId),
+    );
+    final paymentMethod = paymentMethodState.paymentMethod;
+
+    // Hanya tampilkan section ini jika ada kode atau QR yang perlu ditampilkan
+    bool hasPaymentDetails =
+        (paymentMethod?.adminPaymentCode != null &&
+            paymentMethod!.adminPaymentCode!.isNotEmpty) ||
+        (paymentMethod?.adminPaymentQrCodePicture != null &&
+            paymentMethod!.adminPaymentQrCodePicture!.isNotEmpty);
+
+    if (paymentMethodState.isLoading) {
+      return const Card(
+        child: Padding(
+          padding: EdgeInsets.all(16.0),
+          child: Center(child: CircularProgressIndicator()),
+        ),
+      );
+    }
+
+    if (paymentMethod == null || !hasPaymentDetails) {
+      return const SizedBox.shrink();
+    }
+
+    return Card(
+      color: context.cardTheme.color,
+      elevation: 0,
+      shape: context.cardTheme.shape,
+      margin: const EdgeInsets.only(bottom: 16.0),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Detail Pembayaran',
+              style: context.textStyles.titleMedium?.copyWith(
+                color: context.colors.primary,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            Divider(
+              color: context.theme.dividerTheme.color?.withValues(alpha: 0.5),
+              height: 20,
+            ),
+
+            // Nama Metode Pembayaran
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12.0),
+              child: Row(
+                children: [
+                  Text("Metode:", style: context.textStyles.bodyMedium),
+                  const SizedBox(width: 8),
+                  Flexible(
+                    child: Text(
+                      paymentMethod.name,
+                      style: context.textStyles.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // Konten dinamis (QR atau Kode)
+            if (paymentMethod.adminPaymentQrCodePicture != null &&
+                paymentMethod.adminPaymentQrCodePicture!.isNotEmpty)
+              _buildQrCodeContent(paymentMethod.adminPaymentQrCodePicture!)
+            else if (paymentMethod.adminPaymentCode != null &&
+                paymentMethod.adminPaymentCode!.isNotEmpty)
+              _buildPaymentCodeContent(paymentMethod.adminPaymentCode!),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Helper untuk konten QR Code
+  Widget _buildQrCodeContent(String imageUrl) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Cara Bayar:', style: context.textStyles.bodyMedium),
+        const SizedBox(height: 4),
+        Text(
+          'Scan QR Code di bawah menggunakan aplikasi pembayaran Anda.',
+          style: context.textStyles.bodySmall,
+        ),
+        const SizedBox(height: 12),
+        Center(
+          child: GestureDetector(
+            onTap: () {
+              showDialog(
+                context: context,
+                builder:
+                    (ctx) => AlertDialog(
+                      contentPadding: const EdgeInsets.all(8),
+                      content: Image.network(imageUrl),
+                    ),
+              );
+            },
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: Image.network(
+                imageUrl,
+                width: 150,
+                height: 150,
+                fit: BoxFit.cover,
+                loadingBuilder: (context, child, loadingProgress) {
+                  if (loadingProgress == null) return child;
+                  return const SizedBox(
+                    width: 150,
+                    height: 150,
+                    child: Center(child: CircularProgressIndicator()),
+                  );
+                },
+                errorBuilder:
+                    (context, error, stackTrace) =>
+                        const Icon(Icons.broken_image, size: 150),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // Helper untuk konten Kode Pembayaran
+  Widget _buildPaymentCodeContent(String code) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Cara Bayar:', style: context.textStyles.bodyMedium),
+        const SizedBox(height: 4),
+        Text(
+          'Salin kode di bawah dan lakukan pembayaran melalui channel yang sesuai.',
+          style: context.textStyles.bodySmall,
+        ),
+        const SizedBox(height: 12),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+          decoration: BoxDecoration(
+            color: context.colors.surfaceContainerHighest,
+            borderRadius: BorderRadius.circular(8.0),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Flexible(
+                child: Text(
+                  code,
+                  style: context.textStyles.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1.5,
+                  ),
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.copy_outlined),
+                onPressed: () {
+                  Clipboard.setData(ClipboardData(text: code));
+                  ToastUtils.showInfo(
+                    context: context,
+                    message: 'Kode pembayaran disalin!',
+                  );
+                },
+                tooltip: 'Salin Kode',
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
@@ -265,7 +441,9 @@ class _AdminOrderDetailScreenState extends State<AdminOrderDetailScreen> {
                   ),
                 ),
                 Divider(
-                  color: context.theme.dividerTheme.color?.withOpacity(0.5),
+                  color: context.theme.dividerTheme.color?.withValues(
+                    alpha: 0.5,
+                  ),
                   height: 20,
                 ),
                 _buildDetailRow(
@@ -283,7 +461,7 @@ class _AdminOrderDetailScreenState extends State<AdminOrderDetailScreen> {
                 _buildDetailRow(
                   context,
                   'Tanggal Pesan:',
-                  _formatDateTime(widget.order.orderDate),
+                  DateConvention.formatToIndoConv(widget.order.orderDate),
                   icon: Icons.calendar_today_outlined,
                 ),
                 _buildDetailRowWidget(
@@ -301,7 +479,7 @@ class _AdminOrderDetailScreenState extends State<AdminOrderDetailScreen> {
                 _buildDetailRow(
                   context,
                   'Total Bayar:',
-                  _formatCurrency(widget.order.totalAmount),
+                  CurrencyUtils.formatToRupiah(widget.order.totalAmount),
                   icon: Icons.monetization_on_outlined,
                 ),
                 _buildDetailRowWidget(
@@ -310,18 +488,13 @@ class _AdminOrderDetailScreenState extends State<AdminOrderDetailScreen> {
                   _buildStatusChip(context, widget.order.paymentStatus.toMap()),
                   icon: Icons.payment_outlined,
                 ),
-                if (widget.order.paymentMethodId != null)
-                  _buildDetailRow(
-                    context,
-                    'ID Metode Bayar:',
-                    widget.order.paymentMethodId!,
-                    icon: Icons.credit_card_outlined,
-                  ),
                 if (widget.order.estimatedReadyTime != null)
                   _buildDetailRow(
                     context,
                     'Estimasi Siap:',
-                    _formatDateTime(widget.order.estimatedReadyTime),
+                    DateConvention.formatToIndoConv(
+                      widget.order.estimatedReadyTime,
+                    ),
                     icon: Icons.timer_outlined,
                   ),
                 if (widget.order.specialInstructions != null &&
@@ -335,22 +508,26 @@ class _AdminOrderDetailScreenState extends State<AdminOrderDetailScreen> {
                 _buildDetailRow(
                   context,
                   'Dibuat Pada:',
-                  _formatDateTime(widget.order.createdAt),
+                  DateConvention.formatToIndoConv(widget.order.createdAt),
                   icon: Icons.add_circle_outline,
                 ),
                 _buildDetailRow(
                   context,
                   'Diperbarui Pada:',
-                  _formatDateTime(widget.order.updatedAt),
+                  DateConvention.formatToIndoConv(widget.order.updatedAt),
                   icon: Icons.edit_calendar_outlined,
                 ),
               ],
             ),
           ),
         ),
+        // --- SECTION PEMBAYARAN DIPANGGIL DI SINI ---
+        _buildPaymentDetailsSection(),
+
         if (widget.order.orderItems != null &&
             widget.order.orderItems!.isNotEmpty)
           Card(
+            // ... (Card untuk Item Pesanan tidak diubah)
             color: context.cardTheme.color,
             elevation: 0,
             shape: context.cardTheme.shape,
@@ -401,7 +578,7 @@ class _AdminOrderDetailScreenState extends State<AdminOrderDetailScreen> {
                                                   color: context
                                                       .colors
                                                       .secondary
-                                                      .withOpacity(0.5),
+                                                      .withValues(alpha: 0.5),
                                                 ),
                                       ),
                                     )
@@ -410,7 +587,7 @@ class _AdminOrderDetailScreenState extends State<AdminOrderDetailScreen> {
                                       height: 50,
                                       decoration: BoxDecoration(
                                         color: context.colors.secondary
-                                            .withOpacity(0.1),
+                                            .withValues(alpha: 0.1),
                                         borderRadius: BorderRadius.circular(
                                           8.0,
                                         ),
@@ -419,7 +596,7 @@ class _AdminOrderDetailScreenState extends State<AdminOrderDetailScreen> {
                                         Icons.fastfood_outlined,
                                         size: 30,
                                         color: context.colors.secondary
-                                            .withOpacity(0.7),
+                                            .withValues(alpha: 0.7),
                                       ),
                                     ),
                                 const SizedBox(width: 12),
@@ -439,7 +616,7 @@ class _AdminOrderDetailScreenState extends State<AdminOrderDetailScreen> {
                                         overflow: TextOverflow.ellipsis,
                                       ),
                                       Text(
-                                        '${item.quantity} x ${_formatCurrency(item.price)}',
+                                        '${item.quantity} x ${CurrencyUtils.formatToRupiah(item.price)}',
                                         style: context.textStyles.bodyMedium,
                                       ),
                                     ],
@@ -447,7 +624,7 @@ class _AdminOrderDetailScreenState extends State<AdminOrderDetailScreen> {
                                 ),
                                 const SizedBox(width: 8),
                                 Text(
-                                  _formatCurrency(item.total),
+                                  CurrencyUtils.formatToRupiah(item.total),
                                   style: context.textStyles.bodyLarge?.copyWith(
                                     fontWeight: FontWeight.bold,
                                     color: context.colors.primary,
@@ -476,8 +653,8 @@ class _AdminOrderDetailScreenState extends State<AdminOrderDetailScreen> {
                     },
                     separatorBuilder:
                         (ctx, index) => Divider(
-                          color: context.theme.dividerTheme.color?.withOpacity(
-                            0.5,
+                          color: context.theme.dividerTheme.color?.withValues(
+                            alpha: 0.5,
                           ),
                           height: 16,
                         ),
@@ -499,19 +676,15 @@ class _AdminOrderDetailScreenState extends State<AdminOrderDetailScreen> {
           child: Screenshot(
             controller: _screenshotController,
             child: Container(
-              color:
-                  context
-                      .theme
-                      .scaffoldBackgroundColor, // Background untuk screenshot
-              padding: const EdgeInsets.all(
-                8.0,
-              ), // Sedikit padding di sekitar konten screenshot
+              color: context.theme.scaffoldBackgroundColor,
+              padding: const EdgeInsets.all(8.0),
               child: invoiceContent,
             ),
           ),
         ),
       ),
       bottomNavigationBar: Container(
+        // ... (BottomNavigationBar tidak diubah)
         padding: const EdgeInsets.all(16.0),
         decoration: BoxDecoration(
           color:
@@ -519,7 +692,7 @@ class _AdminOrderDetailScreenState extends State<AdminOrderDetailScreen> {
               context.theme.scaffoldBackgroundColor,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
+              color: Colors.black.withValues(alpha: 0.1),
               blurRadius: 4,
               offset: const Offset(0, -2),
             ),
@@ -528,7 +701,6 @@ class _AdminOrderDetailScreenState extends State<AdminOrderDetailScreen> {
         child: SafeArea(
           child: Consumer(
             builder: (context, ref, child) {
-              // Helper method untuk menangani aksi hapus
               Future<void> handleDeleteAction() async {
                 final bool? confirmed = await showDialog<bool>(
                   context: context,
@@ -548,8 +720,8 @@ class _AdminOrderDetailScreenState extends State<AdminOrderDetailScreen> {
                           child: Text(
                             'Batal',
                             style: TextStyle(
-                              color: dialogContext.colors.onSurface.withOpacity(
-                                0.8,
+                              color: dialogContext.colors.onSurface.withValues(
+                                alpha: 0.8,
                               ),
                             ),
                           ),
@@ -636,7 +808,7 @@ class _AdminOrderDetailScreenState extends State<AdminOrderDetailScreen> {
                   PopupMenuButton<String>(
                     icon: Icon(
                       Icons.more_vert,
-                      color: context.colors.onSurface.withOpacity(0.8),
+                      color: context.colors.onSurface.withValues(alpha: 0.8),
                       size: 28,
                     ),
                     tooltip: 'Opsi Admin',

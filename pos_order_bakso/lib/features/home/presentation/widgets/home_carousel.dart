@@ -152,7 +152,7 @@ class _HomeCarouselState extends State<HomeCarousel> {
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.15),
+                          color: Colors.black.withValues(alpha: 0.15),
                           blurRadius: 6,
                           offset: const Offset(0, 3),
                         ),
@@ -167,7 +167,7 @@ class _HomeCarouselState extends State<HomeCarousel> {
                   left: 0,
                   child: Container(
                     decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.3),
+                      color: Colors.black.withValues(alpha: 0.3),
                       shape: BoxShape.circle,
                     ),
                     child: IconButton(
@@ -187,7 +187,7 @@ class _HomeCarouselState extends State<HomeCarousel> {
                   right: 0,
                   child: Container(
                     decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.3),
+                      color: Colors.black.withValues(alpha: 0.3),
                       shape: BoxShape.circle,
                     ),
                     child: IconButton(
@@ -223,7 +223,7 @@ class _HomeCarouselState extends State<HomeCarousel> {
                   color:
                       _currentPage == index
                           ? _getPrimaryColor(context)
-                          : _getSecondaryColor(context).withOpacity(0.5),
+                          : _getSecondaryColor(context).withValues(alpha: 0.5),
                 ),
               ),
             ),

@@ -291,7 +291,9 @@ class _AdminPaymentMethodsScreenState
                 leading: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: Theme.of(context).primaryColor.withOpacity(0.1),
+                    color: Theme.of(
+                      context,
+                    ).primaryColor.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(Icons.add, color: Theme.of(context).primaryColor),
@@ -310,8 +312,8 @@ class _AdminPaymentMethodsScreenState
                   decoration: BoxDecoration(
                     color:
                         _isSelectionMode
-                            ? Colors.orange.withOpacity(0.1)
-                            : Colors.blue.withOpacity(0.1),
+                            ? Colors.orange.withValues(alpha: 0.1)
+                            : Colors.blue.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(
@@ -345,7 +347,7 @@ class _AdminPaymentMethodsScreenState
                 leading: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: Colors.green.withOpacity(0.1),
+                    color: Colors.green.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: const Icon(
@@ -365,7 +367,7 @@ class _AdminPaymentMethodsScreenState
                 leading: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: Colors.red.withOpacity(0.1),
+                    color: Colors.red.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: const Icon(
@@ -537,7 +539,9 @@ class _AdminPaymentMethodsScreenState
                             color:
                                 _showFilters
                                     ? context.colors.primary
-                                    : context.colors.onSurface.withOpacity(0.6),
+                                    : context.colors.onSurface.withValues(
+                                      alpha: 0.6,
+                                    ),
                           ),
                           onPressed: () {
                             setState(() {
@@ -662,7 +666,9 @@ class _AdminPaymentMethodsScreenState
                                                   !_isDescending
                                                       ? context.colors.primary
                                                       : context.colors.onSurface
-                                                          .withOpacity(0.6),
+                                                          .withValues(
+                                                            alpha: 0.6,
+                                                          ),
                                             ),
                                             onPressed: () {
                                               if (_isDescending) {
@@ -681,7 +687,9 @@ class _AdminPaymentMethodsScreenState
                                                   _isDescending
                                                       ? context.colors.primary
                                                       : context.colors.onSurface
-                                                          .withOpacity(0.6),
+                                                          .withValues(
+                                                            alpha: 0.6,
+                                                          ),
                                             ),
                                             onPressed: () {
                                               if (!_isDescending) {
@@ -754,10 +762,10 @@ class _AdminPaymentMethodsScreenState
                         ),
                         padding: const EdgeInsets.all(12.0),
                         decoration: BoxDecoration(
-                          color: context.colors.error.withOpacity(0.1),
+                          color: context.colors.error.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(
-                            color: context.colors.error.withOpacity(0.3),
+                            color: context.colors.error.withValues(alpha: 0.3),
                           ),
                         ),
                         width: double.infinity,
@@ -923,8 +931,8 @@ class _AdminPaymentMethodsScreenState
                               isSelected
                                   ? Theme.of(
                                     context,
-                                  ).primaryColor.withOpacity(0.4)
-                                  : Colors.black.withOpacity(0.2),
+                                  ).primaryColor.withValues(alpha: 0.4)
+                                  : Colors.black.withValues(alpha: 0.2),
                         ),
                       ),
                     ),
@@ -938,7 +946,7 @@ class _AdminPaymentMethodsScreenState
                       color: Colors.white,
                       shadows: [
                         Shadow(
-                          color: Colors.black.withOpacity(0.5),
+                          color: Colors.black.withValues(alpha: 0.5),
                           blurRadius: 2,
                         ),
                       ],

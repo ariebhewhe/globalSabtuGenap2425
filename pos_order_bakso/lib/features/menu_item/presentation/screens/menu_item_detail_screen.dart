@@ -2,39 +2,90 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:jamal/core/routes/app_router.dart';
+import 'package:jamal/core/utils/currency_utils.dart';
 import 'package:jamal/core/utils/enums.dart';
-import 'package:jamal/data/models/cart_item_model.dart';
+import 'package:jamal/core/utils/toast_utils.dart';
 import 'package:jamal/data/models/menu_item_model.dart';
+import 'package:jamal/features/menu_item/providers/menu_item_mutation_provider.dart';
+import 'package:jamal/data/models/cart_item_model.dart';
 import 'package:jamal/features/cart/providers/cart_item_mutation_provider.dart';
+import 'package:jamal/shared/widgets/admin_app_bar.dart';
 import 'package:jamal/shared/widgets/my_end_drawer.dart';
 import 'package:jamal/shared/widgets/my_screen_container.dart';
-import 'package:jamal/shared/widgets/user_app_bar.dart';
 
 @RoutePage()
-class MenuItemDetailScreen extends StatelessWidget {
+class MenuItemDetailScreen extends ConsumerStatefulWidget {
   final MenuItemModel menuItem;
 
-  const MenuItemDetailScreen({Key? key, required this.menuItem})
-    : super(key: key);
+  const MenuItemDetailScreen({super.key, required this.menuItem});
+
+  @override
+  ConsumerState<MenuItemDetailScreen> createState() =>
+      _MenuItemDetailScreenState();
+}
+
+class _MenuItemDetailScreenState extends ConsumerState<MenuItemDetailScreen> {
+  void _handleAddToCart() {
+    ref
+        .read(cartItemMutationProvider.notifier)
+        .addCartItem(
+          CreateCartItemDto(
+            menuItemId: widget.menuItem.id,
+            quantity: 1,
+            menuItem: DenormalizedMenuItemModel(
+              id: widget.menuItem.id,
+              name: widget.menuItem.name,
+              price: widget.menuItem.price,
+              imageUrl: widget.menuItem.imageUrl,
+            ),
+          ),
+        );
+  }
 
   @override
   Widget build(BuildContext context) {
+    // Listener untuk aksi pada menu item (hapus, ubah)
+    ref.listen(menuItemMutationProvider, (previous, next) {
+      if (next.errorMessage != null) {
+        ToastUtils.showError(context: context, message: next.errorMessage!);
+        ref.read(menuItemMutationProvider.notifier).resetErrorMessage();
+      }
+      if (next.successMessage != null) {
+        ToastUtils.showSuccess(context: context, message: next.successMessage!);
+        ref.read(menuItemMutationProvider.notifier).resetSuccessMessage();
+        context.router.pop(); // Kembali setelah sukses
+      }
+    });
+
+    // Listener untuk aksi pada keranjang
+    ref.listen(cartItemMutationProvider, (previous, next) {
+      if (next.errorMessage != null) {
+        ToastUtils.showError(context: context, message: next.errorMessage!);
+        ref.read(cartItemMutationProvider.notifier).resetErrorMessage();
+      }
+      if (next.successMessage != null) {
+        ToastUtils.showSuccess(context: context, message: next.successMessage!);
+        ref.read(cartItemMutationProvider.notifier).resetSuccessMessage();
+      }
+    });
+
     final Color availableColor = context.colors.primary;
     final Color unavailableColor = context.colors.error;
 
     return Scaffold(
-      appBar: const UserAppBar(),
+      appBar: const AdminAppBar(),
       endDrawer: const MyEndDrawer(),
       body: MyScreenContainer(
         child: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (menuItem.imageUrl != null)
+              if (widget.menuItem.imageUrl != null)
                 ClipRRect(
                   borderRadius: BorderRadius.circular(8.0),
                   child: CachedNetworkImage(
-                    imageUrl: menuItem.imageUrl!,
+                    imageUrl: widget.menuItem.imageUrl!,
                     width: double.infinity,
                     height: 250,
                     fit: BoxFit.cover,
@@ -83,14 +134,14 @@ class MenuItemDetailScreen extends StatelessWidget {
                 ),
               const SizedBox(height: 24.0),
               Text(
-                menuItem.name,
+                widget.menuItem.name,
                 style: context.textStyles.headlineMedium?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
               ),
               const SizedBox(height: 8.0),
               Text(
-                'Harga: Rp ${menuItem.price.toStringAsFixed(0)}',
+                'Harga: ${CurrencyUtils.formatToRupiah(widget.menuItem.price)}',
                 style: context.textStyles.titleLarge?.copyWith(
                   color: context.colors.primary,
                   fontWeight: FontWeight.w600,
@@ -105,35 +156,35 @@ class MenuItemDetailScreen extends StatelessWidget {
               ),
               const SizedBox(height: 4.0),
               Text(
-                menuItem.description.isEmpty
+                widget.menuItem.description.isEmpty
                     ? 'Tidak ada deskripsi.'
-                    : menuItem.description,
+                    : widget.menuItem.description,
                 style: context.textStyles.bodyLarge,
               ),
               const SizedBox(height: 16.0),
               Text(
-                'Kategori: ${menuItem.categoryId}',
+                'Kategori: ${widget.menuItem.category?.name ?? "category"}',
                 style: context.textStyles.bodyMedium,
               ),
               const SizedBox(height: 12.0),
               Row(
                 children: [
                   Icon(
-                    menuItem.isAvailable
+                    widget.menuItem.isAvailable
                         ? Icons.check_circle_outline
                         : Icons.cancel_outlined,
                     color:
-                        menuItem.isAvailable
+                        widget.menuItem.isAvailable
                             ? availableColor
                             : unavailableColor,
                     size: 20,
                   ),
                   const SizedBox(width: 8.0),
                   Text(
-                    menuItem.isAvailable ? 'Tersedia' : 'Tidak Tersedia',
+                    widget.menuItem.isAvailable ? 'Tersedia' : 'Tidak Tersedia',
                     style: context.textStyles.bodyLarge?.copyWith(
                       color:
-                          menuItem.isAvailable
+                          widget.menuItem.isAvailable
                               ? availableColor
                               : unavailableColor,
                       fontWeight: FontWeight.w600,
@@ -143,7 +194,7 @@ class MenuItemDetailScreen extends StatelessWidget {
               ),
               const SizedBox(height: 24.0),
               Text(
-                'Ditambahkan: ${menuItem.createdAt.toLocal().toString().split('.')[0]}',
+                'Ditambahkan: ${widget.menuItem.createdAt.toLocal().toString().split('.')[0]}',
                 style: context.textStyles.labelSmall?.copyWith(
                   color: context.textStyles.labelSmall?.color?.withValues(
                     alpha: 0.7,
@@ -152,7 +203,7 @@ class MenuItemDetailScreen extends StatelessWidget {
               ),
               const SizedBox(height: 4.0),
               Text(
-                'Diperbarui: ${menuItem.updatedAt.toLocal().toString().split('.')[0]}',
+                'Diperbarui: ${widget.menuItem.updatedAt.toLocal().toString().split('.')[0]}',
                 style: context.textStyles.labelSmall?.copyWith(
                   color: context.textStyles.labelSmall?.color?.withValues(
                     alpha: 0.7,
@@ -179,50 +230,28 @@ class MenuItemDetailScreen extends StatelessWidget {
           ],
         ),
         child: SafeArea(
-          child: Consumer(
-            builder: (context, ref, child) {
-              return ElevatedButton.icon(
-                icon: const Icon(Icons.shopping_cart_checkout),
-                onPressed:
-                    !menuItem.isAvailable
-                        ? null
-                        : () {
-                          ref
-                              .read(cartItemMutationProvider.notifier)
-                              .addCartItem(
-                                CreateCartItemDto(
-                                  menuItemId: menuItem.id,
-                                  quantity: 1,
-                                  menuItem: DenormalizedMenuItemModel(
-                                    id: menuItem.id,
-                                    name: menuItem.name,
-                                    price: menuItem.price,
-                                    imageUrl: menuItem.imageUrl,
-                                  ),
-                                ),
-                              );
-
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                '${menuItem.name} ditambahkan ke keranjang!',
-                              ),
-                              backgroundColor: context.colors.primary,
-                              duration: const Duration(seconds: 2),
-                            ),
-                          );
-                        },
-                label: const Text('Keranjang'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: context.colors.secondary,
-                  foregroundColor: context.colors.onSecondary,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  textStyle: context.textStyles.titleSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
+          child: Row(
+            children: <Widget>[
+              Expanded(
+                child: ElevatedButton.icon(
+                  icon: const Icon(Icons.shopping_cart_checkout),
+                  label: const Text('Keranjang'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: context.colors.secondary,
+                    foregroundColor: context.colors.onSecondary,
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 14,
+                      horizontal: 16,
+                    ),
+                    textStyle: context.textStyles.titleSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
+                  onPressed:
+                      !widget.menuItem.isAvailable ? null : _handleAddToCart,
                 ),
-              );
-            },
+              ),
+            ],
           ),
         ),
       ),

@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:jamal/core/utils/currency_utils.dart';
 import 'package:jamal/core/utils/enums.dart';
 import 'package:jamal/data/models/cart_item_model.dart';
 
@@ -49,7 +50,9 @@ class CartItemTile extends StatelessWidget {
           children: [
             const SizedBox(height: 4),
             Text(
-              'Rp ${(cartItem.menuItem?.price ?? 0) * cartItem.quantity}',
+              CurrencyUtils.formatToRupiah(
+                (cartItem.menuItem?.price ?? 0) * cartItem.quantity,
+              ),
               style: TextStyle(
                 color: context.colors.primary,
                 fontWeight: FontWeight.w600,

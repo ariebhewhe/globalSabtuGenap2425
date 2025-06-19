@@ -79,11 +79,11 @@ class PaymentMethodTile extends StatelessWidget {
                     as BorderRadius?
                 : BorderRadius.circular(12),
         splashColor: (isDarkMode ? AppTheme.primaryDark : AppTheme.primaryLight)
-            .withOpacity(0.1),
+            .withValues(alpha: 0.1),
         highlightColor: (isDarkMode
                 ? AppTheme.primaryDark
                 : AppTheme.primaryLight)
-            .withOpacity(0.05),
+            .withValues(alpha: 0.05),
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Row(
@@ -94,7 +94,7 @@ class PaymentMethodTile extends StatelessWidget {
                 height: 60,
                 decoration: BoxDecoration(
                   color: (isDarkMode ? AppTheme.bgAltDark : AppTheme.bgAltLight)
-                      .withOpacity(0.5),
+                      .withValues(alpha: 0.5),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 alignment: Alignment.center,

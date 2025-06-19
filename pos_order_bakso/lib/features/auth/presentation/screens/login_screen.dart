@@ -113,8 +113,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                   child: Icon(
                                     Icons.fastfood_outlined,
                                     size: 40,
-                                    color: context.colors.onSurface.withOpacity(
-                                      0.5,
+                                    color: context.colors.onSurface.withValues(
+                                      alpha: 0.5,
                                     ),
                                   ),
                                 ),
@@ -137,7 +137,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               hintStyle: context.textStyles.bodyMedium
                                   ?.copyWith(
                                     color: context.colors.onSurfaceVariant
-                                        .withOpacity(0.7),
+                                        .withValues(alpha: 0.7),
                                   ),
                               prefixIcon: Icon(
                                 Icons.alternate_email,
@@ -171,7 +171,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               hintStyle: context.textStyles.bodyMedium
                                   ?.copyWith(
                                     color: context.colors.onSurfaceVariant
-                                        .withOpacity(0.7),
+                                        .withValues(alpha: 0.7),
                                   ),
                               prefixIcon: Icon(
                                 Icons.lock_outline,
@@ -250,8 +250,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 backgroundColor: context.colors.surface,
                                 foregroundColor: context.colors.primary,
                                 side: BorderSide(
-                                  color: context.colors.outline.withOpacity(
-                                    0.5,
+                                  color: context.colors.outline.withValues(
+                                    alpha: 0.5,
                                   ),
                                 ),
                                 padding: const EdgeInsets.symmetric(

@@ -142,7 +142,7 @@ class AdminAppBar extends StatelessWidget implements PreferredSizeWidget {
                                   BoxShadow(
                                     color: Theme.of(
                                       context,
-                                    ).colorScheme.error.withOpacity(0.3),
+                                    ).colorScheme.error.withValues(alpha: 0.3),
                                     blurRadius: 4,
                                     offset: const Offset(0, 2),
                                   ),
@@ -190,7 +190,7 @@ class AdminAppBar extends StatelessWidget implements PreferredSizeWidget {
                       width: 12,
                       height: 12,
                       decoration: BoxDecoration(
-                        color: Colors.grey.withOpacity(0.5),
+                        color: Colors.grey.withValues(alpha: 0.5),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: const CircularProgressIndicator(

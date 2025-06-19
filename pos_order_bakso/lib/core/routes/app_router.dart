@@ -159,6 +159,10 @@ class AppRouter extends RootStackRouter {
       guards: [_authGuard, _duplicateGuard],
     ),
     AutoRoute(
+      page: AdminCreateOrderRoute.page,
+      guards: [_authGuard, _duplicateGuard],
+    ),
+    AutoRoute(
       page: AdminUpdateOrderRoute.page,
       guards: [_authGuard, _duplicateGuard],
     ),

@@ -189,8 +189,8 @@ class _AdminTableReservationsScreenState
                   decoration: BoxDecoration(
                     color:
                         _isSelectionMode
-                            ? Colors.orange.withOpacity(0.1)
-                            : Colors.blue.withOpacity(0.1),
+                            ? Colors.orange.withValues(alpha: 0.1)
+                            : Colors.blue.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(
@@ -224,7 +224,7 @@ class _AdminTableReservationsScreenState
                 leading: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: Colors.red.withOpacity(0.1),
+                    color: Colors.red.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: const Icon(
@@ -311,7 +311,9 @@ class _AdminTableReservationsScreenState
                   padding: const EdgeInsets.all(12.0),
                   margin: const EdgeInsets.all(16).copyWith(bottom: 0),
                   decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.error.withOpacity(0.1),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.error.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Row(
@@ -419,8 +421,8 @@ class _AdminTableReservationsScreenState
                               isSelected
                                   ? Theme.of(
                                     context,
-                                  ).primaryColor.withOpacity(0.4)
-                                  : Colors.black.withOpacity(0.2),
+                                  ).primaryColor.withValues(alpha: 0.4)
+                                  : Colors.black.withValues(alpha: 0.2),
                         ),
                       ),
                     ),
@@ -434,7 +436,7 @@ class _AdminTableReservationsScreenState
                       color: Colors.white,
                       shadows: [
                         Shadow(
-                          color: Colors.black.withOpacity(0.5),
+                          color: Colors.black.withValues(alpha: 0.5),
                           blurRadius: 2,
                         ),
                       ],
@@ -458,7 +460,7 @@ class _AdminTableReservationsScreenState
             size: 64,
             color: Theme.of(
               context,
-            ).textTheme.bodySmall?.color?.withOpacity(0.5),
+            ).textTheme.bodySmall?.color?.withValues(alpha: 0.5),
           ),
           const SizedBox(height: 16),
           Text(

@@ -41,6 +41,32 @@ class OrderMutationNotifier extends StateNotifier<OrderMutationState> {
     );
   }
 
+  Future<void> addOrderAdmin(CreateOrderDto newOrder) async {
+    state = state.copyWith(isLoading: true);
+
+    final result = await _orderRepo.addOrderAdmin(newOrder);
+
+    result.match(
+      (error) =>
+          state = state.copyWith(isLoading: false, errorMessage: error.message),
+      (success) {
+        state = state.copyWith(
+          isLoading: false,
+          successMessage: success.message,
+        );
+
+        // * Refresh menu items list
+        _ref.read(ordersProvider.notifier).refreshOrders();
+        _ref
+            .read(userTableReservationsProvider.notifier)
+            .refreshTableReservations();
+        _ref.read(cartItemsProvider.notifier).refreshCartItems();
+        _ref.invalidate(totalCartQuantityProvider);
+        _ref.invalidate(distinctCartItemCountProvider);
+      },
+    );
+  }
+
   Future<void> updateOrder(String id, UpdateOrderDto updatedOrder) async {
     state = state.copyWith(isLoading: true);
 

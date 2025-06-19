@@ -1,10 +1,20 @@
 import 'dart:typed_data';
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:jamal/core/routes/app_router.dart';
+import 'package:jamal/core/utils/currency_utils.dart';
+import 'package:jamal/core/utils/date_convention.dart';
 import 'package:jamal/core/utils/enums.dart';
+import 'package:jamal/core/utils/toast_utils.dart';
 import 'package:jamal/data/models/order_model.dart';
+import 'package:jamal/features/order/providers/order_mutation_provider.dart';
+import 'package:jamal/features/payment_method/providers/payment_method_provider.dart';
 import 'package:jamal/main.dart';
+import 'package:jamal/shared/widgets/admin_app_bar.dart';
+import 'package:jamal/shared/widgets/my_end_drawer.dart';
 import 'package:jamal/shared/widgets/my_screen_container.dart';
 import 'package:jamal/shared/widgets/user_app_bar.dart';
 
@@ -12,31 +22,18 @@ import 'package:screenshot/screenshot.dart';
 import 'package:file_saver/file_saver.dart';
 
 @RoutePage()
-class OrderDetailScreen extends StatefulWidget {
+class OrderDetailScreen extends ConsumerStatefulWidget {
   final OrderModel order;
 
   const OrderDetailScreen({Key? key, required this.order}) : super(key: key);
 
   @override
-  State<OrderDetailScreen> createState() => _OrderDetailScreenState();
+  ConsumerState<OrderDetailScreen> createState() => _OrderDetailScreenState();
 }
 
-class _OrderDetailScreenState extends State<OrderDetailScreen> {
+class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
   final ScreenshotController _screenshotController = ScreenshotController();
   bool _isSavingInvoice = false;
-
-  String _formatDateTime(DateTime? dateTime) {
-    if (dateTime == null) return 'N/A';
-    return DateFormat('dd MMM リ, HH:mm', 'id_ID').format(dateTime);
-  }
-
-  String _formatCurrency(double amount) {
-    return NumberFormat.currency(
-      locale: 'id_ID',
-      symbol: 'Rp ',
-      decimalDigits: 0,
-    ).format(amount);
-  }
 
   Widget _buildStatusChip(BuildContext context, String statusText) {
     Color chipBackgroundColor;
@@ -48,7 +45,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
         lowerStatus == PaymentStatus.success.toMap().toLowerCase() ||
         lowerStatus == OrderStatus.confirmed.toMap().toLowerCase() ||
         lowerStatus == OrderStatus.ready.toMap().toLowerCase()) {
-      chipBackgroundColor = context.colors.primary.withOpacity(0.15);
+      chipBackgroundColor = context.colors.primary.withValues(alpha: 0.15);
       chipTextColor = context.colors.primary;
       chipIcon = Icons.check_circle;
       if (lowerStatus == OrderStatus.ready.toMap().toLowerCase()) {
@@ -57,18 +54,18 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     } else if (lowerStatus == OrderStatus.pending.toMap().toLowerCase() ||
         lowerStatus == OrderStatus.preparing.toMap().toLowerCase() ||
         lowerStatus == PaymentStatus.pending.toMap().toLowerCase()) {
-      chipBackgroundColor = Colors.orange.withOpacity(0.15);
+      chipBackgroundColor = Colors.orange.withValues(alpha: 0.15);
       chipTextColor = Colors.orange.shade700;
       chipIcon = Icons.hourglass_empty;
       if (lowerStatus == OrderStatus.preparing.toMap().toLowerCase()) {
         chipIcon = Icons.soup_kitchen_outlined;
       }
     } else if (lowerStatus == OrderStatus.cancelled.toMap().toLowerCase()) {
-      chipBackgroundColor = context.colors.error.withOpacity(0.15);
+      chipBackgroundColor = context.colors.error.withValues(alpha: 0.15);
       chipTextColor = context.colors.error;
       chipIcon = Icons.cancel;
     } else {
-      chipBackgroundColor = context.colors.secondary.withOpacity(0.15);
+      chipBackgroundColor = context.colors.secondary.withValues(alpha: 0.15);
       chipTextColor = context.colors.secondary;
       chipIcon = Icons.info_outline;
     }
@@ -107,7 +104,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
             Icon(
               icon,
               size: 18,
-              color: context.colors.secondary.withOpacity(0.8),
+              color: context.colors.secondary.withValues(alpha: 0.8),
             ),
             const SizedBox(width: 10),
           ] else ...[
@@ -153,7 +150,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
             Icon(
               icon,
               size: 18,
-              color: context.colors.secondary.withOpacity(0.8),
+              color: context.colors.secondary.withValues(alpha: 0.8),
             ),
             const SizedBox(width: 10),
           ] else ...[
@@ -179,6 +176,190 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     );
   }
 
+  // WIDGET BARU: Section khusus untuk detail pembayaran
+  Widget _buildPaymentDetailsSection() {
+    final paymentMethodId = widget.order.paymentMethodId;
+    if (paymentMethodId == null) {
+      return const SizedBox.shrink();
+    }
+
+    final paymentMethodState = ref.watch(
+      paymentMethodProvider(paymentMethodId),
+    );
+    final paymentMethod = paymentMethodState.paymentMethod;
+
+    // Hanya tampilkan section ini jika ada kode atau QR yang perlu ditampilkan
+    bool hasPaymentDetails =
+        (paymentMethod?.adminPaymentCode != null &&
+            paymentMethod!.adminPaymentCode!.isNotEmpty) ||
+        (paymentMethod?.adminPaymentQrCodePicture != null &&
+            paymentMethod!.adminPaymentQrCodePicture!.isNotEmpty);
+
+    if (paymentMethodState.isLoading) {
+      return const Card(
+        child: Padding(
+          padding: EdgeInsets.all(16.0),
+          child: Center(child: CircularProgressIndicator()),
+        ),
+      );
+    }
+
+    if (paymentMethod == null || !hasPaymentDetails) {
+      return const SizedBox.shrink();
+    }
+
+    return Card(
+      color: context.cardTheme.color,
+      elevation: 0,
+      shape: context.cardTheme.shape,
+      margin: const EdgeInsets.only(bottom: 16.0),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Detail Pembayaran',
+              style: context.textStyles.titleMedium?.copyWith(
+                color: context.colors.primary,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            Divider(
+              color: context.theme.dividerTheme.color?.withValues(alpha: 0.5),
+              height: 20,
+            ),
+
+            // Nama Metode Pembayaran
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12.0),
+              child: Row(
+                children: [
+                  Text("Metode:", style: context.textStyles.bodyMedium),
+                  const SizedBox(width: 8),
+                  Flexible(
+                    child: Text(
+                      paymentMethod.name,
+                      style: context.textStyles.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // Konten dinamis (QR atau Kode)
+            if (paymentMethod.adminPaymentQrCodePicture != null &&
+                paymentMethod.adminPaymentQrCodePicture!.isNotEmpty)
+              _buildQrCodeContent(paymentMethod.adminPaymentQrCodePicture!)
+            else if (paymentMethod.adminPaymentCode != null &&
+                paymentMethod.adminPaymentCode!.isNotEmpty)
+              _buildPaymentCodeContent(paymentMethod.adminPaymentCode!),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Helper untuk konten QR Code
+  Widget _buildQrCodeContent(String imageUrl) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Cara Bayar:', style: context.textStyles.bodyMedium),
+        const SizedBox(height: 4),
+        Text(
+          'Scan QR Code di bawah menggunakan aplikasi pembayaran Anda.',
+          style: context.textStyles.bodySmall,
+        ),
+        const SizedBox(height: 12),
+        Center(
+          child: GestureDetector(
+            onTap: () {
+              showDialog(
+                context: context,
+                builder:
+                    (ctx) => AlertDialog(
+                      contentPadding: const EdgeInsets.all(8),
+                      content: Image.network(imageUrl),
+                    ),
+              );
+            },
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: Image.network(
+                imageUrl,
+                width: 150,
+                height: 150,
+                fit: BoxFit.cover,
+                loadingBuilder: (context, child, loadingProgress) {
+                  if (loadingProgress == null) return child;
+                  return const SizedBox(
+                    width: 150,
+                    height: 150,
+                    child: Center(child: CircularProgressIndicator()),
+                  );
+                },
+                errorBuilder:
+                    (context, error, stackTrace) =>
+                        const Icon(Icons.broken_image, size: 150),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // Helper untuk konten Kode Pembayaran
+  Widget _buildPaymentCodeContent(String code) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Cara Bayar:', style: context.textStyles.bodyMedium),
+        const SizedBox(height: 4),
+        Text(
+          'Salin kode di bawah dan lakukan pembayaran melalui channel yang sesuai.',
+          style: context.textStyles.bodySmall,
+        ),
+        const SizedBox(height: 12),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+          decoration: BoxDecoration(
+            color: context.colors.surfaceContainerHighest,
+            borderRadius: BorderRadius.circular(8.0),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Flexible(
+                child: Text(
+                  code,
+                  style: context.textStyles.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1.5,
+                  ),
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.copy_outlined),
+                onPressed: () {
+                  Clipboard.setData(ClipboardData(text: code));
+                  ToastUtils.showInfo(
+                    context: context,
+                    message: 'Kode pembayaran disalin!',
+                  );
+                },
+                tooltip: 'Salin Kode',
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
   Future<void> _captureAndSaveInvoice() async {
     if (_isSavingInvoice) return;
 
@@ -186,27 +367,12 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       _isSavingInvoice = true;
     });
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          'Menyiapkan invoice...',
-          style: context.textStyles.labelMedium?.copyWith(
-            color: context.colors.onSurface,
-          ),
-        ),
-        backgroundColor: context.colors.surface.withOpacity(0.8),
-        duration: const Duration(
-          seconds: 1,
-        ), // Kurangi durasi untuk notif singkat
-      ),
-    );
+    ToastUtils.showInfo(context: context, message: 'Menyiapkan invoice...');
 
     try {
       final Uint8List? imageBytes = await _screenshotController.capture(
-        delay: const Duration(milliseconds: 150), // Sedikit delay
-        pixelRatio:
-            MediaQuery.of(context).devicePixelRatio *
-            1.5, // Kualitas cukup baik
+        delay: const Duration(milliseconds: 150),
+        pixelRatio: MediaQuery.of(context).devicePixelRatio * 1.5,
       );
 
       if (imageBytes == null) {
@@ -216,54 +382,31 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       final String fileName =
           'Invoice_Order_${widget.order.id.length > 6 ? widget.order.id.substring(0, 6) : widget.order.id}_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}';
 
-      // Menggunakan file_saver
-      // Ini akan membuka dialog "Save As" dari sistem operasi
       String? filePath = await FileSaver.instance.saveFile(
-        name: fileName, // Nama file (tanpa ekstensi)
+        name: fileName,
         bytes: imageBytes,
-        ext: 'png', // Ekstensi file
-        mimeType: MimeType.png, // Tipe MIME
+        ext: 'png',
+        mimeType: MimeType.png,
       );
 
       if (filePath != null && filePath.isNotEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Invoice disimpan: $filePath',
-              style: context.textStyles.labelMedium?.copyWith(
-                color: context.colors.onPrimary,
-              ),
-            ),
-            backgroundColor: context.colors.primary,
-            behavior: SnackBarBehavior.floating,
-            duration: const Duration(seconds: 5), // Tampilkan path lebih lama
-          ),
+        if (!context.mounted) return;
+        ToastUtils.showSuccess(
+          context: context,
+          message: 'Invoice disimpan: $filePath',
         );
       } else {
-        // Pengguna mungkin membatalkan dialog penyimpanan
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Penyimpanan dibatalkan oleh pengguna.',
-              style: context.textStyles.labelMedium,
-            ),
-            backgroundColor: context.colors.secondary,
-            behavior: SnackBarBehavior.floating,
-          ),
+        if (!context.mounted) return;
+        ToastUtils.showWarning(
+          context: context,
+          message: 'Penyimpanan dibatalkan oleh pengguna.',
         );
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Error menyimpan: ${e.toString()}',
-            style: context.textStyles.labelMedium?.copyWith(
-              color: context.colors.onError,
-            ),
-          ),
-          backgroundColor: context.colors.error,
-          behavior: SnackBarBehavior.floating,
-        ),
+      if (!context.mounted) return;
+      ToastUtils.showError(
+        context: context,
+        message: 'Error menyimpan: ${e.toString()}',
       );
       logger.e("Error capturing or saving invoice: ${e.toString()}");
     } finally {
@@ -296,7 +439,9 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                   ),
                 ),
                 Divider(
-                  color: context.theme.dividerTheme.color?.withOpacity(0.5),
+                  color: context.theme.dividerTheme.color?.withValues(
+                    alpha: 0.5,
+                  ),
                   height: 20,
                 ),
                 _buildDetailRow(
@@ -314,7 +459,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                 _buildDetailRow(
                   context,
                   'Tanggal Pesan:',
-                  _formatDateTime(widget.order.orderDate),
+                  DateConvention.formatToIndoConv(widget.order.orderDate),
                   icon: Icons.calendar_today_outlined,
                 ),
                 _buildDetailRowWidget(
@@ -332,7 +477,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                 _buildDetailRow(
                   context,
                   'Total Bayar:',
-                  _formatCurrency(widget.order.totalAmount),
+                  CurrencyUtils.formatToRupiah(widget.order.totalAmount),
                   icon: Icons.monetization_on_outlined,
                 ),
                 _buildDetailRowWidget(
@@ -341,18 +486,13 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                   _buildStatusChip(context, widget.order.paymentStatus.toMap()),
                   icon: Icons.payment_outlined,
                 ),
-                if (widget.order.paymentMethodId != null)
-                  _buildDetailRow(
-                    context,
-                    'ID Metode Bayar:',
-                    widget.order.paymentMethodId!,
-                    icon: Icons.credit_card_outlined,
-                  ),
                 if (widget.order.estimatedReadyTime != null)
                   _buildDetailRow(
                     context,
                     'Estimasi Siap:',
-                    _formatDateTime(widget.order.estimatedReadyTime),
+                    DateConvention.formatToIndoConv(
+                      widget.order.estimatedReadyTime,
+                    ),
                     icon: Icons.timer_outlined,
                   ),
                 if (widget.order.specialInstructions != null &&
@@ -366,19 +506,21 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                 _buildDetailRow(
                   context,
                   'Dibuat Pada:',
-                  _formatDateTime(widget.order.createdAt),
+                  DateConvention.formatToIndoConv(widget.order.createdAt),
                   icon: Icons.add_circle_outline,
                 ),
                 _buildDetailRow(
                   context,
                   'Diperbarui Pada:',
-                  _formatDateTime(widget.order.updatedAt),
+                  DateConvention.formatToIndoConv(widget.order.updatedAt),
                   icon: Icons.edit_calendar_outlined,
                 ),
               ],
             ),
           ),
         ),
+        _buildPaymentDetailsSection(),
+
         if (widget.order.orderItems != null &&
             widget.order.orderItems!.isNotEmpty)
           Card(
@@ -432,7 +574,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                                                   color: context
                                                       .colors
                                                       .secondary
-                                                      .withOpacity(0.5),
+                                                      .withValues(alpha: 0.5),
                                                 ),
                                       ),
                                     )
@@ -441,7 +583,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                                       height: 50,
                                       decoration: BoxDecoration(
                                         color: context.colors.secondary
-                                            .withOpacity(0.1),
+                                            .withValues(alpha: 0.1),
                                         borderRadius: BorderRadius.circular(
                                           8.0,
                                         ),
@@ -450,7 +592,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                                         Icons.fastfood_outlined,
                                         size: 30,
                                         color: context.colors.secondary
-                                            .withOpacity(0.7),
+                                            .withValues(alpha: 0.7),
                                       ),
                                     ),
                                 const SizedBox(width: 12),
@@ -470,7 +612,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                                         overflow: TextOverflow.ellipsis,
                                       ),
                                       Text(
-                                        '${item.quantity} x ${_formatCurrency(item.price)}',
+                                        '${item.quantity} x ${CurrencyUtils.formatToRupiah(item.price)}',
                                         style: context.textStyles.bodyMedium,
                                       ),
                                     ],
@@ -478,7 +620,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                                 ),
                                 const SizedBox(width: 8),
                                 Text(
-                                  _formatCurrency(item.total),
+                                  CurrencyUtils.formatToRupiah(item.total),
                                   style: context.textStyles.bodyLarge?.copyWith(
                                     fontWeight: FontWeight.bold,
                                     color: context.colors.primary,
@@ -507,8 +649,8 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                     },
                     separatorBuilder:
                         (ctx, index) => Divider(
-                          color: context.theme.dividerTheme.color?.withOpacity(
-                            0.5,
+                          color: context.theme.dividerTheme.color?.withValues(
+                            alpha: 0.5,
                           ),
                           height: 16,
                         ),
@@ -523,58 +665,81 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     return Scaffold(
       backgroundColor: context.theme.scaffoldBackgroundColor,
       appBar: const UserAppBar(),
+      endDrawer: const MyEndDrawer(),
       body: MyScreenContainer(
         child: SingleChildScrollView(
           padding: const EdgeInsets.only(bottom: 80, left: 4, right: 4, top: 8),
           child: Screenshot(
             controller: _screenshotController,
             child: Container(
-              color:
-                  context
-                      .theme
-                      .scaffoldBackgroundColor, // Background untuk screenshot
-              padding: const EdgeInsets.all(
-                8.0,
-              ), // Sedikit padding di sekitar konten screenshot
+              color: context.theme.scaffoldBackgroundColor,
+              padding: const EdgeInsets.all(8.0),
               child: invoiceContent,
             ),
           ),
         ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _isSavingInvoice ? null : _captureAndSaveInvoice,
-        label:
-            _isSavingInvoice
-                ? Text(
-                  'Menyimpan...',
-                  style: TextStyle(
-                    color: context.colors.onPrimary,
-                    fontWeight: FontWeight.bold,
+      bottomNavigationBar: Container(
+        // ... (BottomNavigationBar tidak diubah)
+        padding: const EdgeInsets.all(16.0),
+        decoration: BoxDecoration(
+          color:
+              context.theme.bottomAppBarTheme.color ??
+              context.theme.scaffoldBackgroundColor,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.1),
+              blurRadius: 4,
+              offset: const Offset(0, -2),
+            ),
+          ],
+        ),
+        child: SafeArea(
+          child: Consumer(
+            builder: (context, ref, child) {
+              return Row(
+                children: <Widget>[
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed:
+                          _isSavingInvoice ? null : _captureAndSaveInvoice,
+                      label:
+                          _isSavingInvoice
+                              ? Text(
+                                'Menyimpan...',
+                                style: TextStyle(
+                                  color: context.colors.onPrimary,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              )
+                              : Text(
+                                'Simpan Bukti',
+                                style: TextStyle(
+                                  color: context.colors.onPrimary,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                      icon:
+                          _isSavingInvoice
+                              ? SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2.0,
+                                  color: context.colors.onPrimary,
+                                ),
+                              )
+                              : Icon(
+                                Icons.save_alt_outlined,
+                                color: context.colors.onPrimary,
+                              ),
+                    ),
                   ),
-                )
-                : Text(
-                  'Simpan Invoice',
-                  style: TextStyle(
-                    color: context.colors.onPrimary,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-        icon:
-            _isSavingInvoice
-                ? SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2.0,
-                    color: context.colors.onPrimary,
-                  ),
-                )
-                : Icon(
-                  Icons.save_alt_outlined,
-                  color: context.colors.onPrimary,
-                ), // Ikon save
-        backgroundColor: context.colors.primary,
-        elevation: 4.0,
+                ],
+              );
+            },
+          ),
+        ),
       ),
     );
   }

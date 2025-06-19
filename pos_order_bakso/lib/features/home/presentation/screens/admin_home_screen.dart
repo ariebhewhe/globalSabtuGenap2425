@@ -21,21 +21,21 @@ class AdminHomeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return MyScreenContainer(
       child: Scaffold(
-        backgroundColor: context.colors.surface.withOpacity(0.95),
+        backgroundColor: context.colors.surface.withValues(alpha: 0.95),
         body: SingleChildScrollView(
           padding: const EdgeInsets.all(20.0),
-          // child: Column(
-          //   crossAxisAlignment: CrossAxisAlignment.start,
-          //   children: [
-          //     _buildHeader(context),
-          //     const SizedBox(height: 32),
-          //     _buildRevenueSection(context, ref),
-          //     const SizedBox(height: 24),
-          //     _buildOrderStatusSection(context, ref),
-          //     const SizedBox(height: 24),
-          //     _buildUserAndProductSection(context, ref),
-          //   ],
-          // ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildHeader(context),
+              const SizedBox(height: 32),
+              _buildRevenueSection(context, ref),
+              const SizedBox(height: 24),
+              _buildOrderStatusSection(context, ref),
+              const SizedBox(height: 24),
+              _buildUserAndProductSection(context, ref),
+            ],
+          ),
         ),
       ),
     );
@@ -64,7 +64,9 @@ class AdminHomeScreen extends ConsumerWidget {
             Text(
               'Ringkasan data dan statistik aplikasi',
               style: context.textStyles.bodyMedium?.copyWith(
-                color: context.textStyles.bodyMedium?.color?.withOpacity(0.7),
+                color: context.textStyles.bodyMedium?.color?.withValues(
+                  alpha: 0.7,
+                ),
               ),
             ),
           ],
@@ -92,7 +94,9 @@ class AdminHomeScreen extends ConsumerWidget {
               Text(
                 'Perbandingan pendapatan dalam berbagai periode.',
                 style: context.textStyles.bodySmall?.copyWith(
-                  color: context.textStyles.bodySmall?.color?.withOpacity(0.7),
+                  color: context.textStyles.bodySmall?.color?.withValues(
+                    alpha: 0.7,
+                  ),
                 ),
               ),
               const SizedBox(height: 24),
@@ -106,8 +110,9 @@ class AdminHomeScreen extends ConsumerWidget {
                           barTouchData: BarTouchData(
                             touchTooltipData: BarTouchTooltipData(
                               getTooltipColor:
-                                  (_) =>
-                                      context.colors.primary.withOpacity(0.8),
+                                  (_) => context.colors.primary.withValues(
+                                    alpha: 0.8,
+                                  ),
                               getTooltipItem: (
                                 group,
                                 groupIndex,
@@ -175,7 +180,7 @@ class AdminHomeScreen extends ConsumerWidget {
                             _makeGroupData(
                               0,
                               data.totalRevenueToday,
-                              color.withOpacity(0.6),
+                              color.withValues(alpha: 0.6),
                             ),
                             _makeGroupData(
                               1,
@@ -185,7 +190,7 @@ class AdminHomeScreen extends ConsumerWidget {
                             _makeGroupData(
                               2,
                               data.totalRevenueThisYear,
-                              color.withOpacity(0.8),
+                              color.withValues(alpha: 0.8),
                             ),
                           ],
                           gridData: FlGridData(
@@ -196,8 +201,8 @@ class AdminHomeScreen extends ConsumerWidget {
                                 (value) => FlLine(
                                   color:
                                       context.isDarkMode
-                                          ? Colors.white.withOpacity(0.1)
-                                          : Colors.black.withOpacity(0.1),
+                                          ? Colors.white.withValues(alpha: 0.1)
+                                          : Colors.black.withValues(alpha: 0.1),
                                   strokeWidth: 1,
                                 ),
                           ),
@@ -422,7 +427,7 @@ class AdminHomeScreen extends ConsumerWidget {
                                   radius: 25,
                                 ),
                                 PieChartSectionData(
-                                  color: color.withOpacity(0.5),
+                                  color: color.withValues(alpha: 0.5),
                                   value: data.userCount.toDouble(),
                                   title: 'User\n${data.userCount}',
                                   titleStyle: context.textStyles.bodySmall
@@ -504,7 +509,7 @@ class AdminHomeScreen extends ConsumerWidget {
                                   radius: 25,
                                 ),
                                 PieChartSectionData(
-                                  color: color.withOpacity(0.5),
+                                  color: color.withValues(alpha: 0.5),
                                   value: data.nonActiveMenuItemCount.toDouble(),
                                   title:
                                       'Non-Aktif\n${data.nonActiveMenuItemCount}',

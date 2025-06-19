@@ -5,6 +5,7 @@ import 'package:jamal/features/cart/providers/cart_item_aggregate_provider.dart'
 import 'package:jamal/features/cart/providers/cart_item_mutation_state.dart';
 import 'package:jamal/features/cart/providers/cart_item_provider.dart';
 import 'package:jamal/features/cart/providers/cart_items_provider.dart';
+import 'package:jamal/features/cart/providers/selected_cart_items_provider.dart';
 
 class CartItemMutationNotifier extends StateNotifier<CartItemMutationState> {
   final CartItemRepo _cartItemRepo;
@@ -28,7 +29,8 @@ class CartItemMutationNotifier extends StateNotifier<CartItemMutationState> {
         );
 
         // * Refresh menu items list
-        _ref.read(cartItemsProvider.notifier).refreshCartItems();
+        _ref.invalidate(cartItemsProvider);
+        _ref.invalidate(selectedCartItemsProvider);
         _ref.invalidate(totalCartQuantityProvider);
         _ref.invalidate(distinctCartItemCountProvider);
       },
@@ -53,7 +55,8 @@ class CartItemMutationNotifier extends StateNotifier<CartItemMutationState> {
         );
 
         // * Refresh menu items dan menu items
-        _ref.read(cartItemsProvider.notifier).refreshCartItems();
+        _ref.invalidate(cartItemsProvider);
+        _ref.invalidate(selectedCartItemsProvider);
         _ref.invalidate(totalCartQuantityProvider);
         _ref.invalidate(distinctCartItemCountProvider);
 
@@ -80,7 +83,8 @@ class CartItemMutationNotifier extends StateNotifier<CartItemMutationState> {
         );
 
         // * Refresh menu items
-        _ref.read(cartItemsProvider.notifier).refreshCartItems();
+        _ref.invalidate(cartItemsProvider);
+        _ref.invalidate(selectedCartItemsProvider);
         _ref.invalidate(totalCartQuantityProvider);
         _ref.invalidate(distinctCartItemCountProvider);
 

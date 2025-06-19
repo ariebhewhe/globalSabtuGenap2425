@@ -257,7 +257,9 @@ class _AdminCategoriesScreenState extends ConsumerState<AdminCategoriesScreen> {
                 leading: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: Theme.of(context).primaryColor.withOpacity(0.1),
+                    color: Theme.of(
+                      context,
+                    ).primaryColor.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(Icons.add, color: Theme.of(context).primaryColor),
@@ -276,8 +278,8 @@ class _AdminCategoriesScreenState extends ConsumerState<AdminCategoriesScreen> {
                   decoration: BoxDecoration(
                     color:
                         _isSelectionMode
-                            ? Colors.orange.withOpacity(0.1)
-                            : Colors.blue.withOpacity(0.1),
+                            ? Colors.orange.withValues(alpha: 0.1)
+                            : Colors.blue.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(
@@ -311,7 +313,7 @@ class _AdminCategoriesScreenState extends ConsumerState<AdminCategoriesScreen> {
                 leading: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: Colors.red.withOpacity(0.1),
+                    color: Colors.red.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: const Icon(Icons.delete_forever, color: Colors.red),
@@ -472,7 +474,9 @@ class _AdminCategoriesScreenState extends ConsumerState<AdminCategoriesScreen> {
                             color:
                                 _showFilters
                                     ? context.colors.primary
-                                    : context.colors.onSurface.withOpacity(0.6),
+                                    : context.colors.onSurface.withValues(
+                                      alpha: 0.6,
+                                    ),
                           ),
                           onPressed: () {
                             setState(() {
@@ -597,7 +601,9 @@ class _AdminCategoriesScreenState extends ConsumerState<AdminCategoriesScreen> {
                                                   !_isDescending
                                                       ? context.colors.primary
                                                       : context.colors.onSurface
-                                                          .withOpacity(0.6),
+                                                          .withValues(
+                                                            alpha: 0.6,
+                                                          ),
                                             ),
                                             onPressed: () {
                                               if (_isDescending) {
@@ -616,7 +622,9 @@ class _AdminCategoriesScreenState extends ConsumerState<AdminCategoriesScreen> {
                                                   _isDescending
                                                       ? context.colors.primary
                                                       : context.colors.onSurface
-                                                          .withOpacity(0.6),
+                                                          .withValues(
+                                                            alpha: 0.6,
+                                                          ),
                                             ),
                                             onPressed: () {
                                               if (!_isDescending) {
@@ -689,10 +697,10 @@ class _AdminCategoriesScreenState extends ConsumerState<AdminCategoriesScreen> {
                         ),
                         padding: const EdgeInsets.all(12.0),
                         decoration: BoxDecoration(
-                          color: context.colors.error.withOpacity(0.1),
+                          color: context.colors.error.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(
-                            color: context.colors.error.withOpacity(0.3),
+                            color: context.colors.error.withValues(alpha: 0.3),
                           ),
                         ),
                         width: double.infinity,
@@ -858,8 +866,8 @@ class _AdminCategoriesScreenState extends ConsumerState<AdminCategoriesScreen> {
                             isSelected
                                 ? Theme.of(
                                   context,
-                                ).primaryColor.withOpacity(0.4)
-                                : Colors.black.withOpacity(0.2),
+                                ).primaryColor.withValues(alpha: 0.4)
+                                : Colors.black.withValues(alpha: 0.2),
                       ),
                     ),
                   ),

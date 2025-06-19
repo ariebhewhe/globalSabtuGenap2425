@@ -38,11 +38,11 @@ class RestaurantTableTile extends StatelessWidget {
                     .resolve(Directionality.of(context))
                 : BorderRadius.circular(8.0), // Default border radius
         splashColor: (isDarkMode ? AppTheme.primaryDark : AppTheme.primaryLight)
-            .withOpacity(0.1),
+            .withValues(alpha: 0.1),
         highlightColor: (isDarkMode
                 ? AppTheme.primaryDark
                 : AppTheme.primaryLight)
-            .withOpacity(0.05),
+            .withValues(alpha: 0.05),
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Row(
@@ -54,10 +54,10 @@ class RestaurantTableTile extends StatelessWidget {
                 height: 60,
                 decoration: BoxDecoration(
                   color: (isDarkMode ? AppTheme.bgAltDark : AppTheme.bgAltLight)
-                      .withOpacity(0.8),
+                      .withValues(alpha: 0.8),
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
-                    color: statusColor.withOpacity(0.5),
+                    color: statusColor.withValues(alpha: 0.5),
                     width: 1.5,
                   ),
                 ),

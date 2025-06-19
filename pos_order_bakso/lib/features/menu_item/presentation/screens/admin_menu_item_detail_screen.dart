@@ -45,7 +45,7 @@ class _AdminMenuItemDetailScreenState
               child: Text(
                 'Batal',
                 style: TextStyle(
-                  color: dialogContext.colors.onSurface.withOpacity(0.8),
+                  color: dialogContext.colors.onSurface.withValues(alpha: 0.8),
                 ),
               ),
               onPressed: () => Navigator.of(dialogContext).pop(false),
@@ -143,13 +143,17 @@ class _AdminMenuItemDetailScreenState
                           width: double.infinity,
                           height: 250,
                           decoration: BoxDecoration(
-                            color: context.colors.surface.withOpacity(0.1),
+                            color: context.colors.surface.withValues(
+                              alpha: 0.1,
+                            ),
                             borderRadius: BorderRadius.circular(8.0),
                           ),
                           child: Icon(
                             Icons.broken_image_outlined,
                             size: 50,
-                            color: context.colors.onSurface.withOpacity(0.4),
+                            color: context.colors.onSurface.withValues(
+                              alpha: 0.4,
+                            ),
                           ),
                         ),
                   ),
@@ -159,14 +163,14 @@ class _AdminMenuItemDetailScreenState
                   width: double.infinity,
                   height: 250,
                   decoration: BoxDecoration(
-                    color: context.colors.surface.withOpacity(0.5),
+                    color: context.colors.surface.withValues(alpha: 0.5),
                     borderRadius: BorderRadius.circular(8.0),
                   ),
                   child: Center(
                     child: Text(
                       'No Image Available',
                       style: context.textStyles.bodyMedium?.copyWith(
-                        color: context.colors.onSurface.withOpacity(0.7),
+                        color: context.colors.onSurface.withValues(alpha: 0.7),
                       ),
                     ),
                   ),
@@ -235,14 +239,18 @@ class _AdminMenuItemDetailScreenState
               Text(
                 'Ditambahkan: ${widget.menuItem.createdAt.toLocal().toString().split('.')[0]}',
                 style: context.textStyles.labelSmall?.copyWith(
-                  color: context.textStyles.labelSmall?.color?.withOpacity(0.7),
+                  color: context.textStyles.labelSmall?.color?.withValues(
+                    alpha: 0.7,
+                  ),
                 ),
               ),
               const SizedBox(height: 4.0),
               Text(
                 'Diperbarui: ${widget.menuItem.updatedAt.toLocal().toString().split('.')[0]}',
                 style: context.textStyles.labelSmall?.copyWith(
-                  color: context.textStyles.labelSmall?.color?.withOpacity(0.7),
+                  color: context.textStyles.labelSmall?.color?.withValues(
+                    alpha: 0.7,
+                  ),
                 ),
               ),
               const SizedBox(height: 80),
@@ -258,7 +266,7 @@ class _AdminMenuItemDetailScreenState
               context.theme.scaffoldBackgroundColor,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
+              color: Colors.black.withValues(alpha: 0.1),
               blurRadius: 4,
               offset: const Offset(0, -2),
             ),
@@ -290,7 +298,7 @@ class _AdminMenuItemDetailScreenState
               PopupMenuButton<String>(
                 icon: Icon(
                   Icons.more_vert,
-                  color: context.colors.onSurface.withOpacity(0.8),
+                  color: context.colors.onSurface.withValues(alpha: 0.8),
                   size: 28,
                 ),
                 tooltip: 'Opsi Admin',

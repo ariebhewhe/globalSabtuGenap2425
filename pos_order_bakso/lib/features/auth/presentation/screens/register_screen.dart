@@ -120,8 +120,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                                   child: Icon(
                                     Icons.fastfood_outlined,
                                     size: 40,
-                                    color: context.colors.onSurface.withOpacity(
-                                      0.5,
+                                    color: context.colors.onSurface.withValues(
+                                      alpha: 0.5,
                                     ),
                                   ),
                                 ),
@@ -142,7 +142,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                               hintStyle: context.textStyles.bodyMedium
                                   ?.copyWith(
                                     color: context.colors.onSurfaceVariant
-                                        .withOpacity(0.7),
+                                        .withValues(alpha: 0.7),
                                   ),
                               prefixIcon: Icon(
                                 Icons.person_outline,
@@ -176,7 +176,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                               hintStyle: context.textStyles.bodyMedium
                                   ?.copyWith(
                                     color: context.colors.onSurfaceVariant
-                                        .withOpacity(0.7),
+                                        .withValues(alpha: 0.7),
                                   ),
                               prefixIcon: Icon(
                                 Icons.alternate_email,
@@ -209,7 +209,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                               hintStyle: context.textStyles.bodyMedium
                                   ?.copyWith(
                                     color: context.colors.onSurfaceVariant
-                                        .withOpacity(0.7),
+                                        .withValues(alpha: 0.7),
                                   ),
                               prefixIcon: Icon(
                                 Icons.lock_outline,
@@ -243,7 +243,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                               hintStyle: context.textStyles.bodyMedium
                                   ?.copyWith(
                                     color: context.colors.onSurfaceVariant
-                                        .withOpacity(0.7),
+                                        .withValues(alpha: 0.7),
                                   ),
                               prefixIcon: Icon(
                                 Icons.lock_reset_outlined,

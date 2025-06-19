@@ -10,22 +10,26 @@ import 'package:jamal/core/helpers/success_response.dart';
 import 'package:jamal/core/utils/enums.dart';
 import 'package:jamal/core/utils/logger.dart';
 import 'package:jamal/data/models/order_model.dart';
+import 'package:jamal/features/order/providers/order_provider.dart';
 import 'package:jamal/providers.dart';
 import 'package:jamal/shared/models/paginated_result.dart';
 import 'package:jamal/shared/services/cloudinary_service.dart';
 import 'package:jamal/shared/services/current_user_storage_service.dart';
+import 'package:jamal/shared/services/order_service.dart';
 
 final orderRepoProvider = Provider.autoDispose<OrderRepo>((ref) {
   final firestore = ref.watch(firebaseFirestoreProvider);
   final currentUserService = ref.watch(currentUserStorageServiceProvider);
   final cloudinary = ref.watch(cloudinaryProvider);
-  return OrderRepo(firestore, currentUserService, cloudinary);
+  final orderService = ref.watch(orderServiceProvider);
+  return OrderRepo(firestore, currentUserService, cloudinary, orderService);
 });
 
 class OrderRepo {
   final FirebaseFirestore _firebaseFirestore;
   final CurrentUserStorageService _currentUserStorageService;
   final CloudinaryService _cloudinaryService;
+  final OrderService _orderService;
 
   final String _collectionPath = 'orders';
   final String _reservationsCollectionPath = 'tableReservations';
@@ -37,6 +41,7 @@ class OrderRepo {
     this._firebaseFirestore,
     this._currentUserStorageService,
     this._cloudinaryService,
+    this._orderService,
   );
 
   Future<String> _getCurrentUserId() async {
@@ -69,7 +74,25 @@ class OrderRepo {
     }
   }
 
+  // New method using OrderService - handles everything in backend
   Future<Either<ErrorResponse, SuccessResponse<OrderModel>>> addOrder(
+    CreateOrderDto dto,
+  ) async {
+    try {
+      final order = await _orderService.createOrder(dto);
+      return Right(
+        SuccessResponse(data: order, message: 'New order added successfully'),
+      );
+    } catch (e) {
+      logger.e(e.toString());
+      return Left(
+        ErrorResponse(message: 'Failed to add new order: ${e.toString()}'),
+      );
+    }
+  }
+
+  // Renamed original method for admin use
+  Future<Either<ErrorResponse, SuccessResponse<OrderModel>>> addOrderAdmin(
     CreateOrderDto dto,
   ) async {
     try {

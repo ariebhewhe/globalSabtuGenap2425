@@ -126,7 +126,9 @@ class _AdminCartScreenState extends ConsumerState<AdminCartScreen> {
                     onPressed:
                         selectedCartItems.isEmpty
                             ? null
-                            : () => context.pushRoute(const CreateOrderRoute()),
+                            : () => context.pushRoute(
+                              const AdminCreateOrderRoute(),
+                            ),
                     child: const Text('Checkout'),
                   ),
                 ),
@@ -148,7 +150,7 @@ class _AdminCartScreenState extends ConsumerState<AdminCartScreen> {
                     Container(
                       padding: const EdgeInsets.all(8.0),
 
-                      color: context.colors.error.withOpacity(0.1),
+                      color: context.colors.error.withValues(alpha: 0.1),
                       width: double.infinity,
                       child: Text(
                         cartItemsState.errorMessage!,
@@ -224,7 +226,7 @@ class _AdminCartScreenState extends ConsumerState<AdminCartScreen> {
                             offset: const Offset(0, -2),
                             blurRadius: 6,
 
-                            color: Colors.black.withOpacity(0.1),
+                            color: Colors.black.withValues(alpha: 0.1),
                           ),
                         ],
                       ),

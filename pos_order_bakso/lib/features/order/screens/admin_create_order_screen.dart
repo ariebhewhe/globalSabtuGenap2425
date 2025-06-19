@@ -1,13 +1,11 @@
-import 'dart:io';
-
 import 'package:auto_route/auto_route.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:jamal/core/routes/app_router.dart';
+import 'package:jamal/core/utils/currency_utils.dart';
 import 'package:jamal/core/utils/enums.dart';
 import 'package:jamal/core/utils/toast_utils.dart';
 import 'package:jamal/data/models/order_item_model.dart';
@@ -35,11 +33,9 @@ class AdminCreateOrderScreen extends ConsumerStatefulWidget {
 class _AdminCreateOrderScreenState
     extends ConsumerState<AdminCreateOrderScreen> {
   final _formKey = GlobalKey<FormBuilderState>();
-  // final ImagePicker _picker = ImagePicker();
 
   List<OrderItemModel> _orderItems = [];
   OrderType _selectedOrderType = OrderType.dineIn;
-  // File? _selectedTransferProofFile;
 
   @override
   void initState() {
@@ -48,7 +44,6 @@ class _AdminCreateOrderScreenState
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         _convertCartItemsToOrderItems();
-
         setState(() {});
       }
     });
@@ -77,20 +72,10 @@ class _AdminCreateOrderScreenState
     return _orderItems.fold(0, (total, item) => total + item.total);
   }
 
-  // Future<void> _pickTransferProofImage() async {
-  //   final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
-  //   if (pickedFile != null) {
-  //     setState(() {
-  //       _selectedTransferProofFile = File(pickedFile.path);
-  //     });
-  //   }
-  // }
-
   void _resetForm() {
     _formKey.currentState?.reset();
     setState(() {
       _selectedOrderType = OrderType.dineIn;
-      // _selectedTransferProofFile = null;
       _convertCartItemsToOrderItems();
     });
   }
@@ -100,25 +85,6 @@ class _AdminCreateOrderScreenState
 
     if (isValid) {
       final formValues = _formKey.currentState!.value;
-
-      final selectedPaymentMethodId = formValues['paymentMethodId'] as String?;
-      PaymentMethodModel? selectedPaymentMethod;
-      if (selectedPaymentMethodId != null) {
-        selectedPaymentMethod = ref
-            .read(paymentMethodsProvider)
-            .paymentMethods
-            .firstWhere((pm) => pm.id == selectedPaymentMethodId);
-      }
-
-      // if (selectedPaymentMethod?.paymentMethodType ==
-      //         PaymentMethodType.bankTransfer &&
-      //     _selectedTransferProofFile == null) {
-      //   ToastUtils.showWarning(
-      //     context: context,
-      //     message: 'Untuk metode Bank Transfer, mohon unggah bukti transfer.',
-      //   );
-      //   return;
-      // }
 
       CreateTableReservationDto? tableReservation;
       if (_selectedOrderType == OrderType.dineIn) {
@@ -147,10 +113,9 @@ class _AdminCreateOrderScreenState
         specialInstructions: formValues['specialInstructions'] as String?,
         tableReservation: tableReservation,
         orderItems: _orderItems,
-        // transferProofFile: _selectedTransferProofFile,
       );
 
-      await ref.read(orderMutationProvider.notifier).addOrder(newOrder);
+      await ref.read(orderMutationProvider.notifier).addOrderAdmin(newOrder);
 
       ref.read(selectedCartItemsProvider.notifier).clearSelectedItems();
     }
@@ -169,7 +134,7 @@ class _AdminCreateOrderScreenState
       return Center(
         child: Text(
           'Error loading tables: ${restaurantTablesState.errorMessage}',
-          style: TextStyle(color: Theme.of(context).colorScheme.error),
+          style: TextStyle(color: context.theme.colorScheme.error),
         ),
       );
     }
@@ -203,6 +168,21 @@ class _AdminCreateOrderScreenState
 
   Widget _buildPaymentMethodDropdown() {
     final paymentMethodsState = ref.watch(paymentMethodsProvider);
+    final paymentMethods = paymentMethodsState.paymentMethods.where(
+      (paymentMethod) =>
+          (paymentMethod.adminPaymentCode?.isNotEmpty ?? false) ||
+          (paymentMethod.adminPaymentQrCodePicture?.isNotEmpty ?? false),
+    );
+
+    print('--- DEBUGGING PAYMENT METHODS ---');
+    for (final method in paymentMethodsState.paymentMethods) {
+      print(
+        'Method: ${method.name}, '
+        'Code: "${method.adminPaymentCode}" (Tipe: ${method.adminPaymentCode.runtimeType}), '
+        'QR: "${method.adminPaymentQrCodePicture}" (Tipe: ${method.adminPaymentQrCodePicture.runtimeType})',
+      );
+    }
+    print('---------------------------------');
 
     if (paymentMethodsState.isLoading) {
       return const Center(child: CircularProgressIndicator());
@@ -212,7 +192,7 @@ class _AdminCreateOrderScreenState
       return Center(
         child: Text(
           'Error loading payment methods: ${paymentMethodsState.errorMessage}',
-          style: TextStyle(color: Theme.of(context).colorScheme.error),
+          style: TextStyle(color: context.theme.colorScheme.error),
         ),
       );
     }
@@ -225,7 +205,7 @@ class _AdminCreateOrderScreenState
         hintText: 'Pilih metode pembayaran',
       ),
       items:
-          paymentMethodsState.paymentMethods
+          paymentMethods
               .map(
                 (method) => DropdownMenuItem(
                   value: method.id,
@@ -267,72 +247,6 @@ class _AdminCreateOrderScreenState
       },
     );
   }
-
-  // Widget _buildTransferProofPicker() {
-  //   final orderMutationState = ref.watch(orderMutationProvider);
-  //   final formValues = _formKey.currentState?.value;
-  //   final selectedPaymentMethodId = formValues?['paymentMethodId'] as String?;
-  //   PaymentMethodModel? selectedPaymentMethod;
-
-  //   if (selectedPaymentMethodId != null) {
-  //     final paymentMethods = ref.read(paymentMethodsProvider).paymentMethods;
-  //     selectedPaymentMethod = paymentMethods.firstWhere(
-  //       (pm) => pm.id == selectedPaymentMethodId,
-  //     );
-  //   }
-
-  //   if (selectedPaymentMethod?.paymentMethodType !=
-  //       PaymentMethodType.bankTransfer) {
-  //     return const SizedBox.shrink();
-  //   }
-
-  //   return Column(
-  //     crossAxisAlignment: CrossAxisAlignment.start,
-  //     children: [
-  //       const Text(
-  //         'Unggah Bukti Transfer',
-  //         style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-  //       ),
-  //       const SizedBox(height: 8),
-  //       GestureDetector(
-  //         onTap: orderMutationState.isLoading ? null : _pickTransferProofImage,
-  //         child: Container(
-  //           width: double.infinity,
-  //           height: 150,
-  //           decoration: BoxDecoration(
-  //             border: Border.all(color: Colors.grey),
-  //             borderRadius: BorderRadius.circular(8),
-  //           ),
-  //           child: Center(
-  //             child:
-  //                 _selectedTransferProofFile != null
-  //                     ? Image.file(
-  //                         _selectedTransferProofFile!,
-  //                         fit: BoxFit.contain,
-  //                         height: 140,
-  //                       )
-  //                     : Column(
-  //                         mainAxisAlignment: MainAxisAlignment.center,
-  //                         children: [
-  //                           Icon(
-  //                             Icons.cloud_upload_outlined,
-  //                             size: 50,
-  //                             color: Colors.grey[600],
-  //                           ),
-  //                           const SizedBox(height: 8),
-  //                           Text(
-  //                             'Ketuk untuk memilih gambar',
-  //                             style: TextStyle(color: Colors.grey[700]),
-  //                           ),
-  //                         ],
-  //                       ),
-  //           ),
-  //         ),
-  //       ),
-  //       const SizedBox(height: 16),
-  //     ],
-  //   );
-  // }
 
   @override
   Widget build(BuildContext context) {
@@ -380,10 +294,9 @@ class _AdminCreateOrderScreenState
               children: [
                 Text(
                   'Informasi Pesanan',
-                  style: Theme.of(context).textTheme.titleLarge,
+                  style: context.theme.textTheme.titleLarge,
                 ),
                 const SizedBox(height: 16),
-
                 FormBuilderDropdown<OrderType>(
                   name: 'orderType',
                   decoration: const InputDecoration(
@@ -408,7 +321,6 @@ class _AdminCreateOrderScreenState
                   },
                 ),
                 const SizedBox(height: 16),
-
                 if (_selectedOrderType == OrderType.dineIn) ...[
                   _buildRestaurantTableDropdown(availableTables),
                   const SizedBox(height: 16),
@@ -445,11 +357,8 @@ class _AdminCreateOrderScreenState
                   ),
                 ],
                 const SizedBox(height: 16),
-
                 _buildPaymentMethodDropdown(),
                 const SizedBox(height: 16),
-
-                // _buildTransferProofPicker(),
                 FormBuilderTextField(
                   name: 'specialInstructions',
                   decoration: const InputDecoration(
@@ -460,13 +369,8 @@ class _AdminCreateOrderScreenState
                   maxLines: 3,
                 ),
                 const SizedBox(height: 24),
-
-                Text(
-                  'Item Pesanan',
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
+                Text('Item Pesanan', style: context.theme.textTheme.titleLarge),
                 const SizedBox(height: 16),
-
                 if (_orderItems.isEmpty)
                   const Center(child: Text('Keranjang belanja Anda kosong.'))
                 else
@@ -492,30 +396,52 @@ class _AdminCreateOrderScreenState
                                           child: CircularProgressIndicator(),
                                         ),
                                     errorWidget:
-                                        (context, url, error) =>
-                                            Container(/* ... error UI ... */),
+                                        (context, url, error) => Container(
+                                          width: 60,
+                                          height: 60,
+                                          decoration: BoxDecoration(
+                                            color: Colors.grey[200],
+                                            borderRadius: BorderRadius.circular(
+                                              8,
+                                            ),
+                                          ),
+                                          child: Icon(
+                                            Icons.broken_image,
+                                            color: Colors.grey[400],
+                                          ),
+                                        ),
                                   ),
                                 )
-                                : Container(/* ... placeholder UI ... */),
+                                : Container(
+                                  width: 60,
+                                  height: 60,
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey[200],
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Icon(
+                                    Icons.no_photography,
+                                    color: Colors.grey[400],
+                                  ),
+                                ),
                         title: Text(item.menuItem?.name ?? 'Item Menu'),
                         subtitle: Text(
-                          'Rp ${item.price.toStringAsFixed(0)} x ${item.quantity}',
+                          '${CurrencyUtils.formatToRupiah(item.price)} x ${item.quantity}',
                         ),
                         trailing: Text(
-                          'Rp ${item.total.toStringAsFixed(0)}',
+                          CurrencyUtils.formatToRupiah(item.total),
                           style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
                       );
                     },
                   ),
                 const SizedBox(height: 16),
-
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     color:
-                        Theme.of(context).brightness == Brightness.dark
-                            ? Theme.of(context).colorScheme.surfaceVariant
+                        context.theme.brightness == Brightness.dark
+                            ? context.theme.colorScheme.surfaceVariant
                             : Colors.grey[100],
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -524,19 +450,20 @@ class _AdminCreateOrderScreenState
                     children: [
                       Text(
                         'Total',
-                        style: Theme.of(context).textTheme.titleMedium
-                            ?.copyWith(fontWeight: FontWeight.bold),
+                        style: context.theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       Text(
-                        'Rp ${_calculateTotal().toStringAsFixed(0)}',
-                        style: Theme.of(context).textTheme.titleMedium
-                            ?.copyWith(fontWeight: FontWeight.bold),
+                        CurrencyUtils.formatToRupiah(_calculateTotal()),
+                        style: context.theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ],
                   ),
                 ),
                 const SizedBox(height: 32),
-
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -561,7 +488,7 @@ class _AdminCreateOrderScreenState
                                   width: 20,
                                   child: CircularProgressIndicator(
                                     valueColor: AlwaysStoppedAnimation<Color>(
-                                      Theme.of(context).colorScheme.onPrimary,
+                                      context.theme.colorScheme.onPrimary,
                                     ),
                                     strokeWidth: 2.0,
                                   ),

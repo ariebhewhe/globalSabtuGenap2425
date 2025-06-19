@@ -58,7 +58,7 @@ class MenuItemCard extends StatelessWidget {
                 fit: BoxFit.cover,
                 placeholder:
                     (context, url) => Container(
-                      color: context.colors.surface.withOpacity(0.5),
+                      color: context.colors.surface.withValues(alpha: 0.5),
                       child: const Center(child: CircularProgressIndicator()),
                     ),
                 errorWidget:
@@ -75,7 +75,7 @@ class MenuItemCard extends StatelessWidget {
         child: Icon(
           Icons.fastfood_outlined,
           size: 50,
-          color: context.colors.onSurface.withOpacity(0.3),
+          color: context.colors.onSurface.withValues(alpha: 0.3),
         ),
       ),
     );
@@ -84,7 +84,7 @@ class MenuItemCard extends StatelessWidget {
   Widget _buildAvailabilityOverlay(BuildContext context) {
     return Positioned.fill(
       child: Container(
-        color: Colors.black.withOpacity(0.6),
+        color: Colors.black.withValues(alpha: 0.6),
         child: Center(
           child: Text(
             'Tidak Tersedia',
@@ -110,10 +110,10 @@ class MenuItemCard extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
             decoration: BoxDecoration(
-              color: Colors.black.withOpacity(0.25),
+              color: Colors.black.withValues(alpha: 0.25),
               borderRadius: const BorderRadius.all(Radius.circular(8.0)),
               border: Border.all(
-                color: Colors.white.withOpacity(0.2),
+                color: Colors.white.withValues(alpha: 0.2),
                 width: 1.0,
               ),
             ),

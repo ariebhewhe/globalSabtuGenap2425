@@ -180,8 +180,8 @@ class _AdminOrdersScreenState extends ConsumerState<AdminOrdersScreen> {
                   decoration: BoxDecoration(
                     color:
                         _isSelectionMode
-                            ? Colors.orange.withOpacity(0.1)
-                            : Colors.blue.withOpacity(0.1),
+                            ? Colors.orange.withValues(alpha: 0.1)
+                            : Colors.blue.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(
@@ -215,7 +215,7 @@ class _AdminOrdersScreenState extends ConsumerState<AdminOrdersScreen> {
                 leading: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: Colors.red.withOpacity(0.1),
+                    color: Colors.red.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: const Icon(
@@ -294,7 +294,9 @@ class _AdminOrdersScreenState extends ConsumerState<AdminOrdersScreen> {
                   padding: const EdgeInsets.all(12.0),
                   margin: const EdgeInsets.all(16).copyWith(bottom: 0),
                   decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.error.withOpacity(0.1),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.error.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Row(
@@ -377,7 +379,6 @@ class _AdminOrdersScreenState extends ConsumerState<AdminOrdersScreen> {
                             if (_isSelectionMode) {
                               _onSelectItem(order.id);
                             } else {
-                              // Navigasi ke detail pesanan
                               context.pushRoute(
                                 AdminOrderDetailRoute(order: order),
                               );
@@ -397,8 +398,8 @@ class _AdminOrdersScreenState extends ConsumerState<AdminOrdersScreen> {
                               isSelected
                                   ? Theme.of(
                                     context,
-                                  ).primaryColor.withOpacity(0.4)
-                                  : Colors.black.withOpacity(0.2),
+                                  ).primaryColor.withValues(alpha: 0.4)
+                                  : Colors.black.withValues(alpha: 0.2),
                         ),
                       ),
                     ),
@@ -412,7 +413,7 @@ class _AdminOrdersScreenState extends ConsumerState<AdminOrdersScreen> {
                       color: Colors.white,
                       shadows: [
                         Shadow(
-                          color: Colors.black.withOpacity(0.5),
+                          color: Colors.black.withValues(alpha: 0.5),
                           blurRadius: 2,
                         ),
                       ],
@@ -436,7 +437,7 @@ class _AdminOrdersScreenState extends ConsumerState<AdminOrdersScreen> {
             size: 64,
             color: Theme.of(
               context,
-            ).textTheme.bodySmall?.color?.withOpacity(0.5),
+            ).textTheme.bodySmall?.color?.withValues(alpha: 0.5),
           ),
           const SizedBox(height: 16),
           Text(

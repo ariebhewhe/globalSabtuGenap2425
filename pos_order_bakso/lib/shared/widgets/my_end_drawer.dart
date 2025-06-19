@@ -14,25 +14,27 @@ class MyEndDrawer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final List<Map<String, dynamic>> userDrawerItems = [
-      {'icon': Icons.person, 'title': 'Profile', 'route': const ProfileRoute()},
+      {
+        'icon': Icons.person,
+        'title': 'Profile',
+        'route': const ProfileRoute(),
+        'tabIndex': 3,
+      },
       {
         'icon': Icons.food_bank,
         'title': 'Foods',
         'route': const MenuItemsRoute(),
+        'tabIndex': null,
       },
       {
         'icon': Icons.receipt_long,
         'title': 'Orders',
         'route': const OrdersRoute(),
+        'tabIndex': 1,
       },
     ];
 
     final List<Map<String, dynamic>> adminDrawerItems = [
-      {
-        'icon': Icons.dashboard,
-        'title': 'Dashboard',
-        'route': const AdminHomeRoute(),
-      },
       {
         'icon': Icons.food_bank,
         'title': 'Menu',
@@ -77,16 +79,25 @@ class MyEndDrawer extends StatelessWidget {
                 final drawerItems =
                     isAdmin ? adminDrawerItems : userDrawerItems;
 
+                // Ambil TabsRouter hanya jika kita berada dalam konteks user (ada AutoTabsScaffold)
+                // Try-catch untuk keamanan jika drawer dipanggil di luar TabsRouter
+                TabsRouter? tabsRouter;
+                if (!isAdmin) {
+                  try {
+                    tabsRouter = AutoTabsRouter.of(context);
+                  } catch (_) {
+                    tabsRouter = null; // Abaikan jika tidak ditemukan
+                  }
+                }
+
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     _buildDrawerHeader(context, ref, userData),
-
                     Expanded(
                       child: ListView(
                         padding: const EdgeInsets.symmetric(vertical: 8.0),
                         children: [
-                          // Role-specific menu items
                           ...drawerItems.map((item) {
                             return _buildDrawerItem(
                               context,
@@ -94,18 +105,30 @@ class MyEndDrawer extends StatelessWidget {
                               title: item['title'],
                               route: item['route'],
                               onTap: () {
+                                // Selalu tutup drawer terlebih dahulu
                                 Navigator.of(context).pop();
-                                context.router.push(item['route']);
+
+                                if (isAdmin) {
+                                  // Logika untuk Admin: selalu push
+                                  context.router.push(item['route']);
+                                } else {
+                                  // Logika untuk User: periksa tabIndex
+                                  final tabIndex = item['tabIndex'] as int?;
+                                  if (tabIndex != null && tabsRouter != null) {
+                                    // Jika item adalah tab, ganti index
+                                    tabsRouter.setActiveIndex(tabIndex);
+                                  } else {
+                                    // Jika bukan tab, push ke root router
+                                    context.router.root.push(item['route']);
+                                  }
+                                }
                               },
                             );
                           }).toList(),
-
-                          // Theme selector
                           _buildThemeSelector(context, ref),
                         ],
                       ),
                     ),
-
                     Padding(
                       padding: const EdgeInsets.all(16.0),
                       child: _buildAuthButton(context, ref, userData),
@@ -190,8 +213,6 @@ class MyEndDrawer extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
-
-          // User profile section
           if (userData != null) ...[
             Row(
               children: [
@@ -259,8 +280,6 @@ class MyEndDrawer extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 12),
-
-            // Role badge
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
@@ -287,7 +306,6 @@ class MyEndDrawer extends StatelessWidget {
               ),
             ),
           ] else ...[
-            // Guest user section
             Row(
               children: [
                 CircleAvatar(
@@ -337,7 +355,6 @@ class MyEndDrawer extends StatelessWidget {
     dynamic userData,
   ) {
     final bool isAuthenticated = userData != null;
-
     return ElevatedButton.icon(
       onPressed: () {
         if (isAuthenticated) {
@@ -382,7 +399,6 @@ class MyEndDrawer extends StatelessWidget {
                 Navigator.of(dialogContext).pop();
                 Navigator.of(context).pop();
                 ref.read(authMutationProvider.notifier).logout();
-
                 if (context.mounted) {
                   context.replaceRoute(const LoginRoute());
                 }
@@ -403,15 +419,13 @@ class MyEndDrawer extends StatelessWidget {
     BuildContext context, {
     required IconData icon,
     required String title,
-    required dynamic route,
+    required PageRouteInfo route,
     required VoidCallback onTap,
   }) {
     bool isActive = false;
-
-    if (route is PageRouteInfo) {
-      final currentRouteName = context.router.current.name;
-      isActive = currentRouteName == route.routeName;
-    }
+    // Cek rute aktif. Untuk tab, context.router.current merujuk pada tab router
+    final currentRouteName = context.router.current.name;
+    isActive = currentRouteName == route.routeName;
 
     return Card(
       color:
@@ -449,7 +463,6 @@ class MyEndDrawer extends StatelessWidget {
 
   Widget _buildThemeSelector(BuildContext context, WidgetRef ref) {
     final currentTheme = ref.watch(themeProvider);
-
     return Card(
       elevation: 1,
       margin: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
@@ -549,7 +562,6 @@ class MyEndDrawer extends StatelessWidget {
               : null,
       onTap: () {
         ref.read(themeProvider.notifier).setTheme(mode);
-
         ToastUtils.showSuccess(
           context: context,
           message: "Tema berhasil diubah",
@@ -558,7 +570,6 @@ class MyEndDrawer extends StatelessWidget {
     );
   }
 
-  // Helper methods for role-based styling
   Color _getRoleColor(Role? role, BuildContext context) {
     switch (role) {
       case Role.admin:

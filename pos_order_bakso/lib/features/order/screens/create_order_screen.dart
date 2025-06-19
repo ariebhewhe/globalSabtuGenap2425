@@ -1,18 +1,15 @@
-import 'dart:io';
-
 import 'package:auto_route/auto_route.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:jamal/core/routes/app_router.dart';
+import 'package:jamal/core/utils/currency_utils.dart';
 import 'package:jamal/core/utils/enums.dart';
 import 'package:jamal/core/utils/toast_utils.dart';
 import 'package:jamal/data/models/order_item_model.dart';
 import 'package:jamal/data/models/order_model.dart';
-import 'package:jamal/data/models/payment_method_model.dart';
 import 'package:jamal/data/models/restaurant_table_model.dart';
 import 'package:jamal/data/models/table_reservation_model.dart';
 import 'package:jamal/features/cart/providers/selected_cart_items_provider.dart';
@@ -20,25 +17,23 @@ import 'package:jamal/features/order/providers/order_mutation_provider.dart';
 import 'package:jamal/features/order/providers/order_mutation_state.dart';
 import 'package:jamal/features/payment_method/providers/payment_methods_provider.dart';
 import 'package:jamal/features/restaurant_table/providers/restaurant_tables_provider.dart';
-import 'package:jamal/shared/widgets/admin_app_bar.dart';
 import 'package:jamal/shared/widgets/my_end_drawer.dart';
 import 'package:jamal/shared/widgets/my_screen_container.dart';
+import 'package:jamal/shared/widgets/user_app_bar.dart';
 
 @RoutePage()
 class CreateOrderScreen extends ConsumerStatefulWidget {
   const CreateOrderScreen({super.key});
 
   @override
-  ConsumerState createState() => CreateOrderScreenState();
+  ConsumerState createState() => _CreateOrderScreenState();
 }
 
-class CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
+class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
   final _formKey = GlobalKey<FormBuilderState>();
-  // final ImagePicker _picker = ImagePicker();
 
   List<OrderItemModel> _orderItems = [];
   OrderType _selectedOrderType = OrderType.dineIn;
-  // File? _selectedTransferProofFile;
 
   @override
   void initState() {
@@ -47,14 +42,13 @@ class CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         _convertCartItemsToOrderItems();
-
         setState(() {});
       }
     });
   }
 
   void _convertCartItemsToOrderItems() {
-    final selectedCartItems = ref.read(selectedCartItemsProvider);
+    final selectedCartItems = ref.watch(selectedCartItemsProvider);
 
     _orderItems =
         selectedCartItems.map((cartItem) {
@@ -76,20 +70,10 @@ class CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
     return _orderItems.fold(0, (total, item) => total + item.total);
   }
 
-  // Future<void> _pickTransferProofImage() async {
-  //   final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
-  //   if (pickedFile != null) {
-  //     setState(() {
-  //       _selectedTransferProofFile = File(pickedFile.path);
-  //     });
-  //   }
-  // }
-
   void _resetForm() {
     _formKey.currentState?.reset();
     setState(() {
       _selectedOrderType = OrderType.dineIn;
-      // _selectedTransferProofFile = null;
       _convertCartItemsToOrderItems();
     });
   }
@@ -99,25 +83,6 @@ class CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
 
     if (isValid) {
       final formValues = _formKey.currentState!.value;
-
-      final selectedPaymentMethodId = formValues['paymentMethodId'] as String?;
-      PaymentMethodModel? selectedPaymentMethod;
-      if (selectedPaymentMethodId != null) {
-        selectedPaymentMethod = ref
-            .read(paymentMethodsProvider)
-            .paymentMethods
-            .firstWhere((pm) => pm.id == selectedPaymentMethodId);
-      }
-
-      // if (selectedPaymentMethod?.paymentMethodType ==
-      //         PaymentMethodType.bankTransfer &&
-      //     _selectedTransferProofFile == null) {
-      //   ToastUtils.showWarning(
-      //     context: context,
-      //     message: 'Untuk metode Bank Transfer, mohon unggah bukti transfer.',
-      //   );
-      //   return;
-      // }
 
       CreateTableReservationDto? tableReservation;
       if (_selectedOrderType == OrderType.dineIn) {
@@ -146,7 +111,6 @@ class CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
         specialInstructions: formValues['specialInstructions'] as String?,
         tableReservation: tableReservation,
         orderItems: _orderItems,
-        // transferProofFile: _selectedTransferProofFile,
       );
 
       await ref.read(orderMutationProvider.notifier).addOrder(newOrder);
@@ -168,7 +132,7 @@ class CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
       return Center(
         child: Text(
           'Error loading tables: ${restaurantTablesState.errorMessage}',
-          style: TextStyle(color: Theme.of(context).colorScheme.error),
+          style: TextStyle(color: context.theme.colorScheme.error),
         ),
       );
     }
@@ -211,7 +175,7 @@ class CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
       return Center(
         child: Text(
           'Error loading payment methods: ${paymentMethodsState.errorMessage}',
-          style: TextStyle(color: Theme.of(context).colorScheme.error),
+          style: TextStyle(color: context.theme.colorScheme.error),
         ),
       );
     }
@@ -267,72 +231,6 @@ class CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
     );
   }
 
-  // Widget _buildTransferProofPicker() {
-  //   final orderMutationState = ref.watch(orderMutationProvider);
-  //   final formValues = _formKey.currentState?.value;
-  //   final selectedPaymentMethodId = formValues?['paymentMethodId'] as String?;
-  //   PaymentMethodModel? selectedPaymentMethod;
-
-  //   if (selectedPaymentMethodId != null) {
-  //     final paymentMethods = ref.read(paymentMethodsProvider).paymentMethods;
-  //     selectedPaymentMethod = paymentMethods.firstWhere(
-  //       (pm) => pm.id == selectedPaymentMethodId,
-  //     );
-  //   }
-
-  //   if (selectedPaymentMethod?.paymentMethodType !=
-  //       PaymentMethodType.bankTransfer) {
-  //     return const SizedBox.shrink();
-  //   }
-
-  //   return Column(
-  //     crossAxisAlignment: CrossAxisAlignment.start,
-  //     children: [
-  //       const Text(
-  //         'Unggah Bukti Transfer',
-  //         style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-  //       ),
-  //       const SizedBox(height: 8),
-  //       GestureDetector(
-  //         onTap: orderMutationState.isLoading ? null : _pickTransferProofImage,
-  //         child: Container(
-  //           width: double.infinity,
-  //           height: 150,
-  //           decoration: BoxDecoration(
-  //             border: Border.all(color: Colors.grey),
-  //             borderRadius: BorderRadius.circular(8),
-  //           ),
-  //           child: Center(
-  //             child:
-  //                 _selectedTransferProofFile != null
-  //                     ? Image.file(
-  //                         _selectedTransferProofFile!,
-  //                         fit: BoxFit.contain,
-  //                         height: 140,
-  //                       )
-  //                     : Column(
-  //                         mainAxisAlignment: MainAxisAlignment.center,
-  //                         children: [
-  //                           Icon(
-  //                             Icons.cloud_upload_outlined,
-  //                             size: 50,
-  //                             color: Colors.grey[600],
-  //                           ),
-  //                           const SizedBox(height: 8),
-  //                           Text(
-  //                             'Ketuk untuk memilih gambar',
-  //                             style: TextStyle(color: Colors.grey[700]),
-  //                           ),
-  //                         ],
-  //                       ),
-  //           ),
-  //         ),
-  //       ),
-  //       const SizedBox(height: 16),
-  //     ],
-  //   );
-  // }
-
   @override
   Widget build(BuildContext context) {
     final orderMutationState = ref.watch(orderMutationProvider);
@@ -360,14 +258,14 @@ class CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
         ref.read(orderMutationProvider.notifier).resetSuccessMessage();
 
         context.router.pushAndPopUntil(
-          const AdminOrdersRoute(),
+          const OrdersRoute(),
           predicate: (route) => route.isFirst,
         );
       }
     });
 
     return Scaffold(
-      appBar: const AdminAppBar(),
+      appBar: const UserAppBar(),
       endDrawer: const MyEndDrawer(),
       body: MyScreenContainer(
         child: SingleChildScrollView(
@@ -379,10 +277,9 @@ class CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
               children: [
                 Text(
                   'Informasi Pesanan',
-                  style: Theme.of(context).textTheme.titleLarge,
+                  style: context.theme.textTheme.titleLarge,
                 ),
                 const SizedBox(height: 16),
-
                 FormBuilderDropdown<OrderType>(
                   name: 'orderType',
                   decoration: const InputDecoration(
@@ -407,7 +304,6 @@ class CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
                   },
                 ),
                 const SizedBox(height: 16),
-
                 if (_selectedOrderType == OrderType.dineIn) ...[
                   _buildRestaurantTableDropdown(availableTables),
                   const SizedBox(height: 16),
@@ -444,11 +340,8 @@ class CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
                   ),
                 ],
                 const SizedBox(height: 16),
-
                 _buildPaymentMethodDropdown(),
                 const SizedBox(height: 16),
-
-                // _buildTransferProofPicker(),
                 FormBuilderTextField(
                   name: 'specialInstructions',
                   decoration: const InputDecoration(
@@ -459,13 +352,8 @@ class CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
                   maxLines: 3,
                 ),
                 const SizedBox(height: 24),
-
-                Text(
-                  'Item Pesanan',
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
+                Text('Item Pesanan', style: context.theme.textTheme.titleLarge),
                 const SizedBox(height: 16),
-
                 if (_orderItems.isEmpty)
                   const Center(child: Text('Keranjang belanja Anda kosong.'))
                 else
@@ -491,30 +379,52 @@ class CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
                                           child: CircularProgressIndicator(),
                                         ),
                                     errorWidget:
-                                        (context, url, error) =>
-                                            Container(/* ... error UI ... */),
+                                        (context, url, error) => Container(
+                                          width: 60,
+                                          height: 60,
+                                          decoration: BoxDecoration(
+                                            color: Colors.grey[200],
+                                            borderRadius: BorderRadius.circular(
+                                              8,
+                                            ),
+                                          ),
+                                          child: Icon(
+                                            Icons.broken_image,
+                                            color: Colors.grey[400],
+                                          ),
+                                        ),
                                   ),
                                 )
-                                : Container(/* ... placeholder UI ... */),
+                                : Container(
+                                  width: 60,
+                                  height: 60,
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey[200],
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Icon(
+                                    Icons.no_photography,
+                                    color: Colors.grey[400],
+                                  ),
+                                ),
                         title: Text(item.menuItem?.name ?? 'Item Menu'),
                         subtitle: Text(
-                          'Rp ${item.price.toStringAsFixed(0)} x ${item.quantity}',
+                          '${CurrencyUtils.formatToRupiah(item.price)} x ${item.quantity}',
                         ),
                         trailing: Text(
-                          'Rp ${item.total.toStringAsFixed(0)}',
+                          CurrencyUtils.formatToRupiah(item.total),
                           style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
                       );
                     },
                   ),
                 const SizedBox(height: 16),
-
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     color:
-                        Theme.of(context).brightness == Brightness.dark
-                            ? Theme.of(context).colorScheme.surfaceVariant
+                        context.theme.brightness == Brightness.dark
+                            ? context.theme.colorScheme.surfaceVariant
                             : Colors.grey[100],
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -523,19 +433,20 @@ class CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
                     children: [
                       Text(
                         'Total',
-                        style: Theme.of(context).textTheme.titleMedium
-                            ?.copyWith(fontWeight: FontWeight.bold),
+                        style: context.theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       Text(
-                        'Rp ${_calculateTotal().toStringAsFixed(0)}',
-                        style: Theme.of(context).textTheme.titleMedium
-                            ?.copyWith(fontWeight: FontWeight.bold),
+                        CurrencyUtils.formatToRupiah(_calculateTotal()),
+                        style: context.theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ],
                   ),
                 ),
                 const SizedBox(height: 32),
-
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -560,7 +471,7 @@ class CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
                                   width: 20,
                                   child: CircularProgressIndicator(
                                     valueColor: AlwaysStoppedAnimation<Color>(
-                                      Theme.of(context).colorScheme.onPrimary,
+                                      context.theme.colorScheme.onPrimary,
                                     ),
                                     strokeWidth: 2.0,
                                   ),

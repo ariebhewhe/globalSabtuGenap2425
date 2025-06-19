@@ -45,11 +45,11 @@ class _TableReservationDetailScreenState
 
     if (isTableAvailability) {
       if (lowerStatus == 'tersedia') {
-        chipBackgroundColor = context.colors.primary.withOpacity(0.15);
+        chipBackgroundColor = context.colors.primary.withValues(alpha: 0.15);
         chipTextColor = context.colors.primary;
         chipIcon = Icons.check_circle_outline;
       } else {
-        chipBackgroundColor = context.colors.error.withOpacity(0.15);
+        chipBackgroundColor = context.colors.error.withValues(alpha: 0.15);
         chipTextColor = context.colors.error;
         chipIcon = Icons.cancel_outlined;
       }
@@ -57,7 +57,7 @@ class _TableReservationDetailScreenState
       if (lowerStatus == ReservationStatus.completed.toMap().toLowerCase() ||
           lowerStatus == ReservationStatus.occupied.toMap().toLowerCase() ||
           lowerStatus == ReservationStatus.reserved.toMap().toLowerCase()) {
-        chipBackgroundColor = context.colors.primary.withOpacity(0.15);
+        chipBackgroundColor = context.colors.primary.withValues(alpha: 0.15);
         chipTextColor = context.colors.primary;
         chipIcon = Icons.event_available;
         if (lowerStatus == ReservationStatus.occupied.toMap().toLowerCase()) {
@@ -65,11 +65,11 @@ class _TableReservationDetailScreenState
         }
       } else if (lowerStatus ==
           ReservationStatus.cancelled.toMap().toLowerCase()) {
-        chipBackgroundColor = context.colors.error.withOpacity(0.15);
+        chipBackgroundColor = context.colors.error.withValues(alpha: 0.15);
         chipTextColor = context.colors.error;
         chipIcon = Icons.event_busy;
       } else {
-        chipBackgroundColor = Colors.orange.withOpacity(0.15);
+        chipBackgroundColor = Colors.orange.withValues(alpha: 0.15);
         chipTextColor = Colors.orange.shade700;
         chipIcon = Icons.hourglass_empty;
       }
@@ -109,7 +109,7 @@ class _TableReservationDetailScreenState
             Icon(
               icon,
               size: 18,
-              color: context.colors.secondary.withOpacity(0.8),
+              color: context.colors.secondary.withValues(alpha: 0.8),
             ),
             const SizedBox(width: 10),
           ] else ...[
@@ -155,7 +155,7 @@ class _TableReservationDetailScreenState
             Icon(
               icon,
               size: 18,
-              color: context.colors.secondary.withOpacity(0.8),
+              color: context.colors.secondary.withValues(alpha: 0.8),
             ),
             const SizedBox(width: 10),
           ] else ...[
@@ -196,7 +196,7 @@ class _TableReservationDetailScreenState
             color: context.colors.onSurface,
           ),
         ),
-        backgroundColor: context.colors.surface.withOpacity(0.8),
+        backgroundColor: context.colors.surface.withValues(alpha: 0.8),
         duration: const Duration(seconds: 1),
       ),
     );
@@ -296,8 +296,10 @@ class _TableReservationDetailScreenState
                 ),
                 Divider(
                   color:
-                      context.theme.dividerTheme.color?.withOpacity(0.5) ??
-                      context.colors.outline.withOpacity(0.5),
+                      context.theme.dividerTheme.color?.withValues(
+                        alpha: 0.5,
+                      ) ??
+                      context.colors.outline.withValues(alpha: 0.5),
                   height: 20,
                 ),
                 _buildDetailRow(
@@ -373,8 +375,10 @@ class _TableReservationDetailScreenState
                   ),
                   Divider(
                     color:
-                        context.theme.dividerTheme.color?.withOpacity(0.5) ??
-                        context.colors.outline.withOpacity(0.5),
+                        context.theme.dividerTheme.color?.withValues(
+                          alpha: 0.5,
+                        ) ??
+                        context.colors.outline.withValues(alpha: 0.5),
                     height: 20,
                   ),
                   _buildDetailRow(
