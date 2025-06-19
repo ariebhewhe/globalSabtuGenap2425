@@ -211,7 +211,7 @@ class TableReservationRepo {
 
       final updateData = dto.toMap();
 
-      updateData['updatedAt'] = DateTime.now().millisecondsSinceEpoch;
+      updateData['updatedAt'] = DateTime.now().toUtc().toIso8601String();
 
       await _firebaseFirestore
           .collection(_collectionPath)

@@ -4,6 +4,7 @@ import 'package:fpdart/fpdart.dart';
 import 'package:jamal/core/helpers/error_response.dart';
 import 'package:jamal/core/helpers/success_response.dart';
 import 'package:jamal/core/utils/logger.dart';
+import 'package:jamal/core/utils/model_utils.dart';
 import 'package:jamal/data/models/cart_item_model.dart';
 import 'package:jamal/data/models/menu_item_model.dart';
 import 'package:jamal/providers.dart';
@@ -47,7 +48,7 @@ class CartItemRepo {
         final newQuantity = existingCartItem.quantity + dto.quantity;
         final updateData = {
           'quantity': newQuantity,
-          'updatedAt': DateTime.now().millisecondsSinceEpoch,
+          'updatedAt': DateTime.now().toUtc().toIso8601String(),
           'menuItem': dto.menuItem.toMap(),
         };
 
@@ -58,9 +59,7 @@ class CartItemRepo {
           menuItem: DenormalizedMenuItemModel.fromMap(
             dto.menuItem.toMap(),
           ), // Pastikan tipe sesuai
-          updatedAt: DateTime.fromMillisecondsSinceEpoch(
-            updateData['updatedAt'] as int,
-          ),
+          updatedAt: ModelUtils.parseDateTime(updateData['updatedAt']),
         );
 
         return Right(
@@ -80,8 +79,8 @@ class CartItemRepo {
 
       cartItemData['id'] = docRef.id;
       cartItemData['userId'] = userId;
-      cartItemData['createdAt'] = DateTime.now().millisecondsSinceEpoch;
-      cartItemData['updatedAt'] = DateTime.now().millisecondsSinceEpoch;
+      cartItemData['createdAt'] = DateTime.now().toUtc().toIso8601String();
+      cartItemData['updatedAt'] = DateTime.now().toUtc().toIso8601String();
 
       await docRef.set(cartItemData);
 
@@ -223,7 +222,7 @@ class CartItemRepo {
 
       final updateData = dto.toMap();
 
-      updateData['updatedAt'] = DateTime.now().millisecondsSinceEpoch;
+      updateData['updatedAt'] = DateTime.now().toUtc().toIso8601String();
 
       await _firebaseFirestore
           .collection(_collectionPath)

@@ -96,7 +96,7 @@ class CloudinaryService {
       );
 
       // * Timestamp untuk signature
-      final timestamp = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+      final timestamp = DateTime.now().toUtc().toIso8601String();
       final signature = generateSignature({
         'public_id': publicId,
         'timestamp': timestamp.toString(),
@@ -135,7 +135,7 @@ class CloudinaryService {
       );
 
       // * Timestamp untuk signature
-      final timestamp = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+      final timestamp = DateTime.now().toUtc().toIso8601String();
 
       // * Join public IDs sebagai comma-separated string
       final publicIdsStr = publicIds.join(',');

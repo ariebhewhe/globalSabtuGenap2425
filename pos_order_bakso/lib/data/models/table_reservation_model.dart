@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:jamal/core/abstractions/base_model.dart';
 import 'package:jamal/core/utils/enums.dart';
+import 'package:jamal/core/utils/model_utils.dart';
 import 'package:jamal/data/models/restaurant_table_model.dart';
 
 class TableReservationModel extends BaseModel {
@@ -69,11 +70,11 @@ class TableReservationModel extends BaseModel {
       'userId': userId,
       'tableId': tableId,
       'orderId': orderId,
-      'reservationTime': reservationTime.millisecondsSinceEpoch,
+      'reservationTime': reservationTime.toUtc().toIso8601String(),
       'status': status.toMap(),
       'table': table?.toMap(),
-      'createdAt': createdAt.millisecondsSinceEpoch,
-      'updatedAt': updatedAt.millisecondsSinceEpoch,
+      'createdAt': createdAt.toUtc().toIso8601String(),
+      'updatedAt': updatedAt.toUtc().toIso8601String(),
     };
   }
 
@@ -84,9 +85,7 @@ class TableReservationModel extends BaseModel {
       userId: map['userId'] as String,
       tableId: map['tableId'] as String,
       orderId: map['orderId'] as String,
-      reservationTime: DateTime.fromMillisecondsSinceEpoch(
-        map['reservationTime'] as int,
-      ),
+      reservationTime: ModelUtils.parseDateTime(map['reservationTime']),
       status: ReservationStatusExtension.fromMap(map['status'] as String),
       table:
           map['table'] != null
@@ -94,8 +93,8 @@ class TableReservationModel extends BaseModel {
                 map['table'] as Map<String, dynamic>,
               )
               : null,
-      createdAt: DateTime.fromMillisecondsSinceEpoch(map['createdAt'] as int),
-      updatedAt: DateTime.fromMillisecondsSinceEpoch(map['updatedAt'] as int),
+      createdAt: ModelUtils.parseDateTime(map['createdAt']),
+      updatedAt: ModelUtils.parseDateTime(map['updatedAt']),
     );
   }
 
@@ -156,7 +155,7 @@ class CreateTableReservationDto {
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
       'tableId': tableId,
-      'reservationTime': reservationTime.millisecondsSinceEpoch,
+      'reservationTime': reservationTime.toUtc().toIso8601String(),
       'table': table?.toMap(),
     };
   }

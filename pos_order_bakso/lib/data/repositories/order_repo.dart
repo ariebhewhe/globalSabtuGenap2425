@@ -73,16 +73,30 @@ class OrderRepo {
     }
   }
 
-  // New method using OrderService - handles everything in backend
   Future<Either<ErrorResponse, SuccessResponse<OrderModel>>> addOrder(
-    CreateOrderDto dto,
+    CreateOrderDto dto, // Ini adalah DTO asli dari UI, tanpa userId
   ) async {
     try {
-      final order = await _orderService.createOrder(dto);
+      final userId = await _getCurrentUserId();
+
+      final dtoWithUserId = CreateOrderDto(
+        userId: userId,
+        paymentMethodId: dto.paymentMethodId,
+        orderType: dto.orderType,
+        estimatedReadyTime: dto.estimatedReadyTime,
+        specialInstructions: dto.specialInstructions,
+        tableReservation: dto.tableReservation,
+        orderItems: dto.orderItems,
+        transferProofFile: dto.transferProofFile,
+      );
+
+      final order = await _orderService.createOrder(dtoWithUserId);
+
       return Right(
         SuccessResponse(data: order, message: 'New order added successfully'),
       );
     } catch (e) {
+      logger.i("from repo");
       logger.e(e.toString());
       return Left(
         ErrorResponse(message: 'Failed to add new order: ${e.toString()}'),
@@ -90,7 +104,6 @@ class OrderRepo {
     }
   }
 
-  // Renamed original method for admin use
   Future<Either<ErrorResponse, SuccessResponse<OrderModel>>> addOrderAdmin(
     CreateOrderDto dto,
   ) async {
@@ -132,13 +145,13 @@ class OrderRepo {
         'status': OrderStatus.pending.toMap(),
         'totalAmount': totalAmount,
         'paymentStatus': PaymentStatus.pending.toMap(),
-        'orderDate': DateTime.now().millisecondsSinceEpoch,
+        'orderDate': DateTime.now().toUtc().toIso8601String(),
         'estimatedReadyTime': orderDataMap['estimatedReadyTime'],
         'specialInstructions': orderDataMap['specialInstructions'],
         'orderItems': orderDataMap['orderItems'],
         'paymentProof': paymentProofUrl,
-        'createdAt': DateTime.now().millisecondsSinceEpoch,
-        'updatedAt': DateTime.now().millisecondsSinceEpoch,
+        'createdAt': DateTime.now().toUtc().toIso8601String(),
+        'updatedAt': DateTime.now().toUtc().toIso8601String(),
       };
 
       batch.set(orderDocRef, orderModelData);
@@ -156,11 +169,11 @@ class OrderRepo {
           'tableId': dto.tableReservation!.tableId,
           'orderId': orderId,
           'reservationTime':
-              dto.tableReservation!.reservationTime.millisecondsSinceEpoch,
+              dto.tableReservation!.reservationTime.toUtc().toIso8601String(),
           'status': ReservationStatus.reserved.toMap(),
           'table': dto.tableReservation!.table?.toMap(),
-          'createdAt': DateTime.now().millisecondsSinceEpoch,
-          'updatedAt': DateTime.now().millisecondsSinceEpoch,
+          'createdAt': DateTime.now().toUtc().toIso8601String(),
+          'updatedAt': DateTime.now().toUtc().toIso8601String(),
         };
         batch.set(reservationDocRef, reservationData);
       }
@@ -236,7 +249,7 @@ class OrderRepo {
       }
 
       final updateData = dto.toMap();
-      updateData['updatedAt'] = DateTime.now().millisecondsSinceEpoch;
+      updateData['updatedAt'] = DateTime.now().toUtc().toIso8601String();
 
       if (transferProofFile != null || deleteExistingTransferProof) {
         updateData['paymentProof'] = paymentProofUrl;

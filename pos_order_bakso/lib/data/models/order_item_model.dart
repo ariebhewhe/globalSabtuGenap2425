@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:jamal/core/abstractions/base_model.dart';
+import 'package:jamal/core/utils/model_utils.dart';
 import 'package:jamal/data/models/menu_item_model.dart';
 
 class OrderItemModel extends BaseModel {
@@ -62,8 +63,8 @@ class OrderItemModel extends BaseModel {
       'total': total,
       'specialRequests': specialRequests,
       'menuItem': menuItem?.toMap(),
-      'createdAt': createdAt.millisecondsSinceEpoch,
-      'updatedAt': updatedAt.millisecondsSinceEpoch,
+      'createdAt': createdAt.toUtc().toIso8601String(),
+      'updatedAt': updatedAt.toUtc().toIso8601String(),
     };
   }
 
@@ -74,8 +75,8 @@ class OrderItemModel extends BaseModel {
       orderId: map['orderId'] as String,
       menuItemId: map['menuItemId'] as String,
       quantity: map['quantity'] as int,
-      price: map['price'] as double,
-      total: map['total'] as double,
+      price: (map['price'] as num).toDouble(),
+      total: (map['total'] as num).toDouble(),
       specialRequests:
           map['specialRequests'] != null
               ? map['specialRequests'] as String
@@ -86,8 +87,8 @@ class OrderItemModel extends BaseModel {
                 map['menuItem'] as Map<String, dynamic>,
               )
               : null,
-      createdAt: DateTime.fromMillisecondsSinceEpoch(map['createdAt'] as int),
-      updatedAt: DateTime.fromMillisecondsSinceEpoch(map['updatedAt'] as int),
+      createdAt: ModelUtils.parseDateTime(map['createdAt']),
+      updatedAt: ModelUtils.parseDateTime(map['updatedAt']),
     );
   }
 

@@ -29,7 +29,7 @@ class CartItemMutationNotifier extends StateNotifier<CartItemMutationState> {
         );
 
         // * Refresh menu items list
-        _ref.invalidate(cartItemsProvider);
+        _ref.read(cartItemsProvider.notifier).refreshCartItems();
         _ref.invalidate(selectedCartItemsProvider);
         _ref.invalidate(totalCartQuantityProvider);
         _ref.invalidate(distinctCartItemCountProvider);

@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:jamal/core/abstractions/base_model.dart';
+import 'package:jamal/core/utils/model_utils.dart';
 import 'package:jamal/data/models/menu_item_model.dart';
 
 class CartItemModel extends BaseModel {
@@ -48,8 +49,8 @@ class CartItemModel extends BaseModel {
       'menuItemId': menuItemId,
       'quantity': quantity,
       'menuItem': menuItem?.toMap(),
-      'createdAt': createdAt.millisecondsSinceEpoch,
-      'updatedAt': updatedAt.millisecondsSinceEpoch,
+      'createdAt': createdAt.toUtc().toIso8601String(),
+      'updatedAt': updatedAt.toUtc().toIso8601String(),
     };
   }
 
@@ -66,8 +67,8 @@ class CartItemModel extends BaseModel {
                 map['menuItem'] as Map<String, dynamic>,
               )
               : null,
-      createdAt: DateTime.fromMillisecondsSinceEpoch(map['createdAt'] as int),
-      updatedAt: DateTime.fromMillisecondsSinceEpoch(map['updatedAt'] as int),
+      createdAt: ModelUtils.parseDateTime(map['createdAt']),
+      updatedAt: ModelUtils.parseDateTime(map['updatedAt']),
     );
   }
 

@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:jamal/core/abstractions/base_model.dart';
+import 'package:jamal/core/utils/model_utils.dart';
 
 class CategoryModel extends BaseModel {
   final String name;
@@ -51,8 +52,8 @@ class CategoryModel extends BaseModel {
       'name': name,
       'description': description,
       'picture': picture,
-      'createdAt': createdAt.millisecondsSinceEpoch,
-      'updatedAt': updatedAt.millisecondsSinceEpoch,
+      'createdAt': createdAt.toUtc().toIso8601String(),
+      'updatedAt': updatedAt.toUtc().toIso8601String(),
     };
   }
 
@@ -64,8 +65,8 @@ class CategoryModel extends BaseModel {
       description:
           map['description'] != null ? map['description'] as String : null,
       picture: map['picture'] != null ? map['picture'] as String : null,
-      createdAt: DateTime.fromMillisecondsSinceEpoch(map['createdAt'] as int),
-      updatedAt: DateTime.fromMillisecondsSinceEpoch(map['updatedAt'] as int),
+      createdAt: ModelUtils.parseDateTime(map['createdAt']),
+      updatedAt: ModelUtils.parseDateTime(map['updatedAt']),
     );
   }
 

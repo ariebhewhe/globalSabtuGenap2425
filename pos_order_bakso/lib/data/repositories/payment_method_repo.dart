@@ -114,8 +114,8 @@ class PaymentMethodRepo {
       paymentMethodData['id'] = docRef.id;
       paymentMethodData['logo'] = logoUrl;
       paymentMethodData['adminPaymentQrCodePicture'] = adminQrCodeUrl;
-      paymentMethodData['createdAt'] = DateTime.now().millisecondsSinceEpoch;
-      paymentMethodData['updatedAt'] = DateTime.now().millisecondsSinceEpoch;
+      paymentMethodData['createdAt'] = DateTime.now().toUtc().toIso8601String();
+      paymentMethodData['updatedAt'] = DateTime.now().toUtc().toIso8601String();
 
       await docRef.set(paymentMethodData);
 
@@ -149,7 +149,7 @@ class PaymentMethodRepo {
     try {
       final batch = _firebaseFirestore.batch();
       final collectionRef = _firebaseFirestore.collection(_collectionPath);
-      final now = DateTime.now().millisecondsSinceEpoch;
+      final now = DateTime.now().toUtc().toIso8601String();
 
       for (final dto in dtos) {
         // Batch add does not support image file uploads. 'logo' and 'adminPaymentQrCodePicture' must be URLs if needed.
@@ -404,7 +404,7 @@ class PaymentMethodRepo {
 
       updateData['logo'] = finalLogoUrl;
       updateData['adminPaymentQrCodePicture'] = finalAdminQrCodeUrl;
-      updateData['updatedAt'] = DateTime.now().millisecondsSinceEpoch;
+      updateData['updatedAt'] = DateTime.now().toUtc().toIso8601String();
 
       final docRef = _firebaseFirestore.collection(_collectionPath).doc(id);
       await docRef.update(updateData);

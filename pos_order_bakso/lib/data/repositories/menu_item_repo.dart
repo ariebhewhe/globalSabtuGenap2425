@@ -137,8 +137,8 @@ class MenuItemRepo {
       final menuItemData = dto.toMap();
       menuItemData['id'] = docRef.id;
       menuItemData['imageUrl'] = imageUrl;
-      menuItemData['createdAt'] = DateTime.now().millisecondsSinceEpoch;
-      menuItemData['updatedAt'] = DateTime.now().millisecondsSinceEpoch;
+      menuItemData['createdAt'] = DateTime.now().toUtc().toIso8601String();
+      menuItemData['updatedAt'] = DateTime.now().toUtc().toIso8601String();
 
       await docRef.set(menuItemData);
 
@@ -179,7 +179,7 @@ class MenuItemRepo {
       final menuItemsCollection = _firebaseFirestore.collection(
         _collectionPath,
       );
-      final now = DateTime.now().millisecondsSinceEpoch;
+      final now = DateTime.now().toUtc().toIso8601String();
 
       for (final dto in dtos) {
         // Note: Batch add does not support image uploads.
@@ -413,7 +413,7 @@ class MenuItemRepo {
       }
 
       updateData['imageUrl'] = finalImageUrl;
-      updateData['updatedAt'] = DateTime.now().millisecondsSinceEpoch;
+      updateData['updatedAt'] = DateTime.now().toUtc().toIso8601String();
 
       final docRef = _firebaseFirestore.collection(_collectionPath).doc(id);
       await docRef.update(updateData);

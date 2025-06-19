@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:jamal/core/abstractions/base_model.dart';
 import 'package:jamal/core/utils/enums.dart';
+import 'package:jamal/core/utils/model_utils.dart';
 
 class PaymentMethodModel extends BaseModel {
   final String name;
@@ -88,8 +89,8 @@ class PaymentMethodModel extends BaseModel {
       'midtransIdentifier': midtransIdentifier, // Ditambahkan ke toMap
       'adminPaymentCode': adminPaymentCode,
       'adminPaymentQrCodePicture': adminPaymentQrCodePicture,
-      'createdAt': createdAt.millisecondsSinceEpoch,
-      'updatedAt': updatedAt.millisecondsSinceEpoch,
+      'createdAt': createdAt.toUtc().toIso8601String(),
+      'updatedAt': updatedAt.toUtc().toIso8601String(),
     };
   }
 
@@ -104,8 +105,8 @@ class PaymentMethodModel extends BaseModel {
       paymentMethodType: PaymentMethodTypeExtension.fromMap(
         map['paymentMethodType'] as String,
       ),
-      minimumAmount: map['minimumAmount'] as double,
-      maximumAmount: map['maximumAmount'] as double,
+      minimumAmount: (map['minimumAmount'] as num).toDouble(),
+      maximumAmount: (map['maximumAmount'] as num).toDouble(),
       midtransIdentifier:
           map['midtransIdentifier'] !=
                   null // Ditambahkan ke fromMap
@@ -119,8 +120,8 @@ class PaymentMethodModel extends BaseModel {
           map['adminPaymentQrCodePicture'] != null
               ? map['adminPaymentQrCodePicture'] as String
               : null,
-      createdAt: DateTime.fromMillisecondsSinceEpoch(map['createdAt'] as int),
-      updatedAt: DateTime.fromMillisecondsSinceEpoch(map['updatedAt'] as int),
+      createdAt: ModelUtils.parseDateTime(map['createdAt']),
+      updatedAt: ModelUtils.parseDateTime(map['updatedAt']),
     );
   }
 

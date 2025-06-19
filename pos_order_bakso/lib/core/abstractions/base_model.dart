@@ -1,3 +1,5 @@
+// core/abstractions/base_model.dart
+
 import 'dart:convert';
 
 abstract class BaseModel {
@@ -11,8 +13,11 @@ abstract class BaseModel {
     required this.updatedAt,
   });
 
+  /// Mengonversi model menjadi Map untuk disimpan ke Firestore.
   Map<String, dynamic> toMap();
 
+  /// Mengonversi model menjadi string JSON.
+  /// Biasanya digunakan untuk logging atau debugging.
   String toJson() => json.encode(toMap());
 
   @override
@@ -23,32 +28,4 @@ abstract class BaseModel {
 
   @override
   int get hashCode;
-
-  // * Helper untuk datetime serialization
-  static int dateTimeToMillis(DateTime dateTime) =>
-      dateTime.millisecondsSinceEpoch;
-  static DateTime millisToDateTime(int millis) =>
-      DateTime.fromMillisecondsSinceEpoch(millis);
-
-  // * Static method untuk timestamp fields
-  static Map<String, dynamic> getTimeStampFields(
-    DateTime createdAt,
-    DateTime updatedAt,
-  ) {
-    return {
-      'createdAt': dateTimeToMillis(createdAt),
-      'updatedAt': dateTimeToMillis(updatedAt),
-    };
-  }
-}
-
-mixin ModelHelper {
-  static DateTime parseDateTime(dynamic value) {
-    if (value is int) {
-      return DateTime.fromMillisecondsSinceEpoch(value);
-    } else if (value is String) {
-      return DateTime.parse(value);
-    }
-    throw Exception('Invalid date format: $value');
-  }
 }

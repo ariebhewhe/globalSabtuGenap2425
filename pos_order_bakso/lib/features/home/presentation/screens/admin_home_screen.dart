@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:auto_route/auto_route.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
@@ -101,114 +103,124 @@ class AdminHomeScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 24),
               orderRevenueAsync.when(
-                data:
-                    (data) => AspectRatio(
+                data: (data) {
+                  final revenues = [
+                    data.totalRevenueToday,
+                    data.totalRevenueThisMonth,
+                    data.totalRevenueThisYear,
+                  ];
+                  final maxYValue = revenues.reduce(max);
+
+                  if (maxYValue == 0) {
+                    return const AspectRatio(
                       aspectRatio: 1.7,
-                      child: BarChart(
-                        BarChartData(
-                          alignment: BarChartAlignment.spaceAround,
-                          barTouchData: BarTouchData(
-                            touchTooltipData: BarTouchTooltipData(
-                              getTooltipColor:
-                                  (_) => context.colors.primary.withValues(
-                                    alpha: 0.8,
+                      child: Center(
+                        child: Text(
+                          'Belum ada data pendapatan untuk ditampilkan.',
+                        ),
+                      ),
+                    );
+                  }
+
+                  return AspectRatio(
+                    aspectRatio: 1.7,
+                    child: BarChart(
+                      BarChartData(
+                        alignment: BarChartAlignment.spaceAround,
+                        barTouchData: BarTouchData(
+                          touchTooltipData: BarTouchTooltipData(
+                            getTooltipColor:
+                                (_) => context.colors.primary.withValues(
+                                  alpha: 0.8,
+                                ),
+                            getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                              return BarTooltipItem(
+                                'Rp ${NumberFormat.compactCurrency(locale: 'id_ID', symbol: '', decimalDigits: 2).format(rod.toY)}',
+                                context.textStyles.bodySmall!.copyWith(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                        titlesData: FlTitlesData(
+                          show: true,
+                          rightTitles: const AxisTitles(
+                            sideTitles: SideTitles(showTitles: false),
+                          ),
+                          topTitles: const AxisTitles(
+                            sideTitles: SideTitles(showTitles: false),
+                          ),
+                          bottomTitles: AxisTitles(
+                            sideTitles: SideTitles(
+                              showTitles: true,
+                              getTitlesWidget: (value, meta) {
+                                final titles = [
+                                  'Hari Ini',
+                                  'Bulan Ini',
+                                  'Tahun Ini',
+                                ];
+                                return SideTitleWidget(
+                                  meta: meta,
+                                  space: 4,
+                                  child: Text(
+                                    titles[value.toInt()],
+                                    style: context.textStyles.labelSmall,
                                   ),
-                              getTooltipItem: (
-                                group,
-                                groupIndex,
-                                rod,
-                                rodIndex,
-                              ) {
-                                return BarTooltipItem(
-                                  'Rp ${NumberFormat.compactCurrency(locale: 'id_ID', symbol: '', decimalDigits: 2).format(rod.toY)}',
-                                  context.textStyles.bodySmall!.copyWith(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                                );
+                              },
+                              reservedSize: 30,
+                            ),
+                          ),
+                          leftTitles: AxisTitles(
+                            sideTitles: SideTitles(
+                              showTitles: true,
+                              reservedSize: 45,
+                              getTitlesWidget: (value, meta) {
+                                if (value == 0) return const Text('');
+                                return Text(
+                                  NumberFormat.compact(
+                                    locale: 'id_ID',
+                                  ).format(value),
+                                  style: context.textStyles.labelSmall,
                                 );
                               },
                             ),
                           ),
-                          titlesData: FlTitlesData(
-                            show: true,
-                            rightTitles: const AxisTitles(
-                              sideTitles: SideTitles(showTitles: false),
-                            ),
-                            topTitles: const AxisTitles(
-                              sideTitles: SideTitles(showTitles: false),
-                            ),
-                            bottomTitles: AxisTitles(
-                              sideTitles: SideTitles(
-                                showTitles: true,
-                                getTitlesWidget: (value, meta) {
-                                  final titles = [
-                                    'Hari Ini',
-                                    'Bulan Ini',
-                                    'Tahun Ini',
-                                  ];
-                                  // ! INI PERBAIKANNYA
-                                  return SideTitleWidget(
-                                    meta: meta,
-                                    space: 4,
-                                    child: Text(
-                                      titles[value.toInt()],
-                                      style: context.textStyles.labelSmall,
-                                    ),
-                                  );
-                                },
-                                reservedSize: 30,
-                              ),
-                            ),
-                            leftTitles: AxisTitles(
-                              sideTitles: SideTitles(
-                                showTitles: true,
-                                reservedSize: 45,
-                                getTitlesWidget: (value, meta) {
-                                  if (value == 0) return const Text('');
-                                  return Text(
-                                    NumberFormat.compact(
-                                      locale: 'id_ID',
-                                    ).format(value),
-                                    style: context.textStyles.labelSmall,
-                                  );
-                                },
-                              ),
-                            ),
+                        ),
+                        borderData: FlBorderData(show: false),
+                        barGroups: [
+                          _makeGroupData(
+                            0,
+                            data.totalRevenueToday,
+                            color.withValues(alpha: 0.6),
                           ),
-                          borderData: FlBorderData(show: false),
-                          barGroups: [
-                            _makeGroupData(
-                              0,
-                              data.totalRevenueToday,
-                              color.withValues(alpha: 0.6),
-                            ),
-                            _makeGroupData(
-                              1,
-                              data.totalRevenueThisMonth,
-                              color,
-                            ),
-                            _makeGroupData(
-                              2,
-                              data.totalRevenueThisYear,
-                              color.withValues(alpha: 0.8),
-                            ),
-                          ],
-                          gridData: FlGridData(
-                            show: true,
-                            drawVerticalLine: false,
-                            horizontalInterval: data.totalRevenueThisYear / 4,
-                            getDrawingHorizontalLine:
-                                (value) => FlLine(
-                                  color:
-                                      context.isDarkMode
-                                          ? Colors.white.withValues(alpha: 0.1)
-                                          : Colors.black.withValues(alpha: 0.1),
-                                  strokeWidth: 1,
-                                ),
+                          _makeGroupData(1, data.totalRevenueThisMonth, color),
+                          _makeGroupData(
+                            2,
+                            data.totalRevenueThisYear,
+                            color.withValues(alpha: 0.8),
                           ),
+                        ],
+                        gridData: FlGridData(
+                          show: true,
+                          drawVerticalLine: false,
+                          // 4. Gunakan maxYValue untuk interval yang dinamis dan aman
+                          horizontalInterval: maxYValue / 4,
+                          getDrawingHorizontalLine:
+                              (value) => FlLine(
+                                color:
+                                    context.isDarkMode
+                                        ? Colors.white.withValues(alpha: 0.1)
+                                        : Colors.black.withValues(alpha: 0.1),
+                                strokeWidth: 1,
+                              ),
                         ),
                       ),
                     ),
+                  );
+                },
                 loading:
                     () => const AspectRatio(
                       aspectRatio: 1.7,

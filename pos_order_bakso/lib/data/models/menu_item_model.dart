@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:jamal/core/abstractions/base_model.dart';
+import 'package:jamal/core/utils/model_utils.dart';
 import 'package:jamal/data/models/category_model.dart';
 
 class MenuItemModel extends BaseModel {
@@ -79,8 +80,8 @@ class MenuItemModel extends BaseModel {
       'imageUrl': imageUrl,
       'isAvailable': isAvailable,
       'category': category?.toMap(), // Ditambahkan di sini
-      'createdAt': createdAt.millisecondsSinceEpoch,
-      'updatedAt': updatedAt.millisecondsSinceEpoch,
+      'createdAt': createdAt.toUtc().toIso8601String(),
+      'updatedAt': updatedAt.toUtc().toIso8601String(),
     };
   }
 
@@ -90,7 +91,7 @@ class MenuItemModel extends BaseModel {
       id: map['id'] as String,
       name: map['name'] as String,
       description: map['description'] as String,
-      price: map['price'] as double,
+      price: (map['price'] as num).toDouble(),
       categoryId:
           map['categoryId'] != null ? map['categoryId'] as String : null,
       imageUrl: map['imageUrl'] != null ? map['imageUrl'] as String : null,
@@ -100,8 +101,8 @@ class MenuItemModel extends BaseModel {
           map['category'] != null
               ? CategoryModel.fromMap(map['category'] as Map<String, dynamic>)
               : null,
-      createdAt: DateTime.fromMillisecondsSinceEpoch(map['createdAt'] as int),
-      updatedAt: DateTime.fromMillisecondsSinceEpoch(map['updatedAt'] as int),
+      createdAt: ModelUtils.parseDateTime(map['createdAt']),
+      updatedAt: ModelUtils.parseDateTime(map['updatedAt']),
     );
   }
 
@@ -181,7 +182,7 @@ class CreateMenuItemDto {
     return CreateMenuItemDto(
       name: map['name'] as String,
       description: map['description'] as String,
-      price: map['price'] as double,
+      price: (map['price'] as num).toDouble(),
       categoryId:
           map['categoryId'] != null ? map['categoryId'] as String : null,
       isAvailable: map['isAvailable'] as bool,
@@ -272,7 +273,7 @@ class DenormalizedMenuItemModel {
     return DenormalizedMenuItemModel(
       id: map['id'] as String,
       name: map['name'] as String,
-      price: map['price'] as double,
+      price: (map['price'] as num).toDouble(),
       imageUrl: map['imageUrl'] != null ? map['imageUrl'] as String : null,
       categoryId:
           map['categoryId'] != null ? map['categoryId'] as String : null,

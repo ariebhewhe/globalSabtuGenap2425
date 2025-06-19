@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 
 import 'package:jamal/core/abstractions/base_model.dart';
 import 'package:jamal/core/utils/enums.dart';
+import 'package:jamal/core/utils/model_utils.dart';
 import 'package:jamal/data/models/order_item_model.dart';
 import 'package:jamal/data/models/table_reservation_model.dart';
 
@@ -115,22 +116,22 @@ class OrderModel extends BaseModel {
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
       'id': id,
-      'createdAt': createdAt.millisecondsSinceEpoch,
-      'updatedAt': updatedAt.millisecondsSinceEpoch,
+      'createdAt': createdAt.toUtc().toIso8601String(),
+      'updatedAt': updatedAt.toUtc().toIso8601String(),
       'userId': userId,
       'paymentMethodId': paymentMethodId,
       'orderType': orderType.toMap(),
       'status': status.toMap(),
       'totalAmount': totalAmount,
       'paymentStatus': paymentStatus.toMap(),
-      'orderDate': orderDate.millisecondsSinceEpoch,
-      'estimatedReadyTime': estimatedReadyTime?.millisecondsSinceEpoch,
+      'orderDate': orderDate.toUtc().toIso8601String(),
+      'estimatedReadyTime': estimatedReadyTime?.toUtc().toIso8601String(),
       'specialInstructions': specialInstructions,
       'orderItems': orderItems?.map((x) => x.toMap()).toList(),
       'paymentProof': paymentProof,
       'paymentCode': paymentCode,
       'paymentDisplayURL': paymentDisplayURL,
-      'paymentExpiry': paymentExpiry?.millisecondsSinceEpoch,
+      'paymentExpiry': paymentExpiry?.toUtc().toIso8601String(),
     };
   }
 
@@ -144,16 +145,14 @@ class OrderModel extends BaseModel {
               : null,
       orderType: OrderTypeExtension.fromMap(map['orderType'] as String),
       status: OrderStatusExtension.fromMap(map['status'] as String),
-      totalAmount: map['totalAmount'] as double,
+      totalAmount: (map['totalAmount'] as num).toDouble(),
       paymentStatus: PaymentStatusExtension.fromMap(
         map['paymentStatus'] as String,
       ),
-      orderDate: DateTime.fromMillisecondsSinceEpoch(map['orderDate'] as int),
+      orderDate: ModelUtils.parseDateTime(map['orderDate']),
       estimatedReadyTime:
           map['estimatedReadyTime'] != null
-              ? DateTime.fromMillisecondsSinceEpoch(
-                map['estimatedReadyTime'] as int,
-              )
+              ? ModelUtils.parseDateTime(map['estimatedReadyTime'])
               : null,
       specialInstructions:
           map['specialInstructions'] != null
@@ -177,10 +176,10 @@ class OrderModel extends BaseModel {
               : null,
       paymentExpiry:
           map['paymentExpiry'] != null
-              ? DateTime.fromMillisecondsSinceEpoch(map['paymentExpiry'] as int)
+              ? ModelUtils.parseDateTime(map['paymentExpiry'])
               : null,
-      createdAt: DateTime.fromMillisecondsSinceEpoch(map['createdAt'] as int),
-      updatedAt: DateTime.fromMillisecondsSinceEpoch(map['updatedAt'] as int),
+      createdAt: ModelUtils.parseDateTime(map['createdAt']),
+      updatedAt: ModelUtils.parseDateTime(map['updatedAt']),
     );
   }
 
@@ -241,6 +240,7 @@ class OrderModel extends BaseModel {
 }
 
 class CreateOrderDto {
+  final String? userId;
   final String paymentMethodId;
   final OrderType orderType;
   final DateTime? estimatedReadyTime;
@@ -250,6 +250,7 @@ class CreateOrderDto {
   final File? transferProofFile;
 
   CreateOrderDto({
+    this.userId,
     required this.paymentMethodId,
     required this.orderType,
     this.estimatedReadyTime,
@@ -261,9 +262,10 @@ class CreateOrderDto {
 
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
+      'userId': userId,
       'paymentMethodId': paymentMethodId,
       'orderType': orderType.toMap(),
-      'estimatedReadyTime': estimatedReadyTime?.millisecondsSinceEpoch,
+      'estimatedReadyTime': estimatedReadyTime?.toUtc().toIso8601String(),
       'specialInstructions': specialInstructions,
       'tableReservation': tableReservation?.toMap(),
       'orderItems': orderItems.map((x) => x.toMap()).toList(),
@@ -303,7 +305,7 @@ class UpdateOrderDto {
       map['paymentStatus'] = paymentStatus!.toMap();
     }
     if (estimatedReadyTime != null) {
-      map['estimatedReadyTime'] = estimatedReadyTime!.millisecondsSinceEpoch;
+      map['estimatedReadyTime'] = estimatedReadyTime!.toUtc().toIso8601String();
     }
     if (paymentCode != null) {
       map['paymentCode'] = paymentCode;
@@ -312,7 +314,7 @@ class UpdateOrderDto {
       map['paymentDisplayURL'] = paymentDisplayURL;
     }
     if (paymentExpiry != null) {
-      map['paymentExpiry'] = paymentExpiry!.millisecondsSinceEpoch;
+      map['paymentExpiry'] = paymentExpiry!.toUtc().toIso8601String();
     }
 
     return map;

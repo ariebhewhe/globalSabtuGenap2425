@@ -35,8 +35,10 @@ class RestaurantTableRepo {
       final restaurantTableData = dto.toMap();
 
       restaurantTableData['id'] = docRef.id;
-      restaurantTableData['createdAt'] = DateTime.now().millisecondsSinceEpoch;
-      restaurantTableData['updatedAt'] = DateTime.now().millisecondsSinceEpoch;
+      restaurantTableData['createdAt'] =
+          DateTime.now().toUtc().toIso8601String();
+      restaurantTableData['updatedAt'] =
+          DateTime.now().toUtc().toIso8601String();
 
       await docRef.set(restaurantTableData);
 
@@ -254,7 +256,7 @@ class RestaurantTableRepo {
 
       final updateData = dto.toMap();
 
-      updateData['updatedAt'] = DateTime.now().millisecondsSinceEpoch;
+      updateData['updatedAt'] = DateTime.now().toUtc().toIso8601String();
 
       await _firebaseFirestore
           .collection(_collectionPath)

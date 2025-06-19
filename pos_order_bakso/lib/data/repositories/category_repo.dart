@@ -95,8 +95,8 @@ class CategoryRepo {
       final categoryData = dto.toMap();
       categoryData['id'] = docRef.id;
       categoryData['picture'] = picture; // Handles null or new URL
-      categoryData['createdAt'] = DateTime.now().millisecondsSinceEpoch;
-      categoryData['updatedAt'] = DateTime.now().millisecondsSinceEpoch;
+      categoryData['createdAt'] = DateTime.now().toUtc().toIso8601String();
+      categoryData['updatedAt'] = DateTime.now().toUtc().toIso8601String();
 
       await docRef.set(categoryData);
 
@@ -123,7 +123,7 @@ class CategoryRepo {
       final categoriesCollection = _firebaseFirestore.collection(
         _collectionPath,
       );
-      final now = DateTime.now().millisecondsSinceEpoch;
+      final now = DateTime.now().toUtc().toIso8601String();
       List<CategoryModel> createdCategories = [];
 
       for (final dto in dtos) {
@@ -344,7 +344,7 @@ class CategoryRepo {
       }
 
       updateData['picture'] = finalImageUrl;
-      updateData['updatedAt'] = DateTime.now().millisecondsSinceEpoch;
+      updateData['updatedAt'] = DateTime.now().toUtc().toIso8601String();
 
       final docRef = _firebaseFirestore.collection(_collectionPath).doc(id);
       await docRef.update(updateData);

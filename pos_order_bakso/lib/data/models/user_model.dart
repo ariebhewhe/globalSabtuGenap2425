@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:jamal/core/abstractions/base_model.dart';
 import 'package:jamal/core/utils/enums.dart';
+import 'package:jamal/core/utils/model_utils.dart';
 
 class UserModel extends BaseModel {
   final String username;
@@ -63,8 +64,8 @@ class UserModel extends BaseModel {
       'phoneNumber': phoneNumber,
       'address': address,
       'profilePicture': profilePicture,
-      'createdAt': createdAt.millisecondsSinceEpoch,
-      'updatedAt': updatedAt.millisecondsSinceEpoch,
+      'createdAt': createdAt.toUtc().toIso8601String(),
+      'updatedAt': updatedAt.toUtc().toIso8601String(),
     };
   }
 
@@ -82,8 +83,8 @@ class UserModel extends BaseModel {
           map['profilePicture'] != null
               ? map['profilePicture'] as String
               : null,
-      createdAt: DateTime.fromMillisecondsSinceEpoch(map['createdAt'] as int),
-      updatedAt: DateTime.fromMillisecondsSinceEpoch(map['updatedAt'] as int),
+      createdAt: ModelUtils.parseDateTime(map['createdAt']),
+      updatedAt: ModelUtils.parseDateTime(map['updatedAt']),
     );
   }
 

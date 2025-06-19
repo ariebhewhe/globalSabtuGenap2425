@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:jamal/core/abstractions/base_model.dart';
 import 'package:jamal/core/utils/enums.dart';
+import 'package:jamal/core/utils/model_utils.dart';
 
 class RestaurantTableModel extends BaseModel {
   final String tableNumber;
@@ -47,8 +48,8 @@ class RestaurantTableModel extends BaseModel {
       'capacity': capacity,
       'isAvailable': isAvailable,
       'location': location.toMap(),
-      'createdAt': createdAt.millisecondsSinceEpoch,
-      'updatedAt': updatedAt.millisecondsSinceEpoch,
+      'createdAt': createdAt.toUtc().toIso8601String(),
+      'updatedAt': updatedAt.toUtc().toIso8601String(),
     };
   }
 
@@ -60,8 +61,8 @@ class RestaurantTableModel extends BaseModel {
       capacity: map['capacity'] as int,
       isAvailable: map['isAvailable'] as bool,
       location: LocationExtension.fromMap(map['location'] as String),
-      createdAt: DateTime.fromMillisecondsSinceEpoch(map['createdAt'] as int),
-      updatedAt: DateTime.fromMillisecondsSinceEpoch(map['updatedAt'] as int),
+      createdAt: ModelUtils.parseDateTime(map['createdAt']),
+      updatedAt: ModelUtils.parseDateTime(map['updatedAt']),
     );
   }
 
