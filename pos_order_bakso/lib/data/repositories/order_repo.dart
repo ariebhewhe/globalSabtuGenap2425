@@ -10,7 +10,6 @@ import 'package:jamal/core/helpers/success_response.dart';
 import 'package:jamal/core/utils/enums.dart';
 import 'package:jamal/core/utils/logger.dart';
 import 'package:jamal/data/models/order_model.dart';
-import 'package:jamal/features/order/providers/order_provider.dart';
 import 'package:jamal/providers.dart';
 import 'package:jamal/shared/models/paginated_result.dart';
 import 'package:jamal/shared/services/cloudinary_service.dart';

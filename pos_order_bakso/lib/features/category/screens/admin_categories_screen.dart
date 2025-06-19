@@ -542,7 +542,7 @@ class _AdminCategoriesScreenState extends ConsumerState<AdminCategoriesScreen> {
                                               selectedColor:
                                                   context.colors.primary,
                                               backgroundColor:
-                                                  context.colors.surfaceVariant,
+                                                  context.colors.surfaceContainerHighest,
                                             );
                                           }).toList(),
                                     ),

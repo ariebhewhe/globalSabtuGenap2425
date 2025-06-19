@@ -65,7 +65,7 @@ class AuthRouteObserver extends NavigatorObserver {
       PageRouteBuilder(
         pageBuilder:
             (context, _, __) =>
-                AutoRouter.declarative(routes: (_) => [LoginRoute()]),
+                AutoRouter.declarative(routes: (_) => [const LoginRoute()]),
         transitionDuration: Duration.zero,
       ),
       (route) => false,
@@ -80,7 +80,7 @@ class AuthRouteObserver extends NavigatorObserver {
       PageRouteBuilder(
         pageBuilder:
             (context, _, __) =>
-                AutoRouter.declarative(routes: (_) => [UserTabRoute()]),
+                AutoRouter.declarative(routes: (_) => [const UserTabRoute()]),
         transitionDuration: Duration.zero,
       ),
       (route) => false,
@@ -95,7 +95,7 @@ class AuthRouteObserver extends NavigatorObserver {
       PageRouteBuilder(
         pageBuilder:
             (context, _, __) =>
-                AutoRouter.declarative(routes: (_) => [AdminTabRoute()]),
+                AutoRouter.declarative(routes: (_) => [const AdminTabRoute()]),
         transitionDuration: Duration.zero,
       ),
       (route) => false,

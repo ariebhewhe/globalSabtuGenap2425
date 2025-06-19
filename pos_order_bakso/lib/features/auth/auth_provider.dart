@@ -3,6 +3,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:jamal/data/models/user_model.dart';
 import 'package:jamal/data/repositories/auth_repo.dart';
 import 'package:jamal/features/auth/providers/auth_mutation_state.dart';
+import 'package:jamal/features/cart/providers/cart_item_aggregate_provider.dart';
+import 'package:jamal/features/cart/providers/cart_items_provider.dart';
+import 'package:jamal/features/category/providers/categories_provider.dart';
+import 'package:jamal/features/menu_item/providers/menu_item_aggregate_provider.dart';
+import 'package:jamal/features/menu_item/providers/menu_items_provider.dart';
+import 'package:jamal/features/order/providers/order_aggregate_provider.dart';
+import 'package:jamal/features/order/providers/orders_provider.dart';
+import 'package:jamal/features/payment_method/providers/payment_methods_provider.dart';
+import 'package:jamal/features/restaurant_table/providers/restaurant_tables_provider.dart';
+import 'package:jamal/features/table_reservation/providers/table_reservations_provider.dart';
+import 'package:jamal/features/user/providers/user_aggregate_provider.dart';
 import 'package:jamal/providers.dart';
 
 class AuthMutationNotifier extends StateNotifier<AuthMutationState> {
@@ -51,7 +62,16 @@ class AuthMutationNotifier extends StateNotifier<AuthMutationState> {
       (error) =>
           state = state.copyWith(isLoading: false, errorMessage: error.message),
       (success) async {
-        state = state.copyWith(isLoading: false, userModel: success.data);
+        state = await state.copyWith(isLoading: false, userModel: success.data);
+        _ref.read(cartItemsProvider.notifier).refreshCartItems();
+        _ref.read(menuItemsProvider.notifier).refreshMenuItems();
+        _ref.read(categoriesProvider.notifier).refreshCategories();
+        _ref.read(paymentMethodsProvider.notifier).refreshPaymentMethods();
+        _ref.read(restaurantTablesProvider.notifier).refreshRestaurantTables();
+        _ref.read(ordersProvider.notifier).refreshOrders();
+        _ref
+            .read(tableReservationsProvider.notifier)
+            .refreshTableReservations();
       },
     );
   }
@@ -65,7 +85,16 @@ class AuthMutationNotifier extends StateNotifier<AuthMutationState> {
       (error) =>
           state = state.copyWith(isLoading: false, errorMessage: error.message),
       (success) async {
-        state = state.copyWith(isLoading: false, userModel: success.data);
+        state = await state.copyWith(isLoading: false, userModel: success.data);
+        _ref.read(cartItemsProvider.notifier).refreshCartItems();
+        _ref.read(menuItemsProvider.notifier).refreshMenuItems();
+        _ref.read(categoriesProvider.notifier).refreshCategories();
+        _ref.read(paymentMethodsProvider.notifier).refreshPaymentMethods();
+        _ref.read(restaurantTablesProvider.notifier).refreshRestaurantTables();
+        _ref.read(ordersProvider.notifier).refreshOrders();
+        _ref
+            .read(tableReservationsProvider.notifier)
+            .refreshTableReservations();
       },
     );
   }
@@ -97,6 +126,14 @@ class AuthMutationNotifier extends StateNotifier<AuthMutationState> {
       (success) {
         _ref.invalidate(currentUserProvider);
         _ref.invalidate(authStateProvider);
+        // Todo: Harusnya invalidate semua entah kenapa malah error
+
+        _ref.invalidate(orderRevenueProvider);
+        _ref.invalidate(totalCartQuantityProvider);
+        _ref.invalidate(distinctCartItemCountProvider);
+        _ref.invalidate(ordersCountProvider);
+        _ref.invalidate(usersCountProvider);
+        _ref.invalidate(menuItemsCountProvider);
         return state = AuthMutationState();
       },
     );

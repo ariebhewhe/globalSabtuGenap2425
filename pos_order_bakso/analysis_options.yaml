@@ -13,7 +13,6 @@ analyzer:
 
 linter:
   rules:
-    avoid_redundant_argument_values: true
     avoid_init_to_null: true
     avoid_print: true
     control_flow_in_finally: true

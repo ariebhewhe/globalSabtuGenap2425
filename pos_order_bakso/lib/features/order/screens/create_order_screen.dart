@@ -424,7 +424,7 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
                   decoration: BoxDecoration(
                     color:
                         context.theme.brightness == Brightness.dark
-                            ? context.theme.colorScheme.surfaceVariant
+                            ? context.theme.colorScheme.surfaceContainerHighest
                             : Colors.grey[100],
                     borderRadius: BorderRadius.circular(8),
                   ),

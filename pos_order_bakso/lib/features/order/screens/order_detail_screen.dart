@@ -1,19 +1,15 @@
-import 'dart:typed_data';
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:jamal/core/routes/app_router.dart';
 import 'package:jamal/core/utils/currency_utils.dart';
 import 'package:jamal/core/utils/date_convention.dart';
 import 'package:jamal/core/utils/enums.dart';
 import 'package:jamal/core/utils/toast_utils.dart';
 import 'package:jamal/data/models/order_model.dart';
-import 'package:jamal/features/order/providers/order_mutation_provider.dart';
 import 'package:jamal/features/payment_method/providers/payment_method_provider.dart';
 import 'package:jamal/main.dart';
-import 'package:jamal/shared/widgets/admin_app_bar.dart';
 import 'package:jamal/shared/widgets/my_end_drawer.dart';
 import 'package:jamal/shared/widgets/my_screen_container.dart';
 import 'package:jamal/shared/widgets/user_app_bar.dart';
@@ -389,7 +385,7 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
         mimeType: MimeType.png,
       );
 
-      if (filePath != null && filePath.isNotEmpty) {
+      if (filePath.isNotEmpty) {
         if (!context.mounted) return;
         ToastUtils.showSuccess(
           context: context,

@@ -2,7 +2,6 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:jamal/core/routes/app_router.dart';
 import 'package:jamal/core/utils/currency_utils.dart';
 import 'package:jamal/core/utils/enums.dart';
 import 'package:jamal/core/utils/toast_utils.dart';

@@ -6,7 +6,6 @@ import 'package:flutter/foundation.dart';
 import 'package:jamal/core/abstractions/base_model.dart';
 import 'package:jamal/core/utils/enums.dart';
 import 'package:jamal/data/models/order_item_model.dart';
-import 'package:jamal/data/models/payment_method_model.dart';
 import 'package:jamal/data/models/table_reservation_model.dart';
 
 class OrderModel extends BaseModel {

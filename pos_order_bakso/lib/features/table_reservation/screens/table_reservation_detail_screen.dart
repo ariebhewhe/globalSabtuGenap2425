@@ -221,7 +221,7 @@ class _TableReservationDetailScreenState
         mimeType: MimeType.png,
       );
 
-      if (filePath != null && filePath.isNotEmpty) {
+      if (filePath.isNotEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(

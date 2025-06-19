@@ -215,7 +215,7 @@ class _AdminTableReservationDetailScreenState
         mimeType: MimeType.png,
       );
 
-      if (filePath != null && filePath.isNotEmpty) {
+      if (filePath.isNotEmpty) {
         if (!context.mounted) return;
         ToastUtils.showSuccess(
           context: context,

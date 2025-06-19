@@ -273,7 +273,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                             child: ElevatedButton(
                               style: context.elevatedButtonTheme.style
                                   ?.copyWith(
-                                    padding: MaterialStateProperty.all(
+                                    padding: WidgetStateProperty.all(
                                       const EdgeInsets.symmetric(vertical: 14),
                                     ),
                                   ),

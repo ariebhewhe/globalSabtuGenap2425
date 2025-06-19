@@ -10,7 +10,6 @@ import 'package:jamal/core/utils/enums.dart';
 import 'package:jamal/core/utils/toast_utils.dart';
 import 'package:jamal/data/models/order_item_model.dart';
 import 'package:jamal/data/models/order_model.dart';
-import 'package:jamal/data/models/payment_method_model.dart';
 import 'package:jamal/data/models/restaurant_table_model.dart';
 import 'package:jamal/data/models/table_reservation_model.dart';
 import 'package:jamal/features/cart/providers/selected_cart_items_provider.dart';
@@ -173,16 +172,6 @@ class _AdminCreateOrderScreenState
           (paymentMethod.adminPaymentCode?.isNotEmpty ?? false) ||
           (paymentMethod.adminPaymentQrCodePicture?.isNotEmpty ?? false),
     );
-
-    print('--- DEBUGGING PAYMENT METHODS ---');
-    for (final method in paymentMethodsState.paymentMethods) {
-      print(
-        'Method: ${method.name}, '
-        'Code: "${method.adminPaymentCode}" (Tipe: ${method.adminPaymentCode.runtimeType}), '
-        'QR: "${method.adminPaymentQrCodePicture}" (Tipe: ${method.adminPaymentQrCodePicture.runtimeType})',
-      );
-    }
-    print('---------------------------------');
 
     if (paymentMethodsState.isLoading) {
       return const Center(child: CircularProgressIndicator());
@@ -441,7 +430,7 @@ class _AdminCreateOrderScreenState
                   decoration: BoxDecoration(
                     color:
                         context.theme.brightness == Brightness.dark
-                            ? context.theme.colorScheme.surfaceVariant
+                            ? context.theme.colorScheme.surfaceContainerHighest
                             : Colors.grey[100],
                     borderRadius: BorderRadius.circular(8),
                   ),

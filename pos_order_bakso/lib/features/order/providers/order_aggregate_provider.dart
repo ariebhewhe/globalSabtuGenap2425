@@ -13,7 +13,7 @@ final ordersCountProvider = FutureProvider.autoDispose<OrdersCountAggregate>((
       statusCounts: {},
       typeCounts: {},
     );
-  }, (success) => success.data);
+  }, (success) => success.data,);
 });
 
 final orderRevenueProvider = FutureProvider.autoDispose<OrdersRevenueAggregate>(
@@ -28,6 +28,6 @@ final orderRevenueProvider = FutureProvider.autoDispose<OrdersRevenueAggregate>(
         totalRevenueThisMonth: 0.0,
         totalRevenueThisYear: 0.0,
       );
-    }, (success) => success.data);
+    }, (success) => success.data,);
   },
 );

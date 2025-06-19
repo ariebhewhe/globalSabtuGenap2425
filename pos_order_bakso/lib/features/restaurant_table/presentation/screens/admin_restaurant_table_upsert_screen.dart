@@ -1,4 +1,3 @@
-import 'package:auto_route/annotations.dart';
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
@@ -190,7 +189,7 @@ class _AdminRestaurantTableUpsertScreenState
                                     widget.restaurantTable != null
                                         ? 'Update'
                                         : 'Submit',
-                                    style: TextStyle(fontSize: 18),
+                                    style: const TextStyle(fontSize: 18),
                                   ),
                         ),
                       ),

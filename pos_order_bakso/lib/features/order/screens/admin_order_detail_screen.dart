@@ -1,4 +1,3 @@
-import 'dart:typed_data';
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -391,7 +390,7 @@ class _AdminOrderDetailScreenState
         mimeType: MimeType.png,
       );
 
-      if (filePath != null && filePath.isNotEmpty) {
+      if (filePath.isNotEmpty) {
         if (!context.mounted) return;
         ToastUtils.showSuccess(
           context: context,
