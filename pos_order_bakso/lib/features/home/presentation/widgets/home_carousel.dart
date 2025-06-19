@@ -23,9 +23,10 @@ class _HomeCarouselState extends State<HomeCarousel> {
   final Curve _animationCurve = Curves.easeInOutCubic;
 
   final List<String> carouselImages = [
-    'https://i.pinimg.com/736x/9b/b9/0a/9bb90a1ca47962be2e98d3d7cf20aae5.jpg',
-    'https://i.pinimg.com/736x/50/5d/d6/505dd6a4b337879b2da117c5d0b02f0a.jpg',
-    'https://i.pinimg.com/736x/8c/bb/21/8cbb212a7d55ca5c8be65044108c059e.jpg',
+    'assets/images/carousel-1.jpg',
+    'assets/images/carousel-2.jpg',
+    'assets/images/carousel-3.jpg',
+    'assets/images/carousel-4.jpg',
   ];
 
   @override
@@ -145,7 +146,7 @@ class _HomeCarouselState extends State<HomeCarousel> {
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(12),
                       image: DecorationImage(
-                        image: NetworkImage(carouselImages[actualIndex]),
+                        image: AssetImage(carouselImages[actualIndex]),
                         fit: BoxFit.cover,
 
                         onError: (exception, stackTrace) {},

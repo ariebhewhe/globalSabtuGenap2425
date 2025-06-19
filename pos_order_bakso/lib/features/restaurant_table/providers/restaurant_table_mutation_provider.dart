@@ -96,6 +96,47 @@ class RestaurantTableMutationNotifier
     );
   }
 
+  Future<void> batchDeleteRestaurantTables(
+    List<String> ids, {
+    bool deleteImages = true,
+  }) async {
+    state = state.copyWith(isLoading: true);
+    final result = await _restaurantTableRepo.batchDeleteRestaurantTables(ids);
+    result.match(
+      (error) =>
+          state = state.copyWith(isLoading: false, errorMessage: error.message),
+      (success) {
+        state = state.copyWith(
+          isLoading: false,
+          successMessage: success.message,
+        );
+        _ref.invalidate(restaurantTablesProvider);
+
+        final activeId = _ref.read(activeRestaurantTableIdProvider);
+        if (activeId != null && ids.contains(activeId)) {
+          _ref.read(activeRestaurantTableIdProvider.notifier).state = null;
+        }
+      },
+    );
+  }
+
+  Future<void> deleteAllRestaurantTables() async {
+    state = state.copyWith(isLoading: true);
+    final result = await _restaurantTableRepo.deleteAllRestaurantTables();
+    result.match(
+      (error) =>
+          state = state.copyWith(isLoading: false, errorMessage: error.message),
+      (success) {
+        state = state.copyWith(
+          isLoading: false,
+          successMessage: success.message,
+        );
+        _ref.invalidate(restaurantTablesProvider);
+        _ref.read(activeRestaurantTableIdProvider.notifier).state = null;
+      },
+    );
+  }
+
   // * Reset pesan sukses - gunakan untuk menghindari snackbar muncul berulang
   void resetSuccessMessage() {
     state = state.copyWith(successMessage: null);

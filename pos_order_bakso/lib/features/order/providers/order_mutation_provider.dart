@@ -6,6 +6,8 @@ import 'package:jamal/features/cart/providers/cart_items_provider.dart';
 import 'package:jamal/features/order/providers/order_mutation_state.dart';
 import 'package:jamal/features/order/providers/order_provider.dart';
 import 'package:jamal/features/order/providers/orders_provider.dart';
+import 'package:jamal/features/payment_method/providers/payment_methods_provider.dart';
+import 'package:jamal/features/restaurant_table/providers/restaurant_tables_provider.dart';
 import 'package:jamal/features/table_reservation/providers/user_table_reservations_provider.dart';
 
 class OrderMutationNotifier extends StateNotifier<OrderMutationState> {
@@ -34,6 +36,8 @@ class OrderMutationNotifier extends StateNotifier<OrderMutationState> {
         _ref
             .read(userTableReservationsProvider.notifier)
             .refreshTableReservations();
+        _ref.invalidate(restaurantTablesProvider);
+        _ref.invalidate(paymentMethodsProvider);
         _ref.read(cartItemsProvider.notifier).refreshCartItems();
         _ref.invalidate(totalCartQuantityProvider);
         _ref.invalidate(distinctCartItemCountProvider);
@@ -60,6 +64,8 @@ class OrderMutationNotifier extends StateNotifier<OrderMutationState> {
         _ref
             .read(userTableReservationsProvider.notifier)
             .refreshTableReservations();
+        _ref.invalidate(restaurantTablesProvider);
+        _ref.invalidate(paymentMethodsProvider);
         _ref.read(cartItemsProvider.notifier).refreshCartItems();
         _ref.invalidate(totalCartQuantityProvider);
         _ref.invalidate(distinctCartItemCountProvider);

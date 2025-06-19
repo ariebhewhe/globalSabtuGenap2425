@@ -22,7 +22,7 @@ class OrderModel extends BaseModel {
   final List<OrderItemModel>? orderItems;
   final String? paymentProof;
   final String? paymentCode;
-  final String? paymentDisplayURL;
+  final String? paymentDisplayUrl;
   final DateTime? paymentExpiry;
   // final PaymentMethodModel? paymentMethod;
 
@@ -42,7 +42,7 @@ class OrderModel extends BaseModel {
     this.orderItems,
     this.paymentProof,
     this.paymentCode,
-    this.paymentDisplayURL,
+    this.paymentDisplayUrl,
     this.paymentExpiry,
   }) : super(id: id, createdAt: createdAt, updatedAt: updatedAt);
 
@@ -65,7 +65,7 @@ class OrderModel extends BaseModel {
       ],
       paymentProof: 'https://example.com/proof.jpg',
       paymentCode: 'QRIS123456ABC',
-      paymentDisplayURL: 'https://qris.example.com/display/12345',
+      paymentDisplayUrl: 'https://qris.example.com/display/12345',
       paymentExpiry: now.add(const Duration(hours: 1)),
       createdAt: now.subtract(const Duration(minutes: 5)),
       updatedAt: now,
@@ -86,7 +86,7 @@ class OrderModel extends BaseModel {
     List<OrderItemModel>? orderItems,
     String? paymentProof,
     String? paymentCode,
-    String? paymentDisplayURL,
+    String? paymentDisplayUrl,
     DateTime? paymentExpiry,
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -105,7 +105,7 @@ class OrderModel extends BaseModel {
       orderItems: orderItems ?? this.orderItems,
       paymentProof: paymentProof ?? this.paymentProof,
       paymentCode: paymentCode ?? this.paymentCode,
-      paymentDisplayURL: paymentDisplayURL ?? this.paymentDisplayURL,
+      paymentDisplayUrl: paymentDisplayUrl ?? this.paymentDisplayUrl,
       paymentExpiry: paymentExpiry ?? this.paymentExpiry,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -130,12 +130,18 @@ class OrderModel extends BaseModel {
       'orderItems': orderItems?.map((x) => x.toMap()).toList(),
       'paymentProof': paymentProof,
       'paymentCode': paymentCode,
-      'paymentDisplayURL': paymentDisplayURL,
+      'paymentDisplayUrl': paymentDisplayUrl,
       'paymentExpiry': paymentExpiry?.toUtc().toIso8601String(),
     };
   }
 
   factory OrderModel.fromMap(Map<String, dynamic> map) {
+    // Untuk bersihnya, kita bisa tampung value dari map ke variabel
+    final dynamic estimatedReadyTimeValue = map['estimatedReadyTime'];
+    final dynamic paymentExpiryValue = map['paymentExpiry'];
+    final dynamic createdAtValue = map['createdAt'];
+    final dynamic updatedAtValue = map['updatedAt'];
+
     return OrderModel(
       id: map['id'] as String,
       userId: map['userId'] as String,
@@ -149,15 +155,19 @@ class OrderModel extends BaseModel {
       paymentStatus: PaymentStatusExtension.fromMap(
         map['paymentStatus'] as String,
       ),
-      orderDate: ModelUtils.parseDateTime(map['orderDate']),
+      orderDate: ModelUtils.parseDateTime(
+        map['orderDate'],
+      ), // Anggap orderDate tidak pernah null
+
       estimatedReadyTime:
-          map['estimatedReadyTime'] != null
-              ? ModelUtils.parseDateTime(map['estimatedReadyTime'])
+          estimatedReadyTimeValue != null &&
+                  estimatedReadyTimeValue.toString().isNotEmpty &&
+                  estimatedReadyTimeValue != 'null'
+              ? ModelUtils.parseDateTime(estimatedReadyTimeValue)
               : null,
-      specialInstructions:
-          map['specialInstructions'] != null
-              ? map['specialInstructions'] as String
-              : null,
+
+      specialInstructions: map['specialInstructions'] as String?,
+
       orderItems:
           map['orderItems'] != null
               ? List<OrderItemModel>.from(
@@ -166,20 +176,31 @@ class OrderModel extends BaseModel {
                 ),
               )
               : null,
-      paymentProof:
-          map['paymentProof'] != null ? map['paymentProof'] as String : null,
-      paymentCode:
-          map['paymentCode'] != null ? map['paymentCode'] as String : null,
-      paymentDisplayURL:
-          map['paymentDisplayURL'] != null
-              ? map['paymentDisplayURL'] as String
-              : null,
+
+      paymentProof: map['paymentProof'] as String?,
+      paymentCode: map['paymentCode'] as String?,
+      paymentDisplayUrl: map['paymentDisplayUrl'] as String?,
+
+      // --- PERBAIKAN DI SINI ---
       paymentExpiry:
-          map['paymentExpiry'] != null
-              ? ModelUtils.parseDateTime(map['paymentExpiry'])
+          paymentExpiryValue != null &&
+                  paymentExpiryValue.toString().isNotEmpty &&
+                  paymentExpiryValue != 'null'
+              ? ModelUtils.parseDateTime(paymentExpiryValue)
               : null,
-      createdAt: ModelUtils.parseDateTime(map['createdAt']),
-      updatedAt: ModelUtils.parseDateTime(map['updatedAt']),
+
+      createdAt:
+          createdAtValue != null &&
+                  createdAtValue.toString().isNotEmpty &&
+                  createdAtValue != 'null'
+              ? ModelUtils.parseDateTime(createdAtValue)
+              : DateTime.now(),
+      updatedAt:
+          updatedAtValue != null &&
+                  updatedAtValue.toString().isNotEmpty &&
+                  updatedAtValue != 'null'
+              ? ModelUtils.parseDateTime(updatedAtValue)
+              : DateTime.now(),
     );
   }
 
@@ -191,7 +212,7 @@ class OrderModel extends BaseModel {
 
   @override
   String toString() {
-    return 'OrderModel(id: $id, createdAt: $createdAt, updatedAt: $updatedAt, userId: $userId, paymentMethodId: $paymentMethodId, orderType: $orderType, status: $status, totalAmount: $totalAmount, paymentStatus: $paymentStatus, orderDate: $orderDate, estimatedReadyTime: $estimatedReadyTime, specialInstructions: $specialInstructions, orderItems: $orderItems, paymentProof: $paymentProof, paymentCode: $paymentCode, paymentDisplayURL: $paymentDisplayURL, paymentExpiry: $paymentExpiry)';
+    return 'OrderModel(id: $id, createdAt: $createdAt, updatedAt: $updatedAt, userId: $userId, paymentMethodId: $paymentMethodId, orderType: $orderType, status: $status, totalAmount: $totalAmount, paymentStatus: $paymentStatus, orderDate: $orderDate, estimatedReadyTime: $estimatedReadyTime, specialInstructions: $specialInstructions, orderItems: $orderItems, paymentProof: $paymentProof, paymentCode: $paymentCode, paymentDisplayUrl: $paymentDisplayUrl, paymentExpiry: $paymentExpiry)';
   }
 
   @override
@@ -213,7 +234,7 @@ class OrderModel extends BaseModel {
         listEquals(other.orderItems, orderItems) &&
         other.paymentProof == paymentProof &&
         other.paymentCode == paymentCode &&
-        other.paymentDisplayURL == paymentDisplayURL &&
+        other.paymentDisplayUrl == paymentDisplayUrl &&
         other.paymentExpiry == paymentExpiry;
   }
 
@@ -234,7 +255,7 @@ class OrderModel extends BaseModel {
         orderItems.hashCode ^
         paymentProof.hashCode ^
         paymentCode.hashCode ^
-        paymentDisplayURL.hashCode ^
+        paymentDisplayUrl.hashCode ^
         paymentExpiry.hashCode;
   }
 }
@@ -279,7 +300,7 @@ class UpdateOrderDto {
   final PaymentStatus? paymentStatus;
   final DateTime? estimatedReadyTime;
   final String? paymentCode;
-  final String? paymentDisplayURL;
+  final String? paymentDisplayUrl;
   final DateTime? paymentExpiry;
 
   UpdateOrderDto({
@@ -288,7 +309,7 @@ class UpdateOrderDto {
     this.paymentStatus,
     this.estimatedReadyTime,
     this.paymentCode,
-    this.paymentDisplayURL,
+    this.paymentDisplayUrl,
     this.paymentExpiry,
   });
 
@@ -310,8 +331,8 @@ class UpdateOrderDto {
     if (paymentCode != null) {
       map['paymentCode'] = paymentCode;
     }
-    if (paymentDisplayURL != null) {
-      map['paymentDisplayURL'] = paymentDisplayURL;
+    if (paymentDisplayUrl != null) {
+      map['paymentDisplayUrl'] = paymentDisplayUrl;
     }
     if (paymentExpiry != null) {
       map['paymentExpiry'] = paymentExpiry!.toUtc().toIso8601String();

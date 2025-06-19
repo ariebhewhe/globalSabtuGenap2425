@@ -149,7 +149,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
     return const Scaffold(
       body: Center(
         child: Image(
-          image: AssetImage("assets/images/splash-3.png"),
+          image: AssetImage("assets/icons/playstore.png"),
           width: 240,
           height: 240,
         ),

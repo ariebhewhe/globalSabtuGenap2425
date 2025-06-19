@@ -6,11 +6,13 @@ import 'package:jamal/data/models/restaurant_table_model.dart';
 class RestaurantTableTile extends StatelessWidget {
   final RestaurantTableModel restaurantTable;
   final VoidCallback? onTap;
+  final void Function()? onLongPress;
 
   const RestaurantTableTile({
     super.key,
     required this.restaurantTable,
     this.onTap,
+    this.onLongPress,
   });
 
   @override
@@ -32,6 +34,7 @@ class RestaurantTableTile extends StatelessWidget {
           const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
       child: InkWell(
         onTap: onTap,
+        onLongPress: onLongPress,
         borderRadius:
             cardTheme.shape is RoundedRectangleBorder
                 ? (cardTheme.shape as RoundedRectangleBorder).borderRadius

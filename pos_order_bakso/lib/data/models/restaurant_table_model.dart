@@ -20,6 +20,20 @@ class RestaurantTableModel extends BaseModel {
     required DateTime updatedAt,
   }) : super(id: id, createdAt: createdAt, updatedAt: updatedAt);
 
+  factory RestaurantTableModel.dummy() {
+    final now = DateTime.now();
+
+    return RestaurantTableModel(
+      id: 'id',
+      tableNumber: 'tableNumber',
+      capacity: 1,
+      isAvailable: false,
+      location: Location.indoor,
+      createdAt: now.subtract(const Duration(minutes: 5)),
+      updatedAt: now,
+    );
+  }
+
   RestaurantTableModel copyWith({
     String? id,
     String? tableNumber,

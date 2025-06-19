@@ -16,6 +16,7 @@ import 'package:jamal/features/cart/providers/selected_cart_items_provider.dart'
 import 'package:jamal/features/order/providers/order_mutation_provider.dart';
 import 'package:jamal/features/order/providers/order_mutation_state.dart';
 import 'package:jamal/features/payment_method/providers/payment_methods_provider.dart';
+import 'package:jamal/features/payment_method/providers/payment_methods_state.dart';
 import 'package:jamal/features/restaurant_table/providers/restaurant_tables_provider.dart';
 import 'package:jamal/shared/widgets/my_end_drawer.dart';
 import 'package:jamal/shared/widgets/my_screen_container.dart';
@@ -164,9 +165,7 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
     );
   }
 
-  Widget _buildPaymentMethodDropdown() {
-    final paymentMethodsState = ref.watch(paymentMethodsProvider);
-
+  Widget _buildPaymentMethodDropdown(PaymentMethodsState paymentMethodsState) {
     if (paymentMethodsState.isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -174,12 +173,19 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
     if (paymentMethodsState.errorMessage != null) {
       return Center(
         child: Text(
-          'Error loading payment methods: ${paymentMethodsState.errorMessage}',
-          style: TextStyle(color: context.theme.colorScheme.error),
+          'Error: ${paymentMethodsState.errorMessage}',
+          style: TextStyle(color: Theme.of(context).colorScheme.error),
         ),
       );
     }
 
+    if (paymentMethodsState.paymentMethods.isEmpty) {
+      return const Center(
+        child: Text('Tidak ada metode pembayaran yang tersedia.'),
+      );
+    }
+
+    // Jika sudah tidak loading dan tidak error, baru render dropdown
     return FormBuilderDropdown<String>(
       name: 'paymentMethodId',
       decoration: const InputDecoration(
@@ -225,9 +231,6 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
       validator: FormBuilderValidators.required(
         errorText: 'Silakan pilih metode pembayaran',
       ),
-      onChanged: (value) {
-        setState(() {});
-      },
     );
   }
 
@@ -235,6 +238,7 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
   Widget build(BuildContext context) {
     final orderMutationState = ref.watch(orderMutationProvider);
     final restaurantTablesState = ref.watch(restaurantTablesProvider);
+    final paymentMethodsState = ref.watch(paymentMethodsProvider);
 
     final availableTables =
         restaurantTablesState.restaurantTables
@@ -340,7 +344,7 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
                   ),
                 ],
                 const SizedBox(height: 16),
-                _buildPaymentMethodDropdown(),
+                _buildPaymentMethodDropdown(paymentMethodsState),
                 const SizedBox(height: 16),
                 FormBuilderTextField(
                   name: 'specialInstructions',

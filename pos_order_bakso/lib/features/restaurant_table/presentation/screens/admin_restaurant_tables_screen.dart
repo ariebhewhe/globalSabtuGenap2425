@@ -4,7 +4,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:jamal/core/routes/app_router.dart';
 import 'package:jamal/core/theme/app_theme.dart';
 import 'package:jamal/core/utils/enums.dart';
+import 'package:jamal/core/utils/toast_utils.dart';
 import 'package:jamal/data/models/restaurant_table_model.dart';
+import 'package:jamal/features/restaurant_table/providers/restaurant_table_mutation_provider.dart';
+import 'package:jamal/features/restaurant_table/providers/restaurant_table_mutation_state.dart';
 import 'package:jamal/features/restaurant_table/providers/restaurant_tables_provider.dart';
 import 'package:jamal/features/restaurant_table/providers/search_restaurant_tables_provider.dart';
 import 'package:jamal/features/restaurant_table/widgets/restaurant_table_tile.dart';
@@ -27,6 +30,9 @@ class _AdminRestaurantTablesScreenState
   final ScrollController _scrollController = ScrollController();
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
+
+  bool _isSelectionMode = false;
+  final Set<String> _selectedItemIds = {};
 
   String _selectedSearchBy = 'tableNumber';
   final List<String> _searchByOptions = ['tableNumber', 'description'];
@@ -118,13 +124,237 @@ class _AdminRestaurantTablesScreenState
   }
 
   Future<void> _refreshData() async {
+    if (_isSelectionMode) _exitSelectionMode();
+
     if (isSearching) {
-      ref
+      await ref
           .read(searchRestaurantTablesProvider.notifier)
           .refreshRestaurantTables();
     } else {
-      ref.read(restaurantTablesProvider.notifier).refreshRestaurantTables();
+      await ref
+          .read(restaurantTablesProvider.notifier)
+          .refreshRestaurantTables();
     }
+  }
+
+  void _enterSelectionMode(String itemId) {
+    if (_isSelectionMode) return;
+    setState(() {
+      _isSelectionMode = true;
+      _selectedItemIds.add(itemId);
+    });
+  }
+
+  void _exitSelectionMode() {
+    setState(() {
+      _isSelectionMode = false;
+      _selectedItemIds.clear();
+    });
+  }
+
+  void _onSelectItem(String itemId) {
+    setState(() {
+      if (_selectedItemIds.contains(itemId)) {
+        _selectedItemIds.remove(itemId);
+      } else {
+        _selectedItemIds.add(itemId);
+      }
+      if (_selectedItemIds.isEmpty) {
+        _isSelectionMode = false;
+      }
+    });
+  }
+
+  void _deleteSelectedItems() {
+    showDialog(
+      context: context,
+      builder:
+          (ctx) => AlertDialog(
+            title: const Text('Konfirmasi Hapus'),
+            content: Text(
+              'Anda yakin ingin menghapus ${_selectedItemIds.length} meja yang dipilih?',
+            ),
+            actions: [
+              TextButton(
+                child: const Text('Batal'),
+                onPressed: () => Navigator.of(ctx).pop(),
+              ),
+              FilledButton(
+                child: const Text('Hapus'),
+                style: FilledButton.styleFrom(backgroundColor: Colors.red),
+                onPressed: () {
+                  ref
+                      .read(restaurantTableMutationProvider.notifier)
+                      .batchDeleteRestaurantTables(_selectedItemIds.toList());
+                  Navigator.of(ctx).pop();
+                  _exitSelectionMode();
+                },
+              ),
+            ],
+          ),
+    );
+  }
+
+  void _deleteAllItems() {
+    final allItemIds = restaurantTables.map((item) => item.id).toList();
+
+    if (allItemIds.isEmpty) {
+      ToastUtils.showError(
+        context: context,
+        message: 'Tidak ada meja untuk dihapus',
+      );
+      return;
+    }
+
+    showDialog(
+      context: context,
+      builder:
+          (ctx) => AlertDialog(
+            title: const Text('Konfirmasi Hapus Semua'),
+            content: Text(
+              'Anda yakin ingin menghapus SEMUA ${allItemIds.length} meja? Tindakan ini tidak dapat dibatalkan.',
+            ),
+            actions: [
+              TextButton(
+                child: const Text('Batal'),
+                onPressed: () => Navigator.of(ctx).pop(),
+              ),
+              FilledButton(
+                child: const Text('Hapus Semua'),
+                style: FilledButton.styleFrom(backgroundColor: Colors.red),
+                onPressed: () {
+                  ref
+                      .read(restaurantTableMutationProvider.notifier)
+                      .batchDeleteRestaurantTables(allItemIds);
+                  Navigator.of(ctx).pop();
+                  if (_isSelectionMode) _exitSelectionMode();
+                },
+              ),
+            ],
+          ),
+    );
+  }
+
+  void _showUtilityBottomSheet() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return Container(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 20),
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              Text(
+                'Table Utilities',
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 20),
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Theme.of(
+                      context,
+                    ).primaryColor.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(Icons.add, color: Theme.of(context).primaryColor),
+                ),
+                title: const Text('Add Restaurant Table'),
+                subtitle: const Text('Tambah meja restoran baru'),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  context.pushRoute(AdminRestaurantTableUpsertRoute());
+                },
+              ),
+              const Divider(),
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color:
+                        _isSelectionMode
+                            ? Colors.orange.withValues(alpha: 0.1)
+                            : Colors.blue.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    _isSelectionMode ? Icons.check_circle : Icons.select_all,
+                    color: _isSelectionMode ? Colors.orange : Colors.blue,
+                  ),
+                ),
+                title: Text(
+                  _isSelectionMode ? 'Exit Selection Mode' : 'Select Items',
+                ),
+                subtitle: Text(
+                  _isSelectionMode
+                      ? 'Keluar dari mode seleksi'
+                      : 'Masuk ke mode seleksi untuk menghapus item',
+                ),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  if (_isSelectionMode) {
+                    _exitSelectionMode();
+                  } else {
+                    setState(() {
+                      _isSelectionMode = true;
+                    });
+                  }
+                },
+              ),
+              const Divider(),
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.red.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(Icons.delete_forever, color: Colors.red),
+                ),
+                title: const Text('Delete All Items'),
+                subtitle: const Text('Hapus semua meja restoran'),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  _deleteAllItems();
+                },
+              ),
+              const SizedBox(height: 20),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  AppBar _buildSelectionAppBar() {
+    return AppBar(
+      leading: IconButton(
+        icon: const Icon(Icons.close),
+        onPressed: _exitSelectionMode,
+      ),
+      title: Text('${_selectedItemIds.length} dipilih'),
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.delete_outline),
+          onPressed: _selectedItemIds.isNotEmpty ? _deleteSelectedItems : null,
+        ),
+      ],
+    );
   }
 
   bool get isLoading {
@@ -155,18 +385,34 @@ class _AdminRestaurantTablesScreenState
   }
 
   String? get errorMessage {
-    if (isSearching) {
-      return ref.watch(searchRestaurantTablesProvider).errorMessage;
-    } else {
-      return ref.watch(restaurantTablesProvider).errorMessage;
-    }
+    final provider =
+        isSearching ? searchRestaurantTablesProvider : restaurantTablesProvider;
+    return ref.watch(provider).errorMessage;
   }
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<RestaurantTableMutationState>(restaurantTableMutationProvider, (
+      _,
+      state,
+    ) {
+      if (state.successMessage != null) {
+        ToastUtils.showSuccess(
+          context: context,
+          message: state.successMessage!,
+        );
+        ref
+            .read(restaurantTableMutationProvider.notifier)
+            .resetSuccessMessage();
+      }
+      if (state.errorMessage != null) {
+        ToastUtils.showError(context: context, message: state.errorMessage!);
+        ref.read(restaurantTableMutationProvider.notifier).resetErrorMessage();
+      }
+    });
+
     return GestureDetector(
       onTap: () {
-        // * Cara ini akan menghilangkan fokus dari widget apapun yang sedang fokus
         FocusScopeNode currentFocus = FocusScope.of(context);
         if (!currentFocus.hasPrimaryFocus &&
             currentFocus.focusedChild != null) {
@@ -174,25 +420,18 @@ class _AdminRestaurantTablesScreenState
         }
       },
       child: Scaffold(
-        appBar: const AdminAppBar(),
-        endDrawer: const MyEndDrawer(),
-        floatingActionButton: SafeArea(
-          child: Container(
-            decoration: BoxDecoration(
-              color: context.theme.primaryColor,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: IconButton(
-              onPressed:
-                  () => context.pushRoute(AdminRestaurantTableUpsertRoute()),
-              icon: const Icon(Icons.add),
-            ),
-          ),
+        appBar:
+            _isSelectionMode ? _buildSelectionAppBar() : const AdminAppBar(),
+        endDrawer: _isSelectionMode ? null : const MyEndDrawer(),
+        floatingActionButton: FloatingActionButton(
+          onPressed: _showUtilityBottomSheet,
+          child: const Icon(Icons.more_vert),
+          tooltip: 'Table Utilities',
         ),
         body: MyScreenContainer(
           child: Consumer(
             builder: (context, ref, child) {
-              const int skeletonItemCount = 6;
+              const int skeletonItemCount = 8;
 
               return RefreshIndicator(
                 onRefresh: _refreshData,
@@ -207,7 +446,7 @@ class _AdminRestaurantTablesScreenState
                             controller: _searchController,
                             focusNode: _searchFocusNode,
                             decoration: InputDecoration(
-                              hintText: 'Search restaurantTables...',
+                              hintText: 'Search restaurant tables...',
                               prefixIcon: Icon(
                                 Icons.search,
                                 color: context.textStyles.bodyMedium?.color,
@@ -258,7 +497,6 @@ class _AdminRestaurantTablesScreenState
                         ),
                       ],
                     ),
-
                     AnimatedContainer(
                       duration: const Duration(milliseconds: 300),
                       height: _showFilters ? null : 0,
@@ -315,7 +553,9 @@ class _AdminRestaurantTablesScreenState
                                               selectedColor:
                                                   context.colors.primary,
                                               backgroundColor:
-                                                  context.colors.surfaceContainerHighest,
+                                                  context
+                                                      .colors
+                                                      .surfaceContainerHighest,
                                             );
                                           }).toList(),
                                     ),
@@ -420,7 +660,6 @@ class _AdminRestaurantTablesScreenState
                         ),
                       ),
                     ),
-
                     if (isSearching ||
                         _selectedOrderBy != 'createdAt' ||
                         !_isDescending)
@@ -465,7 +704,6 @@ class _AdminRestaurantTablesScreenState
                           ],
                         ),
                       ),
-
                     if (errorMessage != null)
                       Container(
                         margin: const EdgeInsets.symmetric(
@@ -506,9 +744,7 @@ class _AdminRestaurantTablesScreenState
                           ],
                         ),
                       ),
-
                     const SizedBox(height: 16),
-
                     Expanded(
                       child: _buildRestaurantTablesList(skeletonItemCount),
                     ),
@@ -532,11 +768,7 @@ class _AdminRestaurantTablesScreenState
     if (_selectedOrderBy != 'createdAt' || !_isDescending) {
       String sortOrder = _orderByOptions[_selectedOrderBy] ?? _selectedOrderBy;
       String direction = _isDescending ? "Descending" : "Ascending";
-      if (_selectedOrderBy != 'createdAt' || !_isDescending) {
-        info.add('Sorted by $sortOrder ($direction)');
-      } else if (_selectedOrderBy == 'createdAt' && !_isDescending) {
-        info.add('Sorted by $sortOrder ($direction)');
-      }
+      info.add('Sorted by $sortOrder ($direction)');
     }
 
     return info.join(' • ');
@@ -549,7 +781,7 @@ class _AdminRestaurantTablesScreenState
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              isSearching ? Icons.search_off : Icons.food_bank,
+              isSearching ? Icons.search_off : Icons.table_restaurant_outlined,
               size: 64,
               color:
                   context.isDarkMode
@@ -559,8 +791,8 @@ class _AdminRestaurantTablesScreenState
             const SizedBox(height: 16),
             Text(
               isSearching
-                  ? 'No restaurantTables found for "${_searchController.text}"'
-                  : 'No restaurantTables available',
+                  ? 'No tables found for "${_searchController.text}"'
+                  : 'No tables available',
               style: context.textStyles.titleMedium?.copyWith(
                 color:
                     context.isDarkMode
@@ -600,7 +832,7 @@ class _AdminRestaurantTablesScreenState
           if (!isLoading && index == restaurantTables.length && isLoadingMore) {
             return Center(
               child: Padding(
-                padding: const EdgeInsets.all(8.0),
+                padding: const EdgeInsets.all(16.0),
                 child: CircularProgressIndicator(
                   valueColor: AlwaysStoppedAnimation<Color>(
                     context.colors.primary,
@@ -612,29 +844,65 @@ class _AdminRestaurantTablesScreenState
 
           final restaurantTable =
               isLoading
-                  ? RestaurantTableModel(
-                    id: '',
-                    tableNumber: '',
-                    capacity: 0,
-                    isAvailable: false,
-                    location: Location.indoor,
-                    createdAt: DateTime.now(),
-                    updatedAt: DateTime.now(),
-                  )
+                  ? RestaurantTableModel.dummy()
                   : restaurantTables[index];
 
-          return RestaurantTableTile(
-            restaurantTable: restaurantTable,
-            onTap:
-                isLoading
-                    ? null
-                    : () {
-                      context.router.push(
-                        AdminRestaurantTableUpsertRoute(
-                          restaurantTable: restaurantTable,
-                        ),
-                      );
-                    },
+          final isSelected = _selectedItemIds.contains(restaurantTable.id);
+
+          return Stack(
+            children: [
+              RestaurantTableTile(
+                restaurantTable: restaurantTable,
+                onTap:
+                    isLoading
+                        ? null
+                        : () {
+                          if (_isSelectionMode) {
+                            _onSelectItem(restaurantTable.id);
+                          } else {
+                            context.router.push(
+                              AdminRestaurantTableUpsertRoute(
+                                restaurantTable: restaurantTable,
+                              ),
+                            );
+                          }
+                        },
+                onLongPress:
+                    isLoading
+                        ? null
+                        : () => _enterSelectionMode(restaurantTable.id),
+              ),
+              if (_isSelectionMode)
+                Positioned.fill(
+                  child: GestureDetector(
+                    onTap: () => _onSelectItem(restaurantTable.id),
+                    child: Container(
+                      margin: const EdgeInsets.symmetric(
+                        vertical: 4.0,
+                        horizontal: 8.0,
+                      ),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                        color:
+                            isSelected
+                                ? Theme.of(
+                                  context,
+                                ).primaryColor.withValues(alpha: 0.4)
+                                : Colors.black.withValues(alpha: 0.2),
+                      ),
+                    ),
+                  ),
+                ),
+              if (isSelected)
+                Positioned(
+                  top: 16,
+                  right: 24,
+                  child: Icon(
+                    Icons.check_circle,
+                    color: Colors.white.withOpacity(0.8),
+                  ),
+                ),
+            ],
           );
         },
       ),

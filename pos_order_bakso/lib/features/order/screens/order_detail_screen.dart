@@ -6,16 +6,19 @@ import 'package:intl/intl.dart';
 import 'package:jamal/core/utils/currency_utils.dart';
 import 'package:jamal/core/utils/date_convention.dart';
 import 'package:jamal/core/utils/enums.dart';
+import 'package:jamal/core/utils/logger.dart';
 import 'package:jamal/core/utils/toast_utils.dart';
 import 'package:jamal/data/models/order_model.dart';
+import 'package:jamal/features/order/providers/orders_provider.dart';
 import 'package:jamal/features/payment_method/providers/payment_method_provider.dart';
 import 'package:jamal/main.dart';
 import 'package:jamal/shared/widgets/my_end_drawer.dart';
 import 'package:jamal/shared/widgets/my_screen_container.dart';
 import 'package:jamal/shared/widgets/user_app_bar.dart';
-
+import 'package:jamal/data/models/payment_method_model.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:file_saver/file_saver.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 @RoutePage()
 class OrderDetailScreen extends ConsumerStatefulWidget {
@@ -27,9 +30,38 @@ class OrderDetailScreen extends ConsumerStatefulWidget {
   ConsumerState<OrderDetailScreen> createState() => _OrderDetailScreenState();
 }
 
-class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
+class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen>
+    with WidgetsBindingObserver {
   final ScreenshotController _screenshotController = ScreenshotController();
   bool _isSavingInvoice = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+
+    if (state == AppLifecycleState.resumed) {
+      AppLogger().i("Aplikasi kembali aktif, me-refresh data order...");
+
+      ref.read(ordersProvider.notifier).refreshOrders();
+
+      ToastUtils.showInfo(
+        context: context,
+        message: 'Memperbarui status pesanan...',
+      );
+    }
+  }
 
   Widget _buildStatusChip(BuildContext context, String statusText) {
     Color chipBackgroundColor;
@@ -172,24 +204,16 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
     );
   }
 
-  // WIDGET BARU: Section khusus untuk detail pembayaran
   Widget _buildPaymentDetailsSection() {
-    final paymentMethodId = widget.order.paymentMethodId;
-    if (paymentMethodId == null) {
+    final order = widget.order;
+    // Tampilkan section ini jika ada paymentMethodId
+    if (order.paymentMethodId == null) {
       return const SizedBox.shrink();
     }
 
     final paymentMethodState = ref.watch(
-      paymentMethodProvider(paymentMethodId),
+      paymentMethodProvider(order.paymentMethodId!),
     );
-    final paymentMethod = paymentMethodState.paymentMethod;
-
-    // Hanya tampilkan section ini jika ada kode atau QR yang perlu ditampilkan
-    bool hasPaymentDetails =
-        (paymentMethod?.adminPaymentCode != null &&
-            paymentMethod!.adminPaymentCode!.isNotEmpty) ||
-        (paymentMethod?.adminPaymentQrCodePicture != null &&
-            paymentMethod!.adminPaymentQrCodePicture!.isNotEmpty);
 
     if (paymentMethodState.isLoading) {
       return const Card(
@@ -200,7 +224,57 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
       );
     }
 
-    if (paymentMethod == null || !hasPaymentDetails) {
+    if (paymentMethodState.errorMessage != null) {
+      return Card(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Text(
+            'Gagal memuat metode pembayaran: ${paymentMethodState.errorMessage}',
+          ),
+        ),
+      );
+    }
+
+    if (paymentMethodState.paymentMethod == null) {
+      // Mungkin payment method tidak ditemukan, tapi kita bisa tampilkan info dasar
+      return Card(
+        color: context.cardTheme.color,
+        elevation: 0,
+        shape: context.cardTheme.shape,
+        margin: const EdgeInsets.only(bottom: 16.0),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Text(
+            'Detail pembayaran untuk metode ${order.paymentMethodId} tidak ditemukan.',
+          ),
+        ),
+      );
+    }
+
+    return _buildPaymentGatewaySection(
+      order,
+      paymentMethodState.paymentMethod!,
+    );
+  }
+
+  /// WIDGET YANG DIPERBAIKI
+  Widget _buildPaymentGatewaySection(
+    OrderModel order,
+    PaymentMethodModel paymentMethod,
+  ) {
+    final bool hasPaymentCode =
+        order.paymentCode != null && order.paymentCode!.isNotEmpty;
+    final bool hasPaymentDisplayURL =
+        order.paymentDisplayUrl != null && order.paymentDisplayUrl!.isNotEmpty;
+    final bool shouldShowButtons = order.paymentStatus == PaymentStatus.pending;
+
+    String? simulatorURL;
+    if (paymentMethod.midtransIdentifier != null) {
+      simulatorURL = _getSimulatorUrl(paymentMethod.midtransIdentifier!);
+    }
+
+    // Jangan tampilkan card sama sekali jika tidak ada info apa pun untuk ditampilkan
+    if (!hasPaymentCode && !hasPaymentDisplayURL && simulatorURL == null) {
       return const SizedBox.shrink();
     }
 
@@ -215,7 +289,7 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Detail Pembayaran',
+              'Instruksi Pembayaran',
               style: context.textStyles.titleMedium?.copyWith(
                 color: context.colors.primary,
                 fontWeight: FontWeight.bold,
@@ -225,135 +299,190 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
               color: context.theme.dividerTheme.color?.withValues(alpha: 0.5),
               height: 20,
             ),
-
-            // Nama Metode Pembayaran
-            Padding(
-              padding: const EdgeInsets.only(bottom: 12.0),
-              child: Row(
-                children: [
-                  Text("Metode:", style: context.textStyles.bodyMedium),
-                  const SizedBox(width: 8),
-                  Flexible(
-                    child: Text(
-                      paymentMethod.name,
-                      style: context.textStyles.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+            _buildDetailRow(
+              context,
+              'Metode',
+              paymentMethod.name,
+              icon: Icons.credit_card,
             ),
 
-            // Konten dinamis (QR atau Kode)
-            if (paymentMethod.adminPaymentQrCodePicture != null &&
-                paymentMethod.adminPaymentQrCodePicture!.isNotEmpty)
-              _buildQrCodeContent(paymentMethod.adminPaymentQrCodePicture!)
-            else if (paymentMethod.adminPaymentCode != null &&
-                paymentMethod.adminPaymentCode!.isNotEmpty)
-              _buildPaymentCodeContent(paymentMethod.adminPaymentCode!),
+            if (hasPaymentCode)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 6.0),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(
+                      Icons.pin_outlined,
+                      size: 18,
+                      color: context.colors.secondary.withValues(alpha: 0.8),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      flex: 2,
+                      child: Text(
+                        'Kode Bayar',
+                        style: context.textStyles.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: context.textStyles.bodySmall?.color,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      flex: 3,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12.0,
+                          vertical: 4.0,
+                        ),
+                        decoration: BoxDecoration(
+                          color: context.colors.surfaceContainerHighest,
+                          borderRadius: BorderRadius.circular(8.0),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Flexible(
+                              child: Text(
+                                order.paymentCode!,
+                                style: context.textStyles.bodyLarge?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            IconButton(
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                              icon: const Icon(Icons.copy_outlined, size: 18),
+                              onPressed: () {
+                                Clipboard.setData(
+                                  ClipboardData(text: order.paymentCode!),
+                                );
+                                ToastUtils.showInfo(
+                                  context: context,
+                                  message: 'Kode pembayaran disalin!',
+                                );
+                              },
+                              tooltip: 'Salin Kode',
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+            if (order.paymentExpiry != null)
+              _buildDetailRow(
+                context,
+                'Batas Bayar',
+                DateConvention.formatToIndoConv(order.paymentExpiry!),
+                icon: Icons.timer_off_outlined,
+              ),
+
+            const SizedBox(height: 16),
+
+            if (shouldShowButtons)
+              Column(
+                children: [
+                  if (hasPaymentDisplayURL)
+                    Container(
+                      width: double.infinity,
+                      margin: const EdgeInsets.only(bottom: 8.0),
+                      child: ElevatedButton.icon(
+                        icon: const Icon(Icons.payment),
+                        label: const Text('Lanjutkan Pembayaran'),
+                        onPressed: () => _launchUrl(order.paymentDisplayUrl!),
+                      ),
+                    ),
+                  if (simulatorURL != null)
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        icon: const Icon(Icons.open_in_new),
+                        label: const Text('Buka Simulator Pembayaran'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: context.colors.secondary,
+                          foregroundColor: context.colors.onSecondary,
+                        ),
+                        onPressed: () => _launchUrl(simulatorURL!),
+                      ),
+                    ),
+                ],
+              )
+            else
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12.0),
+                decoration: BoxDecoration(
+                  color: context.colors.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(8.0),
+                  border: Border.all(
+                    color: context.colors.outline.withValues(alpha: 0.3),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.info_outline,
+                      size: 20,
+                      color: context.colors.secondary,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        order.paymentStatus == PaymentStatus.success
+                            ? 'Pembayaran telah berhasil'
+                            : 'Pembayaran tidak tersedia untuk status ini',
+                        style: context.textStyles.bodyMedium?.copyWith(
+                          color: context.colors.secondary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
           ],
         ),
       ),
     );
   }
 
-  // Helper untuk konten QR Code
-  Widget _buildQrCodeContent(String imageUrl) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('Cara Bayar:', style: context.textStyles.bodyMedium),
-        const SizedBox(height: 4),
-        Text(
-          'Scan QR Code di bawah menggunakan aplikasi pembayaran Anda.',
-          style: context.textStyles.bodySmall,
-        ),
-        const SizedBox(height: 12),
-        Center(
-          child: GestureDetector(
-            onTap: () {
-              showDialog(
-                context: context,
-                builder:
-                    (ctx) => AlertDialog(
-                      contentPadding: const EdgeInsets.all(8),
-                      content: Image.network(imageUrl),
-                    ),
-              );
-            },
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: Image.network(
-                imageUrl,
-                width: 150,
-                height: 150,
-                fit: BoxFit.cover,
-                loadingBuilder: (context, child, loadingProgress) {
-                  if (loadingProgress == null) return child;
-                  return const SizedBox(
-                    width: 150,
-                    height: 150,
-                    child: Center(child: CircularProgressIndicator()),
-                  );
-                },
-                errorBuilder:
-                    (context, error, stackTrace) =>
-                        const Icon(Icons.broken_image, size: 150),
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
+  Future<void> _launchUrl(String url) async {
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri);
+    } else {
+      if (!context.mounted) return;
+      ToastUtils.showError(
+        context: context,
+        message: 'Tidak dapat membuka link: $url',
+      );
+    }
   }
 
-  // Helper untuk konten Kode Pembayaran
-  Widget _buildPaymentCodeContent(String code) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('Cara Bayar:', style: context.textStyles.bodyMedium),
-        const SizedBox(height: 4),
-        Text(
-          'Salin kode di bawah dan lakukan pembayaran melalui channel yang sesuai.',
-          style: context.textStyles.bodySmall,
-        ),
-        const SizedBox(height: 12),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
-          decoration: BoxDecoration(
-            color: context.colors.surfaceContainerHighest,
-            borderRadius: BorderRadius.circular(8.0),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Flexible(
-                child: Text(
-                  code,
-                  style: context.textStyles.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 1.5,
-                  ),
-                ),
-              ),
-              IconButton(
-                icon: const Icon(Icons.copy_outlined),
-                onPressed: () {
-                  Clipboard.setData(ClipboardData(text: code));
-                  ToastUtils.showInfo(
-                    context: context,
-                    message: 'Kode pembayaran disalin!',
-                  );
-                },
-                tooltip: 'Salin Kode',
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
+  String? _getSimulatorUrl(String identifier) {
+    switch (identifier.toLowerCase()) {
+      case 'bca':
+        return 'https://simulator.sandbox.midtrans.com/bca/va/index';
+      case 'bri':
+        return 'https://simulator.sandbox.midtrans.com/openapi/va/index?bank=bri';
+      case 'bni':
+        return 'https://simulator.sandbox.midtrans.com/bni/va/index';
+      case 'mandiri':
+        return 'https://simulator.sandbox.midtrans.com/openapi/va/index?bank=mandiri';
+      case 'bsi':
+        return 'https://simulator.sandbox.midtrans.com/openapi/va/index?bank=bsi';
+      case 'qris':
+        return 'https://simulator.sandbox.midtrans.com/v2/qris/index';
+      case 'gopay':
+        return 'https://simulator.sandbox.midtrans.com/v2/deeplink/index';
+      default:
+        return null;
+    }
   }
 
   Future<void> _captureAndSaveInvoice() async {
@@ -385,7 +514,7 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
         mimeType: MimeType.png,
       );
 
-      if (filePath.isNotEmpty) {
+      if (filePath != null && filePath.isNotEmpty) {
         if (!context.mounted) return;
         ToastUtils.showSuccess(
           context: context,
@@ -406,9 +535,11 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
       );
       logger.e("Error capturing or saving invoice: ${e.toString()}");
     } finally {
-      setState(() {
-        _isSavingInvoice = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isSavingInvoice = false;
+        });
+      }
     }
   }
 
@@ -487,7 +618,7 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
                     context,
                     'Estimasi Siap:',
                     DateConvention.formatToIndoConv(
-                      widget.order.estimatedReadyTime,
+                      widget.order.estimatedReadyTime!,
                     ),
                     icon: Icons.timer_outlined,
                   ),
@@ -516,7 +647,6 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
           ),
         ),
         _buildPaymentDetailsSection(),
-
         if (widget.order.orderItems != null &&
             widget.order.orderItems!.isNotEmpty)
           Card(
@@ -676,7 +806,6 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
         ),
       ),
       bottomNavigationBar: Container(
-        // ... (BottomNavigationBar tidak diubah)
         padding: const EdgeInsets.all(16.0),
         decoration: BoxDecoration(
           color:
