@@ -1,7 +1,5 @@
-## Aplikasi Pos Order Bakso
+Nama Kelompok = Smooth Operation
 
-**kelompok**
-- Rizqiansyah Ramadhan (1122140051)
-- Fendi Andriyanto (1122140055)
-- Andreas Ronaldo (1122140098)
-- Lukman Hakim (1122140088)
+- Agung Rizki Saputra (1122140056/AgungRizkiSaputra)
+- Gusnaldi Luthfi (1122140107/Gusnaldi99)
+- Wahyu Arliansyah (1122140037/WahyuArliansyah)
