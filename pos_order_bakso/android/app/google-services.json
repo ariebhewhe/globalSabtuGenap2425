@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "712554617132",
+    "project_id": "jamal-69420",
+    "storage_bucket": "jamal-69420.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:712554617132:android:b9e2fda58ebb83141f3489",
+        "android_client_info": {
+          "package_name": "rizz.learn.jamal"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "712554617132-2psi1ododotu37p5it20orraefvppst3.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "rizz.learn.jamal",
+            "certificate_hash": "5dcb9e7545d8e9a667050201b904341198a5b4bd"
+          }
+        },
+        {
+          "client_id": "712554617132-23lslmsihvmnae3h40dnhr3a3kgl651m.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDYPP7WpjV5M3ue89Di6H_wISWnbGcWH64"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "712554617132-23lslmsihvmnae3h40dnhr3a3kgl651m.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
