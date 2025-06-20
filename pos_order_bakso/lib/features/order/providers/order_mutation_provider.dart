@@ -41,6 +41,7 @@ class OrderMutationNotifier extends StateNotifier<OrderMutationState> {
         _ref.read(cartItemsProvider.notifier).refreshCartItems();
         _ref.invalidate(totalCartQuantityProvider);
         _ref.invalidate(distinctCartItemCountProvider);
+        _ref.invalidateSelf();
       },
     );
   }

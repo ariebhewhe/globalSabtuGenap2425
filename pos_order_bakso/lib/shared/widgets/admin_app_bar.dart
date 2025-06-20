@@ -170,7 +170,7 @@ class AdminAppBar extends StatelessWidget implements PreferredSizeWidget {
           },
           error:
               (err, stack) => IconButton(
-                onPressed: () => context.pushRoute(const CartRoute()),
+                onPressed: () => context.pushRoute(const AdminCartRoute()),
                 icon: const Icon(Icons.shopping_cart_outlined),
                 tooltip: 'Keranjang Belanja',
               ),
@@ -179,7 +179,7 @@ class AdminAppBar extends StatelessWidget implements PreferredSizeWidget {
                 clipBehavior: Clip.none,
                 children: [
                   IconButton(
-                    onPressed: () => context.pushRoute(const CartRoute()),
+                    onPressed: () => context.pushRoute(const AdminCartRoute()),
                     icon: const Icon(Icons.shopping_cart_outlined),
                     tooltip: 'Keranjang Belanja',
                   ),

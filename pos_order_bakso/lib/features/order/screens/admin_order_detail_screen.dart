@@ -11,11 +11,9 @@ import 'package:jamal/core/utils/toast_utils.dart';
 import 'package:jamal/data/models/order_model.dart';
 import 'package:jamal/features/order/providers/order_mutation_provider.dart';
 import 'package:jamal/features/payment_method/providers/payment_method_provider.dart';
-import 'package:jamal/main.dart';
 import 'package:jamal/shared/widgets/admin_app_bar.dart';
 import 'package:jamal/shared/widgets/my_end_drawer.dart';
 import 'package:jamal/shared/widgets/my_screen_container.dart';
-
 import 'package:screenshot/screenshot.dart';
 import 'package:file_saver/file_saver.dart';
 
@@ -177,7 +175,6 @@ class _AdminOrderDetailScreenState
     );
   }
 
-  // WIDGET BARU: Section khusus untuk detail pembayaran
   Widget _buildPaymentDetailsSection() {
     final paymentMethodId = widget.order.paymentMethodId;
     if (paymentMethodId == null) {
@@ -189,7 +186,6 @@ class _AdminOrderDetailScreenState
     );
     final paymentMethod = paymentMethodState.paymentMethod;
 
-    // Hanya tampilkan section ini jika ada kode atau QR yang perlu ditampilkan
     bool hasPaymentDetails =
         (paymentMethod?.adminPaymentCode != null &&
             paymentMethod!.adminPaymentCode!.isNotEmpty) ||
@@ -230,8 +226,6 @@ class _AdminOrderDetailScreenState
               color: context.theme.dividerTheme.color?.withValues(alpha: 0.5),
               height: 20,
             ),
-
-            // Nama Metode Pembayaran
             Padding(
               padding: const EdgeInsets.only(bottom: 12.0),
               child: Row(
@@ -250,7 +244,6 @@ class _AdminOrderDetailScreenState
               ),
             ),
 
-            // Konten dinamis (QR atau Kode)
             if (paymentMethod.adminPaymentQrCodePicture != null &&
                 paymentMethod.adminPaymentQrCodePicture!.isNotEmpty)
               _buildQrCodeContent(paymentMethod.adminPaymentQrCodePicture!)
@@ -263,7 +256,6 @@ class _AdminOrderDetailScreenState
     );
   }
 
-  // Helper untuk konten QR Code
   Widget _buildQrCodeContent(String imageUrl) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -313,7 +305,6 @@ class _AdminOrderDetailScreenState
     );
   }
 
-  // Helper untuk konten Kode Pembayaran
   Widget _buildPaymentCodeContent(String code) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -390,7 +381,7 @@ class _AdminOrderDetailScreenState
         mimeType: MimeType.png,
       );
 
-      if (filePath.isNotEmpty) {
+      if (filePath != null && filePath.isNotEmpty) {
         if (!context.mounted) return;
         ToastUtils.showSuccess(
           context: context,
@@ -409,11 +400,13 @@ class _AdminOrderDetailScreenState
         context: context,
         message: 'Error menyimpan: ${e.toString()}',
       );
-      logger.e("Error capturing or saving invoice: ${e.toString()}");
+      // logger.e("Error capturing or saving invoice: ${e.toString()}");
     } finally {
-      setState(() {
-        _isSavingInvoice = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isSavingInvoice = false;
+        });
+      }
     }
   }
 
@@ -492,7 +485,7 @@ class _AdminOrderDetailScreenState
                     context,
                     'Estimasi Siap:',
                     DateConvention.formatToIndoConv(
-                      widget.order.estimatedReadyTime,
+                      widget.order.estimatedReadyTime!,
                     ),
                     icon: Icons.timer_outlined,
                   ),
@@ -520,13 +513,10 @@ class _AdminOrderDetailScreenState
             ),
           ),
         ),
-        // --- SECTION PEMBAYARAN DIPANGGIL DI SINI ---
         _buildPaymentDetailsSection(),
-
         if (widget.order.orderItems != null &&
             widget.order.orderItems!.isNotEmpty)
           Card(
-            // ... (Card untuk Item Pesanan tidak diubah)
             color: context.cardTheme.color,
             elevation: 0,
             shape: context.cardTheme.shape,
@@ -683,7 +673,6 @@ class _AdminOrderDetailScreenState
         ),
       ),
       bottomNavigationBar: Container(
-        // ... (BottomNavigationBar tidak diubah)
         padding: const EdgeInsets.all(16.0),
         decoration: BoxDecoration(
           color:

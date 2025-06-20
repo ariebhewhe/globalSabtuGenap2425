@@ -167,11 +167,7 @@ class _AdminCreateOrderScreenState
 
   Widget _buildPaymentMethodDropdown() {
     final paymentMethodsState = ref.watch(paymentMethodsProvider);
-    final paymentMethods = paymentMethodsState.paymentMethods.where(
-      (paymentMethod) =>
-          (paymentMethod.adminPaymentCode?.isNotEmpty ?? false) ||
-          (paymentMethod.adminPaymentQrCodePicture?.isNotEmpty ?? false),
-    );
+    final paymentMethods = paymentMethodsState.paymentMethods;
 
     if (paymentMethodsState.isLoading) {
       return const Center(child: CircularProgressIndicator());

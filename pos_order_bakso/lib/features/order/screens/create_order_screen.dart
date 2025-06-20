@@ -185,7 +185,6 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
       );
     }
 
-    // Jika sudah tidak loading dan tidak error, baru render dropdown
     return FormBuilderDropdown<String>(
       name: 'paymentMethodId',
       decoration: const InputDecoration(
