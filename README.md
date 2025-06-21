@@ -141,8 +141,3 @@ Struktur direktori `lib` yang digunakan dalam proyek ini adalah sebagai berikut:
     ├── main.dart
     └── providers.dart
 ```
-
-*(Struktur direktori di atas telah disederhanakan untuk keterbacaan, lihat kode sumber untuk detail lengkapnya)*
-
-```
-```
