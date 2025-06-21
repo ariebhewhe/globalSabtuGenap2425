@@ -1,0 +1,4 @@
+https://laragon.org/download/
+Download Laragon 2025 v8.1.0 - Full (229 MB): https://github.com/leokhoa/laragon/releases/download/8.1.0/laragon-wamp.exe
+Download the script PIP : https://pip.pypa.io/en/stable/installation/
+
