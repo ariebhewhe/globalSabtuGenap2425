@@ -7,6 +7,7 @@ Aplikasi Point of Sale (POS) berbasis mobile yang dibuat untuk memudahkan proses
 ## Daftar Isi
 - [Aplikasi POS Order Bakso Pentol](#aplikasi-pos-order-bakso-pentol)
   - [Daftar Isi](#daftar-isi)
+  - [Peran \& Tanggung Jawab](#peran--tanggung-jawab)
   - [Fitur Utama](#fitur-utama)
   - [Teknologi \& Arsitektur](#teknologi--arsitektur)
     - [Arsitektur](#arsitektur)
@@ -15,6 +16,14 @@ Aplikasi Point of Sale (POS) berbasis mobile yang dibuat untuk memudahkan proses
   - [Struktur Proyek](#struktur-proyek)
 
 ---
+
+## Peran & Tanggung Jawab
+| NIM | Nama | Peran & Tanggung Jawab |
+| :--- | :--- | :--- |
+| **1122140051** | **Rizqiansyah Ramadhan** | **Lead Developer**. Bertanggung jawab atas perancangan arsitektur, implementasi, dan pengembangan keseluruhan fungsionalitas aplikasi dari awal hingga akhir. |
+| **1122140055** | **Fendi Andriyanto** | **System Analyst & Documenter**. Bertugas membuat dokumen *Software Requirements Specification* (SRS) secara detail sebagai landasan utama pengembangan. |
+| **1122140088** | **Lukman Hakim** | **Client Relations & Requirement Gathering**. Bertugas untuk segala hal yang berkaitan dengan klien, termasuk melakukan wawancara, mengumpulkan kebutuhan, dan memastikan proyek sejalan dengan ekspektasi pengguna. |
+| **1122140098** | **Andreas Renaldo C.M**| **Client Relations & Requirement Gathering**. Bekerja sama dengan Lukman Hakim dalam menjembatani komunikasi antara tim pengembang dan klien, serta melakukan analisis kebutuhan awal. |
 
 ## Fitur Utama
 
