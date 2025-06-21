@@ -63,6 +63,9 @@ class AuthMutationNotifier extends StateNotifier<AuthMutationState> {
           state = state.copyWith(isLoading: false, errorMessage: error.message),
       (success) async {
         state = await state.copyWith(isLoading: false, userModel: success.data);
+
+        _ref.invalidate(currentUserProvider);
+
         _ref.read(cartItemsProvider.notifier).refreshCartItems();
         _ref.read(menuItemsProvider.notifier).refreshMenuItems();
         _ref.read(categoriesProvider.notifier).refreshCategories();
@@ -86,6 +89,9 @@ class AuthMutationNotifier extends StateNotifier<AuthMutationState> {
           state = state.copyWith(isLoading: false, errorMessage: error.message),
       (success) async {
         state = await state.copyWith(isLoading: false, userModel: success.data);
+
+        _ref.invalidate(currentUserProvider);
+
         _ref.read(cartItemsProvider.notifier).refreshCartItems();
         _ref.read(menuItemsProvider.notifier).refreshMenuItems();
         _ref.read(categoriesProvider.notifier).refreshCategories();
