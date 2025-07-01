@@ -152,6 +152,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
           image: AssetImage("assets/icons/playstore.png"),
           width: 240,
           height: 240,
+          fit: BoxFit.cover,
         ),
       ),
     );

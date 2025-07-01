@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:jamal/data/models/menu_item_model.dart';
 import 'package:jamal/data/repositories/menu_item_repo.dart';
 import 'package:jamal/features/cart/providers/cart_items_provider.dart';
+import 'package:jamal/features/menu_item/providers/menu_item_aggregate_provider.dart';
 import 'package:jamal/features/menu_item/providers/menu_item_mutation_state.dart';
 import 'package:jamal/features/menu_item/providers/menu_item_provider.dart';
 import 'package:jamal/features/menu_item/providers/menu_items_provider.dart';
@@ -29,6 +30,7 @@ class MenuItemMutationNotifier extends StateNotifier<MenuItemMutationState> {
 
         // * Refresh menu items list
         _ref.invalidate(menuItemsProvider);
+        _ref.invalidate(menuItemsCountProvider);
       },
     );
   }
@@ -57,6 +59,7 @@ class MenuItemMutationNotifier extends StateNotifier<MenuItemMutationState> {
 
         // * Refresh menu items dan menu items
         _ref.invalidate(menuItemsProvider);
+        _ref.invalidate(menuItemsCountProvider);
 
         final activeId = _ref.read(activeMenuItemIdProvider);
         if (activeId == id) {
@@ -85,7 +88,8 @@ class MenuItemMutationNotifier extends StateNotifier<MenuItemMutationState> {
 
         // * Refresh menu items
         _ref.invalidate(menuItemsProvider);
-        _ref.invalidate(cartItemsProvider);
+        _ref.refresh(cartItemsProvider.notifier).refreshCartItems();
+        _ref.invalidate(menuItemsCountProvider);
 
         // * Kalo delete clear active item id
         final activeId = _ref.read(activeMenuItemIdProvider);

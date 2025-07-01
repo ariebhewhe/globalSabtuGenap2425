@@ -98,7 +98,7 @@ class _AdminRestaurantTableUpsertScreenState
     });
     return Scaffold(
       appBar: const AdminAppBar(),
-      drawer: const MyEndDrawer(),
+      endDrawer: const MyEndDrawer(),
       body: MyScreenContainer(
         child: SingleChildScrollView(
           child: AbsorbPointer(

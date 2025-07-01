@@ -1,5 +1,4 @@
 import 'package:auto_route/auto_route.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
@@ -103,28 +102,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          CachedNetworkImage(
+                          const Image(
+                            image: AssetImage("assets/icons/playstore.png"),
                             width: 48,
                             height: 48,
-                            imageUrl:
-                                "https://i.pinimg.com/736x/bc/38/9a/bc389aea0978b039f923054485688917.jpg",
                             fit: BoxFit.cover,
-                            placeholder:
-                                (context, url) => Center(
-                                  child: CircularProgressIndicator(
-                                    color: context.colors.primary,
-                                  ),
-                                ),
-                            errorWidget:
-                                (context, url, error) => Center(
-                                  child: Icon(
-                                    Icons.fastfood_outlined,
-                                    size: 40,
-                                    color: context.colors.onSurface.withValues(
-                                      alpha: 0.5,
-                                    ),
-                                  ),
-                                ),
                           ),
                           const SizedBox(height: 32),
                           FormBuilderTextField(
