@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "323941923576",
+    "firebase_url": "https://kantinku-5b541-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "kantinku-5b541",
+    "storage_bucket": "kantinku-5b541.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:323941923576:android:22ed2d48c8f9c514f3190d",
+        "android_client_info": {
+          "package_name": "com.tugaspakari.kantinku"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAHbcFaHjY-LXknguuSz489PcrUFqyqhj4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
