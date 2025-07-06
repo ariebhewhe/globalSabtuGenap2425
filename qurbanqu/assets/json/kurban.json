@@ -1,0 +1,38 @@
+[
+  {
+    "id": "1",
+    "nama": "Sapi Limosin Premium",
+    "jenis": "Sapi",
+    "deskripsi": "Sapi Limosin kualitas premium. Diternakkan dengan pakan berkualitas dan perawatan terbaik.",
+    "harga": 18500000,
+    "berat": 450,
+    "gambar": "https://images.unsplash.com/photo-1570042225831-d98fa7577f1e?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxzZWFyY2h8Mnx8Y293fGVufDB8fDB8fA%3D%3D&auto=format&fit=crop&w=800&q=60"
+  },
+  {
+    "id": "2",
+    "nama": "Domba Merino Super",
+    "jenis": "Domba",
+    "deskripsi": "Domba Merino dengan bulu yang tebal dan kualitas daging yang premium. Hasil peternakan lokal terpercaya.",
+    "harga": 3500000,
+    "berat": 50,
+    "gambar": "https://images.unsplash.com/photo-1484557985045-edf25e08da73?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxzZWFyY2h8Mnx8c2hlZXB8ZW58MHx8MHx8&auto=format&fit=crop&w=800&q=60"
+  },
+  {
+    "id": "3",
+    "nama": "Kambing Etawa Pilihan",
+    "jenis": "Kambing",
+    "deskripsi": "Kambing Etawa dengan kualitas daging yang lembut dan bernutrisi tinggi. Diternak dengan standar tinggi.",
+    "harga": 2800000,
+    "berat": 35,
+    "gambar": "https://images.unsplash.com/photo-1524764517232-b6e486885e78?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxzZWFyY2h8NHx8Z29hdHxlbnwwfHwwfHw%3D&auto=format&fit=crop&w=800&q=60"
+  },
+  {
+    "id": "4",
+    "nama": "Sapi Bali Unggulan",
+    "jenis": "Sapi",
+    "deskripsi": "Sapi Bali kualitas unggulan, dibesarkan dengan pakan organik untuk kualitas daging terbaik.",
+    "harga": 15000000,
+    "berat": 400,
+    "gambar": "https://images.unsplash.com/photo-1527153857715-3908f2bae5e8?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxzZWFyY2h8OHx8Y293fGVufDB8fDB8fA%3D%3D&auto=format&fit=crop&w=800&q=60"
+  }
+]
